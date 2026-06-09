@@ -2,201 +2,122 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
     KeyboardAvoidingView, Platform, ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+    StyleSheet, Text, TextInput,
+    TouchableOpacity, View
 } from 'react-native';
 
 const PRIMARY = '#1B8B3A';
-const MUTED = '#666';
-const BORDER = '#E5E5E5';
-const BG = '#F7F7F7';
+const MUTED = '#888';
+const BORDER = '#E8E8E8';
+const BG = '#F9F9F9';
 
 export default function LoginScreen() {
-    const [tab, setTab] = useState<'login' | 'signup'>('login');
-    const [phone, setPhone] = useState('');
-    const [name, setName] = useState('');
-    const [otp, setOtp] = useState('');
-    const [step, setStep] = useState<'form' | 'otp'>('form');
-    const [role, setRole] = useState<'client' | 'worker'>('client');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
-    const handleSendOTP = () => {
-        if (!phone) return;
-        // Bypass OTP verification for development, go straight to home
-        router.replace('/home');
-    };
-
-    const handleVerify = () => {
-        if (!otp) return;
-        router.replace('/home');
+    const handleLogin = () => {
+        if (!email || !password) return;
+        router.replace('/(tabs)/home');
     };
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: '#fff' }}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <ScrollView
                 contentContainerStyle={styles.container}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
             >
                 {/* Logo */}
-                <View style={styles.logoBox}>
+                <View style={styles.logoRow}>
                     <View style={styles.logoIcon}>
-                        <Text style={{ fontSize: 32 }}>🛠️</Text>
+                        <Text style={{ fontSize: 22 }}>🛠️</Text>
                     </View>
                     <Text style={styles.logoText}>SkillHub</Text>
-                    <Text style={styles.logoSub}>Your local skilled worker marketplace</Text>
                 </View>
 
-                {step === 'form' ? (
-                    <View style={styles.card}>
+                {/* Heading */}
+                <Text style={styles.heading}>Welcome back 👋</Text>
+                <Text style={styles.subheading}>Login to continue</Text>
 
-                        {/* Tabs */}
-                        <View style={styles.tabs}>
-                            <TouchableOpacity
-                                style={[styles.tab, tab === 'login' && styles.tabActive]}
-                                onPress={() => setTab('login')}
-                            >
-                                <Text style={[styles.tabText, tab === 'login' && styles.tabTextActive]}>
-                                    Login
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.tab, tab === 'signup' && styles.tabActive]}
-                                onPress={() => setTab('signup')}
-                            >
-                                <Text style={[styles.tabText, tab === 'signup' && styles.tabTextActive]}>
-                                    Sign Up
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                {/* Email / Phone */}
+                <View style={styles.inputBox}>
+                    <Text style={styles.inputLabel}>Email or Phone</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="you@example.com"
+                        placeholderTextColor={MUTED}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={email}
+                        onChangeText={setEmail}
+                    />
+                </View>
 
-                        {/* Sign up name field */}
-                        {tab === 'signup' && (
-                            <View style={styles.inputBox}>
-                                <Text style={styles.inputLabel}>Full Name</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="e.g. Akosua Mensah"
-                                    placeholderTextColor={MUTED}
-                                    value={name}
-                                    onChangeText={setName}
-                                />
-                            </View>
-                        )}
-
-                        {/* Phone */}
-                        <View style={styles.inputBox}>
-                            <Text style={styles.inputLabel}>Phone Number</Text>
-                            <View style={styles.phoneRow}>
-                                <View style={styles.countryCode}>
-                                    <Text style={styles.countryCodeText}>🇬🇭 +233</Text>
-                                </View>
-                                <TextInput
-                                    style={styles.phoneInput}
-                                    placeholder="024 000 0000"
-                                    placeholderTextColor={MUTED}
-                                    keyboardType="phone-pad"
-                                    value={phone}
-                                    onChangeText={setPhone}
-                                />
-                            </View>
-                        </View>
-
-                        {/* Sign up role selection */}
-                        {tab === 'signup' && (
-                            <View style={styles.inputBox}>
-                                <Text style={styles.inputLabel}>I want to</Text>
-                                <View style={styles.roleRow}>
-                                    <TouchableOpacity
-                                        style={[styles.roleCard, role === 'client' && { borderColor: PRIMARY }]}
-                                        onPress={() => setRole('client')}
-                                    >
-                                        <Text style={{ fontSize: 24, marginBottom: 6 }}>🔍</Text>
-                                        <Text style={styles.roleLabel}>Find Workers</Text>
-                                        <Text style={styles.roleSub}>I need a service</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[styles.roleCard, role === 'worker' && { borderColor: PRIMARY }]}
-                                        onPress={() => setRole('worker')}
-                                    >
-                                        <Text style={{ fontSize: 24, marginBottom: 6 }}>💼</Text>
-                                        <Text style={styles.roleLabel}>Offer Services</Text>
-                                        <Text style={styles.roleSub}>I am a worker</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        )}
-
-                        {/* OTP Button */}
-                        <TouchableOpacity
-                            style={[styles.btn, !phone && styles.btnDisabled]}
-                            onPress={handleSendOTP}
-                            disabled={!phone}
-                        >
-                            <Text style={styles.btnText}>
-                                {tab === 'login' ? 'Send OTP Code' : 'Create Account'}
-                            </Text>
-                        </TouchableOpacity>
-
-                        <Text style={styles.termsText}>
-                            By continuing you agree to our{' '}
-                            <Text style={{ color: PRIMARY }}>Terms of Service</Text>
-                            {' '}and{' '}
-                            <Text style={{ color: PRIMARY }}>Privacy Policy</Text>
-                        </Text>
-
-                    </View>
-                ) : (
-
-                    /* OTP Step */
-                    <View style={styles.card}>
-                        <TouchableOpacity
-                            style={styles.backBtn}
-                            onPress={() => setStep('form')}
-                        >
-                            <Text style={styles.backText}>← Back</Text>
-                        </TouchableOpacity>
-
-                        <Text style={styles.otpTitle}>Enter OTP Code</Text>
-                        <Text style={styles.otpSub}>
-                            We sent a 6-digit code to{'\n'}
-                            <Text style={{ fontWeight: '700', color: '#111' }}>
-                                +233 {phone}
-                            </Text>
-                        </Text>
-
+                {/* Password */}
+                <View style={styles.inputBox}>
+                    <Text style={styles.inputLabel}>Password</Text>
+                    <View style={styles.passwordRow}>
                         <TextInput
-                            style={styles.otpInput}
-                            placeholder="- - - - - -"
+                            style={styles.passwordInput}
+                            placeholder="••••••••"
                             placeholderTextColor={MUTED}
-                            keyboardType="number-pad"
-                            maxLength={6}
-                            value={otp}
-                            onChangeText={setOtp}
-                            textAlign="center"
+                            secureTextEntry={!showPassword}
+                            value={password}
+                            onChangeText={setPassword}
                         />
-
                         <TouchableOpacity
-                            style={[styles.btn, otp.length < 6 && styles.btnDisabled]}
-                            onPress={handleVerify}
-                            disabled={otp.length < 6}
+                            onPress={() => setShowPassword(!showPassword)}
+                            style={styles.eyeBtn}
                         >
-                            <Text style={styles.btnText}>Verify & Continue</Text>
+                            <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.resendBtn}>
-                            <Text style={styles.resendText}>
-                                Didn't receive it?{' '}
-                                <Text style={{ color: PRIMARY, fontWeight: '700' }}>Resend OTP</Text>
-                            </Text>
-                        </TouchableOpacity>
-
                     </View>
-                )}
+                </View>
+
+                {/* Forgot Password */}
+                <TouchableOpacity style={styles.forgotBtn}>
+                    <Text style={styles.forgotText}>Forgot password?</Text>
+                </TouchableOpacity>
+
+                {/* Login Button */}
+                <TouchableOpacity
+                    style={[styles.btn, (!email || !password) && styles.btnDisabled]}
+                    onPress={handleLogin}
+                    disabled={!email || !password}
+                >
+                    <Text style={styles.btnText}>Login</Text>
+                </TouchableOpacity>
+
+                {/* Divider */}
+                <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or continue with</Text>
+                    <View style={styles.dividerLine} />
+                </View>
+
+                {/* Social Buttons */}
+                <View style={styles.socialRow}>
+                    <TouchableOpacity style={styles.socialBtn}>
+                        <Text style={styles.socialIcon}>G</Text>
+                        <Text style={styles.socialText}>Google</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.socialBtn}>
+                        <Text style={styles.socialIcon}></Text>
+                        <Text style={styles.socialText}>Apple</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Register Link */}
+                <View style={styles.registerRow}>
+                    <Text style={styles.registerText}>Don't have an account? </Text>
+                    <TouchableOpacity onPress={() => router.push('/register')}>
+                        <Text style={styles.registerLink}>Register</Text>
+                    </TouchableOpacity>
+                </View>
 
             </ScrollView>
         </KeyboardAvoidingView>
@@ -205,94 +126,88 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1, backgroundColor: BG,
-        alignItems: 'center', paddingVertical: 60, paddingHorizontal: 20,
+        flexGrow: 1,
+        backgroundColor: '#fff',
+        paddingHorizontal: 24,
+        paddingTop: 64,
+        paddingBottom: 40,
     },
 
-    logoBox: { alignItems: 'center', marginBottom: 32 },
+    logoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 36,
+    },
     logoIcon: {
-        width: 72, height: 72, borderRadius: 20,
-        backgroundColor: PRIMARY + '20',
+        width: 44, height: 44, borderRadius: 12,
+        backgroundColor: PRIMARY + '18',
         alignItems: 'center', justifyContent: 'center',
-        marginBottom: 12,
     },
-    logoText: { fontSize: 28, fontWeight: '800', color: '#111' },
-    logoSub: { fontSize: 13, color: MUTED, marginTop: 4 },
-
-    card: {
-        backgroundColor: '#fff', borderRadius: 20,
-        padding: 24, width: '100%',
-        shadowColor: '#000', shadowOpacity: 0.06,
-        shadowRadius: 12, elevation: 4,
+    logoText: {
+        fontSize: 22, fontWeight: '800', color: '#111',
     },
 
-    tabs: {
-        flexDirection: 'row', backgroundColor: BG,
-        borderRadius: 12, padding: 4, marginBottom: 24,
+    heading: {
+        fontSize: 28, fontWeight: '800', color: '#111', marginBottom: 6,
     },
-    tab: {
-        flex: 1, paddingVertical: 10,
-        borderRadius: 10, alignItems: 'center',
+    subheading: {
+        fontSize: 15, color: MUTED, marginBottom: 32,
     },
-    tabActive: { backgroundColor: '#fff', elevation: 2 },
-    tabText: { fontSize: 14, fontWeight: '500', color: MUTED },
-    tabTextActive: { color: '#111', fontWeight: '700' },
 
-    inputBox: { marginBottom: 18 },
+    inputBox: { marginBottom: 20 },
     inputLabel: {
-        fontSize: 13, fontWeight: '600',
-        color: '#111', marginBottom: 8,
+        fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 8,
     },
     input: {
         borderWidth: 1, borderColor: BORDER,
-        borderRadius: 12, padding: 14,
+        borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
         fontSize: 15, color: '#111', backgroundColor: BG,
     },
 
-    phoneRow: { flexDirection: 'row', gap: 10 },
-    countryCode: {
+    passwordRow: {
+        flexDirection: 'row', alignItems: 'center',
         borderWidth: 1, borderColor: BORDER,
-        borderRadius: 12, paddingHorizontal: 14,
-        justifyContent: 'center', backgroundColor: BG,
+        borderRadius: 14, backgroundColor: BG,
+        paddingHorizontal: 16,
     },
-    countryCodeText: { fontSize: 14, fontWeight: '600', color: '#111' },
-    phoneInput: {
-        flex: 1, borderWidth: 1, borderColor: BORDER,
-        borderRadius: 12, padding: 14,
-        fontSize: 15, color: '#111', backgroundColor: BG,
+    passwordInput: {
+        flex: 1, paddingVertical: 14,
+        fontSize: 15, color: '#111',
     },
+    eyeBtn: { padding: 4 },
+    eyeText: { fontSize: 18 },
 
-    roleRow: { flexDirection: 'row', gap: 12 },
-    roleCard: {
-        flex: 1, borderWidth: 1.5, borderColor: BORDER,
-        borderRadius: 14, padding: 14, alignItems: 'center',
-    },
-    roleLabel: { fontSize: 13, fontWeight: '700', color: '#111' },
-    roleSub: { fontSize: 11, color: MUTED, marginTop: 2 },
+    forgotBtn: { alignSelf: 'flex-end', marginBottom: 28 },
+    forgotText: { fontSize: 13, color: PRIMARY, fontWeight: '600' },
 
     btn: {
         backgroundColor: PRIMARY, borderRadius: 14,
-        padding: 16, alignItems: 'center', marginTop: 8,
+        paddingVertical: 16, alignItems: 'center', marginBottom: 28,
     },
-    btnDisabled: { backgroundColor: '#ccc' },
+    btnDisabled: { backgroundColor: '#C8E6D0' },
     btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
-    termsText: {
-        fontSize: 12, color: MUTED,
-        textAlign: 'center', marginTop: 16, lineHeight: 18,
+    dividerRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20,
     },
+    dividerLine: { flex: 1, height: 1, backgroundColor: BORDER },
+    dividerText: { fontSize: 13, color: MUTED },
 
-    backBtn: { marginBottom: 20 },
-    backText: { fontSize: 15, color: MUTED, fontWeight: '500' },
-    otpTitle: { fontSize: 22, fontWeight: '800', color: '#111', marginBottom: 8 },
-    otpSub: { fontSize: 14, color: MUTED, marginBottom: 28, lineHeight: 22 },
-    otpInput: {
-        borderWidth: 2, borderColor: PRIMARY,
-        borderRadius: 14, padding: 18,
-        fontSize: 28, fontWeight: '700',
-        letterSpacing: 12, marginBottom: 24,
-        color: '#111',
+    socialRow: { flexDirection: 'row', gap: 12, marginBottom: 36 },
+    socialBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'center', gap: 8,
+        borderWidth: 1, borderColor: BORDER,
+        borderRadius: 14, paddingVertical: 13,
+        backgroundColor: '#fff',
     },
-    resendBtn: { marginTop: 16, alignItems: 'center' },
-    resendText: { fontSize: 13, color: MUTED },
+    socialIcon: { fontSize: 16, fontWeight: '700', color: '#111' },
+    socialText: { fontSize: 14, fontWeight: '600', color: '#111' },
+
+    registerRow: {
+        flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
+    },
+    registerText: { fontSize: 14, color: MUTED },
+    registerLink: { fontSize: 14, color: PRIMARY, fontWeight: '700' },
 });

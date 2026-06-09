@@ -1,512 +1,388 @@
-import { COLORS, FONTS, RADIUS, SHADOWS } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { COLORS } from '@/constants/theme';
+import { router } from 'expo-router';
+import { useState } from 'react';
 import {
-  Dimensions,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { width } = Dimensions.get('window');
 
 const CATEGORIES = [
-  { id: '1', name: 'Electrician', icon: '⚡' },
-  { id: '2', name: 'Plumber', icon: '🪠' },
-  { id: '3', name: 'Tailor', icon: '🧵' },
-  { id: '4', name: 'Mason', icon: '🧱' },
-  { id: '5', name: 'Painter', icon: '🎨' },
-  { id: '6', name: 'Carpenter', icon: '🪚' },
+  { name: 'Plumbing', icon: '🔧' },
+  { name: 'Electrical', icon: '⚡' },
+  { name: 'Carpentry', icon: '🪚' },
+  { name: 'Painting', icon: '🖌️' },
+  { name: 'Cleaning', icon: '🧹' },
+  { name: 'More', icon: '⋯' },
 ];
 
-const WORKERS = [
+const RECOMMENDED = [
   {
-    id: '1',
-    name: 'Kofi Mensah',
-    skill: 'Electrician',
-    rating: 4.9,
-    reviews: 28,
-    price: 'GH₵ 60/hr',
-    location: 'Airport Residential, Accra',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150&auto=format&fit=crop&q=80',
-    available: true,
+    id: 1, name: 'Kofi Mensah', skill: 'Plumber',
+    rating: 4.8, jobs: 120, distance: '2.2 km',
+    price: 450, initials: 'KM', color: '#006B3F',
   },
   {
-    id: '2',
-    name: 'Ama Serwaa',
-    skill: 'Tailor & Designer',
-    rating: 4.8,
-    reviews: 19,
-    price: 'GH₵ 45/hr',
-    location: 'East Legon, Accra',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=150&auto=format&fit=crop&q=80',
-    available: true,
+    id: 2, name: 'Kwame Adjei', skill: 'Electrician',
+    rating: 4.7, jobs: 89, distance: '1.8 km',
+    price: 400, initials: 'KA', color: '#1D6FBA',
   },
   {
-    id: '3',
-    name: 'Kwame Osei',
-    skill: 'Plumber & Fitter',
-    rating: 4.7,
-    reviews: 34,
-    price: 'GH₵ 50/hr',
-    location: 'Madina, Accra',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    available: false,
-  },
-  {
-    id: '4',
-    name: 'Yaa Boateng',
-    skill: 'Professional Painter',
-    rating: 4.9,
-    reviews: 12,
-    price: 'GH₵ 55/hr',
-    location: 'Osu, Accra',
-    verified: false,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    available: true,
+    id: 3, name: 'Yaw Boateng', skill: 'Carpenter',
+    rating: 4.6, jobs: 73, distance: '2.5 km',
+    price: 350, initials: 'YB', color: '#D97706',
   },
 ];
 
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
-  const [selectedCat, setSelectedCat] = useState<string | null>(null);
-
-  const filteredWorkers = WORKERS.filter((worker) => {
-    const matchesSearch = worker.name.toLowerCase().includes(search.toLowerCase()) ||
-      worker.skill.toLowerCase().includes(search.toLowerCase());
-    const matchesCat = selectedCat ? worker.skill.toLowerCase().includes(selectedCat.toLowerCase()) : true;
-    return matchesSearch && matchesCat;
-  });
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+    <View style={styles.container}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.welcomeText}>Welcome back 👋</Text>
-            <Text style={styles.userName}>Akosua Mensah</Text>
-          </View>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location" size={16} color={COLORS.primary} />
-            <Text style={styles.locationText}>Accra, Ghana 🇬🇭</Text>
-          </View>
-        </View>
-
-        {/* Search Section */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={COLORS.muted} style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search electrician, tailor, painter..."
-              placeholderTextColor={COLORS.muted}
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-          <TouchableOpacity style={styles.filterBtn}>
-            <Ionicons name="options-outline" size={22} color={COLORS.primary} />
+      {/* ── HEADER ── */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.locationRow}>
+            <Text style={styles.locationIcon}>📍</Text>
+            <Text style={styles.locationText}>Kumasi, Ghana</Text>
+            <Text style={styles.locationChevron}>⌄</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Banner Section */}
-        <View style={styles.banner}>
-          <View style={styles.bannerTextContainer}>
-            <Text style={styles.bannerTitle}>Escrow Protection Active 🔒</Text>
-            <Text style={styles.bannerSubtitle}>
-              Your payments are secure. We only release funds once you confirm the service is completed.
-            </Text>
-          </View>
-        </View>
-
-        {/* Categories Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesScroll}
-        >
-          {CATEGORIES.map((cat) => {
-            const isSelected = selectedCat === cat.name;
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.categoryCard,
-                  isSelected && styles.categoryCardSelected,
-                ]}
-                onPress={() => setSelectedCat(isSelected ? null : cat.name)}
-              >
-                <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                <Text
-                  style={[
-                    styles.categoryName,
-                    isSelected && styles.categoryNameSelected,
-                  ]}
-                >
-                  {cat.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Featured Workers List */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {selectedCat ? `${selectedCat}s` : 'Recommended Workers'}
-          </Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.workersList}>
-          {filteredWorkers.length > 0 ? (
-            filteredWorkers.map((worker) => (
-              <View key={worker.id} style={styles.workerCard}>
-                <Image source={{ uri: worker.avatar }} style={styles.workerAvatar} />
-
-                <View style={styles.workerInfo}>
-                  <View style={styles.workerHeaderRow}>
-                    <Text style={styles.workerName}>{worker.name}</Text>
-                    {worker.verified && (
-                      <View style={styles.verifiedBadge}>
-                        <Ionicons name="checkmark-circle" size={14} color={COLORS.verified} />
-                        <Text style={styles.verifiedText}>Verified</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <Text style={styles.workerSkill}>{worker.skill}</Text>
-
-                  <View style={styles.workerMetaRow}>
-                    <View style={styles.ratingRow}>
-                      <Ionicons name="star" size={14} color={COLORS.star} />
-                      <Text style={styles.ratingText}>
-                        {worker.rating} <Text style={styles.reviewsText}>({worker.reviews})</Text>
-                      </Text>
-                    </View>
-                    <Text style={styles.workerPrice}>{worker.price}</Text>
-                  </View>
-
-                  <View style={styles.locationRow}>
-                    <Ionicons name="navigate-outline" size={12} color={COLORS.muted} />
-                    <Text style={styles.workerLocation}>{worker.location}</Text>
-                  </View>
-                </View>
-
-                {/* Status Indicator */}
-                <View style={styles.statusIndicatorContainer}>
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: worker.available ? COLORS.success : COLORS.muted }
-                    ]}
-                  />
-                  <Text style={styles.statusText}>
-                    {worker.available ? 'Available' : 'Busy'}
-                  </Text>
-                </View>
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={{ fontSize: 40, marginBottom: 12 }}>🔍</Text>
-              <Text style={styles.emptyStateTitle}>No workers found</Text>
-              <Text style={styles.emptyStateSub}>Try clearing your filters or search terms.</Text>
+          <TouchableOpacity style={styles.avatarBtn}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>NK</Text>
             </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Search bar */}
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="What work do you need?"
+            placeholderTextColor={COLORS.muted}
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity
+              style={styles.searchGoBtn}
+              onPress={() => router.push('/search')}
+            >
+              <Text style={styles.searchGoBtnText}>Search</Text>
+            </TouchableOpacity>
           )}
         </View>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+
+        {/* ── CATEGORIES ── */}
+        <View style={styles.categoriesGrid}>
+          {CATEGORIES.map((cat) => (
+            <TouchableOpacity
+              key={cat.name}
+              style={styles.catCard}
+              onPress={() => router.push('/post-job')}
+            >
+              <Text style={styles.catIcon}>{cat.icon}</Text>
+              <Text style={styles.catLabel}>{cat.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* ── EMERGENCY HIRE BANNER ── */}
+        <TouchableOpacity
+          style={styles.emergencyBanner}
+          onPress={() => router.push('/emergency')}
+        >
+          <View style={styles.emergencyLeft}>
+            <Text style={styles.emergencyTitle}>Need it urgently? ⚡</Text>
+            <Text style={styles.emergencySubtitle}>
+              Get fast responses from available workers near you.
+            </Text>
+            <View style={styles.emergencyBtn}>
+              <Text style={styles.emergencyBtnText}>Emergency Hire</Text>
+            </View>
+          </View>
+          <Text style={styles.emergencyEmoji}>🔥</Text>
+        </TouchableOpacity>
+
+        {/* ── RECOMMENDED ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recommended for you</Text>
+          <TouchableOpacity onPress={() => router.push('/search')}>
+            <Text style={styles.seeAll}>See all</Text>
+          </TouchableOpacity>
+        </View>
+
+        {RECOMMENDED.map((worker) => (
+          <TouchableOpacity
+            key={worker.id}
+            style={styles.workerCard}
+            onPress={() => router.push(`/worker-profile?id=${worker.id}`)}
+          >
+            {/* Avatar */}
+            <View style={[styles.workerAvatar, { backgroundColor: worker.color + '20' }]}>
+              <Text style={[styles.workerInitials, { color: worker.color }]}>
+                {worker.initials}
+              </Text>
+            </View>
+
+            {/* Info */}
+            <View style={styles.workerInfo}>
+              <Text style={styles.workerName}>{worker.name}</Text>
+              <Text style={styles.workerSkill}>{worker.skill}</Text>
+              <View style={styles.workerMeta}>
+                <Text style={styles.workerStar}>★</Text>
+                <Text style={styles.workerRating}>{worker.rating}</Text>
+                <Text style={styles.workerJobs}>({worker.jobs} jobs)</Text>
+                <Text style={styles.workerDot}>·</Text>
+                <Text style={styles.workerDist}>📍 {worker.distance}</Text>
+              </View>
+            </View>
+
+            {/* Price + Save */}
+            <View style={styles.workerRight}>
+              <TouchableOpacity style={styles.saveBtn}>
+                <Text style={styles.saveIcon}>🤍</Text>
+              </TouchableOpacity>
+              <Text style={styles.workerPriceLabel}>From</Text>
+              <Text style={styles.workerPrice}>
+                GHC {worker.price}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
 
       </ScrollView>
-    </SafeAreaView>
+
+      {/* ── BOTTOM NAV ── */}
+      <View style={styles.bottomNav}>
+        {[
+          { icon: '🏠', label: 'Home', route: '/home' },
+          { icon: '💼', label: 'Jobs', route: '/bookings' },
+          { icon: '➕', label: '', route: '/post-job', isCenter: true },
+          { icon: '💬', label: 'Messages', route: '/messages' },
+          { icon: '👤', label: 'Profile', route: '/profile' },
+        ].map((tab) =>
+          tab.isCenter ? (
+            <TouchableOpacity
+              key="center"
+              style={styles.centerBtn}
+              onPress={() => router.push(tab.route as any)}
+            >
+              <Text style={styles.centerBtnText}>➕</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              key={tab.label}
+              style={styles.navTab}
+              onPress={() => router.push(tab.route as any)}
+            >
+              <Text style={styles.navIcon}>{tab.icon}</Text>
+              <Text style={styles.navLabel}>{tab.label}</Text>
+            </TouchableOpacity>
+          )
+        )}
+      </View>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+
+  /* Header */
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 10,
-  },
-  welcomeText: {
-    fontSize: 13,
-    color: COLORS.muted,
-    fontWeight: FONTS.medium as any,
-  },
-  userName: {
-    fontSize: 20,
-    color: COLORS.text,
-    fontWeight: FONTS.bold as any,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primaryLight,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: RADIUS.full,
-  },
-  locationText: {
-    fontSize: 12,
-    fontWeight: FONTS.semibold as any,
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  searchSection: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: 15,
-    gap: 12,
-  },
-  searchContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.bgGrey,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 48,
-    color: COLORS.text,
-    fontSize: 14,
-  },
-  filterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  banner: {
-    backgroundColor: COLORS.primary,
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: RADIUS.xl,
-    padding: 18,
-    ...SHADOWS.md,
-  },
-  bannerTextContainer: {
-    flex: 1,
-  },
-  bannerTitle: {
-    fontSize: 15,
-    fontWeight: FONTS.bold as any,
-    color: '#FFFFFF',
-    marginBottom: 6,
-  },
-  bannerSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.85)',
-    lineHeight: 18,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 25,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: FONTS.bold as any,
-    color: COLORS.text,
-  },
-  seeAllText: {
-    fontSize: 13,
-    color: COLORS.primary,
-    fontWeight: FONTS.semibold as any,
-  },
-  categoriesScroll: {
-    paddingLeft: 20,
-    paddingRight: 10,
-  },
-  categoryCard: {
     backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginRight: 10,
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    ...SHADOWS.sm,
+    paddingTop: 54, paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1, borderColor: COLORS.border,
   },
-  categoryCardSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  categoryIcon: {
-    fontSize: 18,
-  },
-  categoryName: {
-    fontSize: 13,
-    fontWeight: FONTS.semibold as any,
-    color: COLORS.text,
-  },
-  categoryNameSelected: {
-    color: '#FFFFFF',
-  },
-  workersList: {
-    paddingHorizontal: 20,
-    gap: 15,
-  },
-  workerCard: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 14,
-    gap: 14,
-    ...SHADOWS.md,
-  },
-  workerAvatar: {
-    width: 76,
-    height: 76,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgGrey,
-  },
-  workerInfo: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  workerHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  workerName: {
-    fontSize: 15,
-    fontWeight: FONTS.bold as any,
-    color: COLORS.text,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5FE',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.sm,
-    gap: 2,
-  },
-  verifiedText: {
-    fontSize: 9,
-    color: COLORS.verified,
-    fontWeight: FONTS.bold as any,
-  },
-  workerSkill: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 2,
-  },
-  workerMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: FONTS.bold as any,
-    color: COLORS.text,
-  },
-  reviewsText: {
-    fontWeight: FONTS.regular as any,
-    color: COLORS.muted,
-  },
-  workerPrice: {
-    fontSize: 13,
-    fontWeight: FONTS.bold as any,
-    color: COLORS.primary,
+  headerTop: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 14,
   },
   locationRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+  },
+  locationIcon: { fontSize: 14 },
+  locationText: {
+    fontSize: 15, fontWeight: '700', color: COLORS.text,
+  },
+  locationChevron: { fontSize: 16, color: COLORS.muted },
+  avatarBtn: {},
+  avatar: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: COLORS.primary + '20',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: COLORS.primary,
+  },
+  avatarText: {
+    fontSize: 13, fontWeight: '700', color: COLORS.primary,
+  },
+
+  /* Search */
+  searchBar: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.bgGrey, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 11,
+    borderWidth: 1, borderColor: COLORS.border, gap: 10,
+  },
+  searchIcon: { fontSize: 16 },
+  searchInput: {
+    flex: 1, fontSize: 14, color: COLORS.text,
+  },
+  searchGoBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12, paddingVertical: 5,
+    borderRadius: 8,
+  },
+  searchGoBtnText: {
+    color: '#fff', fontSize: 12, fontWeight: '700',
+  },
+
+  scrollContent: { paddingBottom: 100 },
+
+  /* Categories */
+  categoriesGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    paddingHorizontal: 16, paddingTop: 20,
+    gap: 10, marginBottom: 20,
+  },
+  catCard: {
+    width: '15%', minWidth: 54,
+    alignItems: 'center', gap: 6,
+    backgroundColor: COLORS.card,
+    borderRadius: 14, padding: 10,
+    borderWidth: 1, borderColor: COLORS.border,
+    flex: 1,
+  },
+  catIcon: { fontSize: 22 },
+  catLabel: {
+    fontSize: 11, fontWeight: '500',
+    color: COLORS.text, textAlign: 'center',
+  },
+
+  /* Emergency banner */
+  emergencyBanner: {
+    marginHorizontal: 16, marginBottom: 24,
+    backgroundColor: COLORS.dark,
+    borderRadius: 16, padding: 20,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
   },
-  workerLocation: {
-    fontSize: 11,
-    color: COLORS.muted,
+  emergencyLeft: { flex: 1 },
+  emergencyTitle: {
+    fontSize: 16, fontWeight: '800',
+    color: '#fff', marginBottom: 4,
   },
-  statusIndicatorContainer: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.bgGrey,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-    gap: 4,
+  emergencySubtitle: {
+    fontSize: 12, color: 'rgba(255,255,255,0.7)',
+    lineHeight: 18, marginBottom: 14,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  emergencyBtn: {
+    backgroundColor: COLORS.danger,
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 20, alignSelf: 'flex-start',
   },
-  statusText: {
-    fontSize: 10,
-    fontWeight: FONTS.semibold as any,
-    color: COLORS.text,
+  emergencyBtnText: {
+    color: '#fff', fontSize: 13, fontWeight: '700',
   },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
+  emergencyEmoji: { fontSize: 48, marginLeft: 10 },
+
+  /* Section header */
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingHorizontal: 16, marginBottom: 12,
   },
-  emptyStateTitle: {
-    fontSize: 16,
-    fontWeight: FONTS.bold as any,
-    color: COLORS.text,
+  sectionTitle: {
+    fontSize: 16, fontWeight: '700', color: COLORS.text,
   },
-  emptyStateSub: {
-    fontSize: 13,
-    color: COLORS.muted,
-    marginTop: 4,
-    textAlign: 'center',
+  seeAll: {
+    fontSize: 13, color: COLORS.primary, fontWeight: '600',
   },
+
+  /* Worker cards */
+  workerCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.card,
+    marginHorizontal: 16, marginBottom: 10,
+    borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: COLORS.border,
+    gap: 12,
+  },
+  workerAvatar: {
+    width: 50, height: 50, borderRadius: 25,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  workerInitials: {
+    fontSize: 16, fontWeight: '800',
+  },
+  workerInfo: { flex: 1 },
+  workerName: {
+    fontSize: 14, fontWeight: '700', color: COLORS.text,
+  },
+  workerSkill: {
+    fontSize: 12, color: COLORS.muted, marginBottom: 4,
+  },
+  workerMeta: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+  },
+  workerStar: { color: COLORS.accent, fontSize: 12 },
+  workerRating: {
+    fontSize: 12, fontWeight: '700', color: COLORS.text,
+  },
+  workerJobs: { fontSize: 11, color: COLORS.muted },
+  workerDot: { fontSize: 11, color: COLORS.muted },
+  workerDist: { fontSize: 11, color: COLORS.muted },
+
+  workerRight: { alignItems: 'flex-end', gap: 4 },
+  saveBtn: { marginBottom: 4 },
+  saveIcon: { fontSize: 18 },
+  workerPriceLabel: {
+    fontSize: 10, color: COLORS.muted, fontWeight: '500',
+  },
+  workerPrice: {
+    fontSize: 15, fontWeight: '800', color: COLORS.primary,
+  },
+
+  /* Bottom nav */
+  bottomNav: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: COLORS.card,
+    borderTopWidth: 1, borderColor: COLORS.border,
+    flexDirection: 'row', alignItems: 'center',
+    paddingBottom: 20, paddingTop: 10,
+    paddingHorizontal: 10,
+  },
+  navTab: {
+    flex: 1, alignItems: 'center', gap: 3,
+  },
+  navIcon: { fontSize: 22 },
+  navLabel: {
+    fontSize: 10, fontWeight: '500', color: COLORS.muted,
+  },
+  centerBtn: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  centerBtnText: { fontSize: 22, color: '#fff' },
 });
