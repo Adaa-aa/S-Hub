@@ -1,150 +1,291 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Dimensions, Easing, StyleSheet, Text, View } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+const PRIMARY = '#1B8B3A';
+const PRIMARY_DARK = '#0F5C26';
 
-const SLIDES = [
-  {
-    id: 1,
-    icon: '🔍',
-    title: 'Find Skilled Workers\nNear You',
-    subtitle: 'Discover verified electricians, tailors, masons and more in your neighbourhood instantly.',
-    bg: '#1B8B3A',
-  },
-  {
-    id: 2,
-    icon: '⭐',
-    title: 'Verified &\nTrusted Workers',
-    subtitle: 'Every worker is ID-verified and rated by real customers. No more guessing or getting scammed.',
-    bg: '#1D6FBA',
-  },
-  {
-    id: 3,
-    icon: '🔒',
-    title: 'Pay Safely\nWith Escrow',
-    subtitle: 'Your money is held securely until the job is done. You only pay when you are satisfied.',
-    bg: '#D97706',
-  },
-];
+export default function SplashScreen() {
+  const spinAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-export default function OnboardingScreen() {
-  const [current, setCurrent] = useState(0);
-  const slide = SLIDES[current];
-  const isLast = current === SLIDES.length - 1;
+  useEffect(() => {
+    // Fade in
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
 
-  const handleNext = () => {
-    if (isLast) {
+    // Spin loader
+    Animated.loop(
+      Animated.timing(spinAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Navigate after 3 seconds
+    const timer = setTimeout(() => {
       router.replace('/login');
-    } else {
-      setCurrent(current + 1);
-    }
-  };
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const spin = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
-    <View style={[styles.container, { backgroundColor: slide.bg }]}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
 
-      {/* Skip */}
-      {!isLast && (
-        <TouchableOpacity
-          style={styles.skipBtn}
-          onPress={() => router.replace('/login')}
-        >
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-      )}
+      {/* ── TOP GREEN SECTION ── */}
+      <View style={styles.topSection}>
 
-      {/* Illustration */}
-      <View style={styles.illustrationBox}>
-        <Text style={styles.icon}>{slide.icon}</Text>
+        {/* Logo */}
+        <View style={styles.logoArea}>
+          <View style={styles.logoRow}>
+            {/* W with checkmark */}
+            <Text style={styles.logoW}>W</Text>
+            <View style={styles.checkBadge}>
+              <Text style={styles.checkMark}>✓</Text>
+            </View>
+            <Text style={styles.logoRest}>aker</Text>
+          </View>
+          <Text style={styles.tagline1}>Find trusted workers.</Text>
+          <Text style={styles.tagline2}>Get work done.</Text>
+        </View>
+
+        {/* Skill icons floating */}
+        <View style={styles.iconsRow}>
+          <View style={styles.iconBubble}>
+            <Text style={styles.iconEmoji}>🔧</Text>
+          </View>
+          <View style={styles.iconBubble}>
+            <Text style={styles.iconEmoji}>🧵</Text>
+          </View>
+          <View style={styles.iconBubble}>
+            <Text style={styles.iconEmoji}>⚡</Text>
+          </View>
+          <View style={styles.iconBubble}>
+            <Text style={styles.iconEmoji}>🖌️</Text>
+          </View>
+        </View>
+
+        {/* Worker illustration placeholder */}
+        <View style={styles.workersArea}>
+          <View style={styles.workersRow}>
+            {[
+              { emoji: '👷🏿', tool: '🔧', color: '#2EA94F' },
+              { emoji: '👩🏿‍🔧', tool: '✂️', color: '#1B8B3A' },
+              { emoji: '👷🏿‍♂️', tool: '🪛', color: '#0F5C26' },
+              { emoji: '👩🏿‍🏭', tool: '🖌️', color: '#1B8B3A' },
+            ].map((w, i) => (
+              <View key={i} style={[styles.workerCard, { backgroundColor: w.color }]}>
+                <Text style={styles.workerEmoji}>{w.emoji}</Text>
+                <Text style={styles.workerTool}>{w.tool}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
       </View>
 
-      {/* Text */}
-      <View style={styles.textBox}>
-        <Text style={styles.title}>{slide.title}</Text>
-        <Text style={styles.subtitle}>{slide.subtitle}</Text>
+      {/* ── BOTTOM WHITE SECTION ── */}
+      <View style={styles.bottomSection}>
+
+        {/* Shield icon */}
+        <View style={styles.shieldRow}>
+          <View style={styles.dividerShort} />
+          <View style={styles.shieldIcon}>
+            <Text style={styles.shieldEmoji}>🛡️</Text>
+          </View>
+          <View style={styles.dividerShort} />
+        </View>
+
+        <Text style={styles.verifiedText}>Verified. Rated. Reliable.</Text>
+        <Text style={styles.verifiedSub}>Your go-to app for skilled{'\n'}workers near you.</Text>
+
+        {/* Spinner */}
+        <View style={styles.loaderArea}>
+          <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]} />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+
       </View>
 
-      {/* Dots */}
-      <View style={styles.dots}>
-        {SLIDES.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, i === current && styles.dotActive]}
-          />
-        ))}
-      </View>
-
-      {/* Button */}
-      <TouchableOpacity style={styles.btn} onPress={handleNext}>
-        <Text style={styles.btnText}>
-          {isLast ? 'Get Started' : 'Next'}
-        </Text>
-      </TouchableOpacity>
-
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, alignItems: 'center',
-    justifyContent: 'center', padding: 24,
+    flex: 1,
+    backgroundColor: PRIMARY_DARK,
   },
 
-  skipBtn: {
-    position: 'absolute', top: 54, right: 24,
-  },
-  skipText: {
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 15, fontWeight: '500',
-  },
-
-  illustrationBox: {
-    width: width * 0.65,
-    height: width * 0.65,
-    borderRadius: width * 0.325,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 48,
-  },
-  icon: { fontSize: 100 },
-
-  textBox: {
-    alignItems: 'center', marginBottom: 40, paddingHorizontal: 10,
-  },
-  title: {
-    fontSize: 30, fontWeight: '800', color: '#fff',
-    textAlign: 'center', lineHeight: 38, marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 15, color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center', lineHeight: 24,
+  /* ── TOP ── */
+  topSection: {
+    flex: 1,
+    backgroundColor: PRIMARY_DARK,
+    alignItems: 'center',
+    paddingTop: 80,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
 
-  dots: {
-    flexDirection: 'row', gap: 8, marginBottom: 40,
+  logoArea: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  dot: {
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.35)',
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  dotActive: {
-    width: 24, backgroundColor: '#fff',
+  logoW: {
+    fontSize: 64,
+    fontWeight: '900',
+    color: '#fff',
+    lineHeight: 70,
+  },
+  checkBadge: {
+    backgroundColor: PRIMARY,
+    borderRadius: 12,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    marginLeft: -8,
+  },
+  checkMark: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  logoRest: {
+    fontSize: 64,
+    fontWeight: '900',
+    color: '#fff',
+    lineHeight: 70,
+  },
+  tagline1: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  tagline2: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#4ADE80',
   },
 
-  btn: {
-    backgroundColor: '#fff',
-    paddingVertical: 16, paddingHorizontal: 60,
-    borderRadius: 30, width: '100%', alignItems: 'center',
+  iconsRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 24,
   },
-  btnText: {
-    fontSize: 16, fontWeight: '800', color: '#111',
+  iconBubble: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  iconEmoji: { fontSize: 22 },
+
+  workersArea: {
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  workersRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  workerCard: {
+    width: 72,
+    height: 110,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  workerEmoji: { fontSize: 36 },
+  workerTool: { fontSize: 18 },
+
+  /* ── BOTTOM ── */
+  bottomSection: {
+    backgroundColor: '#F2F2F2',
+    paddingTop: 32,
+    paddingBottom: 48,
+    alignItems: 'center',
+  },
+
+  shieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  dividerShort: {
+    width: 48,
+    height: 1.5,
+    backgroundColor: PRIMARY,
+    borderRadius: 2,
+  },
+  shieldIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: PRIMARY + '18',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shieldEmoji: { fontSize: 26 },
+
+  verifiedText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111',
+    marginBottom: 8,
+  },
+  verifiedSub: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+
+  loaderArea: {
+    alignItems: 'center',
+    gap: 10,
+  },
+  spinner: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: '#D4EDD9',
+    borderTopColor: PRIMARY,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: PRIMARY,
+    fontWeight: '600',
   },
 });
+
