@@ -1,79 +1,99 @@
 import { COLORS } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
-const CATEGORIES = [
+const SERVICES = [
   { name: 'Plumbing', icon: '🔧' },
   { name: 'Electrical', icon: '⚡' },
   { name: 'Carpentry', icon: '🪚' },
   { name: 'Painting', icon: '🖌️' },
   { name: 'Cleaning', icon: '🧹' },
-  { name: 'More', icon: '⋯' },
 ];
 
 const RECOMMENDED = [
   {
     id: 1, name: 'Kofi Mensah', skill: 'Plumber',
-    rating: 4.8, jobs: 120, distance: '2.2 km',
+    rating: 4.8, reviews: 20, distance: '2.1 km',
     price: 450, initials: 'KM', color: '#006B3F',
   },
   {
     id: 2, name: 'Kwame Adjei', skill: 'Electrician',
-    rating: 4.7, jobs: 89, distance: '1.8 km',
+    rating: 4.7, reviews: 35, distance: '1.8 km',
     price: 400, initials: 'KA', color: '#1D6FBA',
   },
   {
     id: 3, name: 'Yaw Boateng', skill: 'Carpenter',
-    rating: 4.6, jobs: 73, distance: '2.5 km',
+    rating: 4.6, reviews: 18, distance: '2.5 km',
     price: 350, initials: 'YB', color: '#D97706',
   },
 ];
 
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
+  const [saved, setSaved] = useState<number[]>([]);
+
+  const toggleSave = (id: number) =>
+    setSaved((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.card} />
 
       {/* ── HEADER ── */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.locationRow}>
-            <Text style={styles.locationIcon}>📍</Text>
-            <Text style={styles.locationText}>Kumasi, Ghana</Text>
-            <Text style={styles.locationChevron}>⌄</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarBtn}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>NK</Text>
+        {/* Brand row */}
+        <View style={styles.brandRow}>
+          <View style={styles.logoGroup}>
+            {/* Small lightning mark */}
+            <View style={styles.logoMark}>
+              <Text style={styles.logoMarkText}>⚡</Text>
             </View>
+            <Text style={styles.brandName}>Vaker</Text>
+          </View>
+          <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7} onPress={() => router.push('/notifications' as any)}>
+            <Ionicons name="notifications-outline" size={22} color={COLORS.text} />
+            {/* Notification dot */}
+            <View style={styles.bellDot} />
           </TouchableOpacity>
         </View>
 
+        {/* Location row */}
+        <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
+          <Ionicons name="location-sharp" size={15} color={COLORS.primary} />
+          <Text style={styles.locationText}>Kumasi, Ghana</Text>
+          <Ionicons name="chevron-down" size={14} color={COLORS.muted} />
+        </TouchableOpacity>
+
         {/* Search bar */}
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search-outline" size={18} color={COLORS.muted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="What work do you need?"
+            placeholder="What work do you need done?"
             placeholderTextColor={COLORS.muted}
             value={search}
             onChangeText={setSearch}
+            returnKeyType="search"
+            onSubmitEditing={() => search.length > 0 && router.push('/search')}
           />
           {search.length > 0 && (
             <TouchableOpacity
               style={styles.searchGoBtn}
               onPress={() => router.push('/search')}
             >
-              <Text style={styles.searchGoBtnText}>Search</Text>
+              <Text style={styles.searchGoBtnText}>Go</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -83,39 +103,62 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* ── POPULAR SERVICES ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Popular Services</Text>
+          <TouchableOpacity onPress={() => router.push('/search')}>
+            <Text style={styles.seeAll}>See All</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* ── CATEGORIES ── */}
-        <View style={styles.categoriesGrid}>
-          {CATEGORIES.map((cat) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.servicesRow}
+        >
+          {SERVICES.map((svc) => (
             <TouchableOpacity
-              key={cat.name}
-              style={styles.catCard}
-              onPress={() => router.push('/post-job')}
+              key={svc.name}
+              style={styles.svcCard}
+              activeOpacity={0.75}
+              onPress={() => router.push('/search')}
             >
-              <Text style={styles.catIcon}>{cat.icon}</Text>
-              <Text style={styles.catLabel}>{cat.name}</Text>
+              <View style={styles.svcIconWrap}>
+                <Text style={styles.svcIcon}>{svc.icon}</Text>
+              </View>
+              <Text style={styles.svcLabel}>{svc.name}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
         {/* ── EMERGENCY HIRE BANNER ── */}
         <TouchableOpacity
           style={styles.emergencyBanner}
+          activeOpacity={0.85}
           onPress={() => router.push('/emergency')}
         >
+          {/* Left text */}
           <View style={styles.emergencyLeft}>
-            <Text style={styles.emergencyTitle}>Need it urgently? ⚡</Text>
+            <Text style={styles.emergencyTitle}>Need it urgently?</Text>
             <Text style={styles.emergencySubtitle}>
-              Get fast responses from available workers near you.
+              Get fast responses from{'\n'}available workers near you.
             </Text>
             <View style={styles.emergencyBtn}>
               <Text style={styles.emergencyBtnText}>Emergency Hire</Text>
             </View>
           </View>
-          <Text style={styles.emergencyEmoji}>🔥</Text>
+
+          {/* Right — lightning graphic */}
+          <View style={styles.emergencyRight}>
+            <View style={styles.boltCircleOuter}>
+              <View style={styles.boltCircleInner}>
+                <Text style={styles.boltEmoji}>⚡</Text>
+              </View>
+            </View>
+          </View>
         </TouchableOpacity>
 
-        {/* ── RECOMMENDED ── */}
+        {/* ── RECOMMENDED FOR YOU ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recommended for you</Text>
           <TouchableOpacity onPress={() => router.push('/search')}>
@@ -127,10 +170,11 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={worker.id}
             style={styles.workerCard}
-            onPress={() => router.push(`/worker-profile?id=${worker.id}`)}
+            activeOpacity={0.8}
+            onPress={() => router.push(`/worker-profile?id=${worker.id}` as any)}
           >
             {/* Avatar */}
-            <View style={[styles.workerAvatar, { backgroundColor: worker.color + '20' }]}>
+            <View style={[styles.workerAvatar, { backgroundColor: worker.color + '18' }]}>
               <Text style={[styles.workerInitials, { color: worker.color }]}>
                 {worker.initials}
               </Text>
@@ -141,23 +185,29 @@ export default function HomeScreen() {
               <Text style={styles.workerName}>{worker.name}</Text>
               <Text style={styles.workerSkill}>{worker.skill}</Text>
               <View style={styles.workerMeta}>
-                <Text style={styles.workerStar}>★</Text>
-                <Text style={styles.workerRating}>{worker.rating}</Text>
-                <Text style={styles.workerJobs}>({worker.jobs} jobs)</Text>
-                <Text style={styles.workerDot}>·</Text>
-                <Text style={styles.workerDist}>📍 {worker.distance}</Text>
+                <Ionicons name="star" size={11} color={COLORS.accent} />
+                <Text style={styles.workerRating}> {worker.rating}</Text>
+                <Text style={styles.workerReviews}> ({worker.reviews})</Text>
+                <Text style={styles.workerDot}> · </Text>
+                <Ionicons name="location-outline" size={11} color={COLORS.muted} />
+                <Text style={styles.workerDist}> {worker.distance}</Text>
               </View>
             </View>
 
-            {/* Price + Save */}
+            {/* Right: heart + price */}
             <View style={styles.workerRight}>
-              <TouchableOpacity style={styles.saveBtn}>
-                <Text style={styles.saveIcon}>🤍</Text>
+              <TouchableOpacity
+                style={styles.heartBtn}
+                onPress={(e) => { e.stopPropagation(); toggleSave(worker.id); }}
+              >
+                <Ionicons
+                  name={saved.includes(worker.id) ? 'heart' : 'heart-outline'}
+                  size={20}
+                  color={saved.includes(worker.id) ? COLORS.danger : COLORS.muted}
+                />
               </TouchableOpacity>
-              <Text style={styles.workerPriceLabel}>From</Text>
-              <Text style={styles.workerPrice}>
-                GHC {worker.price}
-              </Text>
+              <Text style={styles.workerFrom}>From</Text>
+              <Text style={styles.workerPrice}>GH₵ {worker.price}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -167,222 +217,376 @@ export default function HomeScreen() {
       {/* ── BOTTOM NAV ── */}
       <View style={styles.bottomNav}>
         {[
-          { icon: '🏠', label: 'Home', route: '/home' },
-          { icon: '💼', label: 'Jobs', route: '/bookings' },
-          { icon: '➕', label: '', route: '/post-job', isCenter: true },
-          { icon: '💬', label: 'Messages', route: '/messages' },
-          { icon: '👤', label: 'Profile', route: '/profile' },
+          { icon: 'home', iconFocused: 'home', label: 'Home', route: '/home', active: true },
+          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
+          { icon: 'add', iconFocused: 'add', label: '', route: '/post-job', center: true },
+          { icon: 'chatbubble-outline', iconFocused: 'chatbubble', label: 'Messages', route: '/messages', active: false },
+          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
         ].map((tab) =>
-          tab.isCenter ? (
+          (tab as any).center ? (
             <TouchableOpacity
               key="center"
               style={styles.centerBtn}
+              activeOpacity={0.85}
               onPress={() => router.push(tab.route as any)}
             >
-              <Text style={styles.centerBtnText}>➕</Text>
+              <Ionicons name="add" size={28} color="#fff" />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               key={tab.label}
               style={styles.navTab}
+              activeOpacity={0.7}
               onPress={() => router.push(tab.route as any)}
             >
-              <Text style={styles.navIcon}>{tab.icon}</Text>
-              <Text style={styles.navLabel}>{tab.label}</Text>
+              <Ionicons
+                name={(tab.active ? tab.iconFocused : tab.icon) as any}
+                size={22}
+                color={tab.active ? COLORS.primary : COLORS.muted}
+              />
+              <Text style={[styles.navLabel, tab.active && styles.navLabelActive]}>
+                {tab.label}
+              </Text>
             </TouchableOpacity>
           )
         )}
       </View>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
 
-  /* Header */
+  /* ── Header ── */
   header: {
     backgroundColor: COLORS.card,
-    paddingTop: 54, paddingHorizontal: 16,
-    paddingBottom: 14,
-    borderBottomWidth: 1, borderColor: COLORS.border,
+    paddingTop: 52,
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  headerTop: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 14,
+
+  /* Brand row */
+  brandRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
+  logoGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  logoMark: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoMarkText: { fontSize: 14 },
+  brandName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.text,
+    letterSpacing: -0.5,
+  },
+  bellBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellDot: {
+    position: 'absolute',
+    top: 7,
+    right: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: COLORS.danger,
+    borderWidth: 1.5,
+    borderColor: '#F0F0F0',
+  },
+
+  /* Location */
   locationRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 14,
   },
-  locationIcon: { fontSize: 14 },
   locationText: {
-    fontSize: 15, fontWeight: '700', color: COLORS.text,
-  },
-  locationChevron: { fontSize: 16, color: COLORS.muted },
-  avatarBtn: {},
-  avatar: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: COLORS.primary + '20',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: COLORS.primary,
-  },
-  avatarText: {
-    fontSize: 13, fontWeight: '700', color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text,
   },
 
   /* Search */
   searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.bgGrey, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 11,
-    borderWidth: 1, borderColor: COLORS.border, gap: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F2',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 10,
   },
-  searchIcon: { fontSize: 16 },
   searchInput: {
-    flex: 1, fontSize: 14, color: COLORS.text,
+    flex: 1,
+    fontSize: 14,
+    color: COLORS.text,
   },
   searchGoBtn: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 12, paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 8,
   },
-  searchGoBtnText: {
-    color: '#fff', fontSize: 12, fontWeight: '700',
+  searchGoBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
+  scrollContent: { paddingBottom: 110 },
+
+  /* Section header */
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    marginTop: 22,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  seeAll: {
+    fontSize: 13,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
 
-  scrollContent: { paddingBottom: 100 },
-
-  /* Categories */
-  categoriesGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: 16, paddingTop: 20,
-    gap: 10, marginBottom: 20,
+  /* Services row */
+  servicesRow: {
+    paddingHorizontal: 18,
+    gap: 12,
   },
-  catCard: {
-    width: '15%', minWidth: 54,
-    alignItems: 'center', gap: 6,
+  svcCard: {
+    alignItems: 'center',
+    gap: 7,
+  },
+  svcIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
     backgroundColor: COLORS.card,
-    borderRadius: 14, padding: 10,
-    borderWidth: 1, borderColor: COLORS.border,
-    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#EBEBEB',
   },
-  catIcon: { fontSize: 22 },
-  catLabel: {
-    fontSize: 11, fontWeight: '500',
-    color: COLORS.text, textAlign: 'center',
+  svcIcon: { fontSize: 26 },
+  svcLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: COLORS.text,
+    textAlign: 'center',
   },
 
   /* Emergency banner */
   emergencyBanner: {
-    marginHorizontal: 16, marginBottom: 24,
-    backgroundColor: COLORS.dark,
-    borderRadius: 16, padding: 20,
+    marginHorizontal: 18,
+    marginTop: 20,
+    backgroundColor: '#1A1A2E',
+    borderRadius: 18,
+    padding: 22,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    overflow: 'hidden',
   },
-  emergencyLeft: { flex: 1 },
+  emergencyLeft: { flex: 1, paddingRight: 10 },
   emergencyTitle: {
-    fontSize: 16, fontWeight: '800',
-    color: '#fff', marginBottom: 4,
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 6,
   },
   emergencySubtitle: {
-    fontSize: 12, color: 'rgba(255,255,255,0.7)',
-    lineHeight: 18, marginBottom: 14,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 19,
+    marginBottom: 16,
   },
   emergencyBtn: {
     backgroundColor: COLORS.danger,
-    paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 20, alignSelf: 'flex-start',
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 24,
+    alignSelf: 'flex-start',
   },
   emergencyBtnText: {
-    color: '#fff', fontSize: 13, fontWeight: '700',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
-  emergencyEmoji: { fontSize: 48, marginLeft: 10 },
-
-  /* Section header */
-  sectionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingHorizontal: 16, marginBottom: 12,
+  emergencyRight: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sectionTitle: {
-    fontSize: 16, fontWeight: '700', color: COLORS.text,
+  boltCircleOuter: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(252,209,22,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  seeAll: {
-    fontSize: 13, color: COLORS.primary, fontWeight: '600',
+  boltCircleInner: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(252,209,22,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  boltEmoji: { fontSize: 30 },
 
   /* Worker cards */
   workerCard: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.card,
-    marginHorizontal: 16, marginBottom: 10,
-    borderRadius: 14, padding: 14,
-    borderWidth: 1, borderColor: COLORS.border,
+    marginHorizontal: 18,
+    marginBottom: 10,
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
     gap: 12,
   },
   workerAvatar: {
-    width: 50, height: 50, borderRadius: 25,
-    alignItems: 'center', justifyContent: 'center',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
   },
   workerInitials: {
-    fontSize: 16, fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '800',
   },
   workerInfo: { flex: 1 },
   workerName: {
-    fontSize: 14, fontWeight: '700', color: COLORS.text,
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 2,
   },
   workerSkill: {
-    fontSize: 12, color: COLORS.muted, marginBottom: 4,
+    fontSize: 12,
+    color: COLORS.muted,
+    marginBottom: 5,
   },
   workerMeta: {
-    flexDirection: 'row', alignItems: 'center', gap: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  workerStar: { color: COLORS.accent, fontSize: 12 },
   workerRating: {
-    fontSize: 12, fontWeight: '700', color: COLORS.text,
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.text,
   },
-  workerJobs: { fontSize: 11, color: COLORS.muted },
-  workerDot: { fontSize: 11, color: COLORS.muted },
-  workerDist: { fontSize: 11, color: COLORS.muted },
-
-  workerRight: { alignItems: 'flex-end', gap: 4 },
-  saveBtn: { marginBottom: 4 },
-  saveIcon: { fontSize: 18 },
-  workerPriceLabel: {
-    fontSize: 10, color: COLORS.muted, fontWeight: '500',
+  workerReviews: {
+    fontSize: 11,
+    color: COLORS.muted,
+  },
+  workerDot: {
+    fontSize: 11,
+    color: COLORS.muted,
+  },
+  workerDist: {
+    fontSize: 11,
+    color: COLORS.muted,
+  },
+  workerRight: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  heartBtn: {
+    marginBottom: 6,
+    padding: 2,
+  },
+  workerFrom: {
+    fontSize: 10,
+    color: COLORS.muted,
+    fontWeight: '500',
   },
   workerPrice: {
-    fontSize: 15, fontWeight: '800', color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
 
   /* Bottom nav */
   bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: COLORS.card,
-    borderTopWidth: 1, borderColor: COLORS.border,
-    flexDirection: 'row', alignItems: 'center',
-    paddingBottom: 20, paddingTop: 10,
+    borderTopWidth: 1,
+    borderColor: '#ECECEC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 22,
+    paddingTop: 10,
     paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 10,
   },
   navTab: {
-    flex: 1, alignItems: 'center', gap: 3,
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
   },
-  navIcon: { fontSize: 22 },
   navLabel: {
-    fontSize: 10, fontWeight: '500', color: COLORS.muted,
+    fontSize: 10,
+    fontWeight: '500',
+    color: COLORS.muted,
+  },
+  navLabelActive: {
+    color: COLORS.primary,
+    fontWeight: '700',
   },
   centerBtn: {
-    width: 52, height: 52, borderRadius: 26,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: COLORS.primary,
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
     shadowColor: COLORS.primary,
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  centerBtnText: { fontSize: 22, color: '#fff' },
 });
