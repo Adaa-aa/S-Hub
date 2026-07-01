@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -27,17 +28,17 @@ type MenuItemProps = {
 };
 
 /* ─── Reusable menu row ─── */
-function MenuItem({ icon, label, subtitle, onPress, right, danger }: MenuItemProps) {
+function MenuItem({ icon, label, subtitle, onPress, right, danger, cardBg, textColor, subColor }: MenuItemProps & { cardBg: string; textColor: string; subColor: string }) {
   return (
     <TouchableOpacity
-      style={mi.row}
+      style={[mi.row, { backgroundColor: cardBg }]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
     >
       <View style={mi.iconWrap}>{icon}</View>
       <View style={mi.textGroup}>
-        <Text style={[mi.label, danger && mi.labelDanger]}>{label}</Text>
-        {subtitle ? <Text style={mi.subtitle}>{subtitle}</Text> : null}
+        <Text style={[mi.label, { color: textColor }, danger && mi.labelDanger]}>{label}</Text>
+        {subtitle ? <Text style={[mi.subtitle, { color: subColor }]}>{subtitle}</Text> : null}
       </View>
       {right ?? (
         onPress
@@ -54,53 +55,51 @@ const mi = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     gap: 16,
   },
   iconWrap: { width: 24, alignItems: 'center' },
   textGroup: { flex: 1 },
-  label: { fontSize: 15, fontWeight: '500', color: '#1A1A1A' },
+  label: { fontSize: 15, fontWeight: '500' },
   labelDanger: { color: COLORS.danger },
-  subtitle: { fontSize: 12, color: COLORS.primary, marginTop: 2, fontWeight: '500' },
+  subtitle: { fontSize: 12, marginTop: 2, fontWeight: '500', color: COLORS.primary },
 });
 
 /* ─── Section wrapper ─── */
-function Section({ children }: { children: React.ReactNode }) {
-  return <View style={sec.wrap}>{children}</View>;
+function Section({ children, borderColor }: { children: React.ReactNode; borderColor: string }) {
+  return <View style={[sec.wrap, { borderColor }]}>{children}</View>;
 }
 
 const sec = StyleSheet.create({
   wrap: {
-    backgroundColor: '#fff',
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
     marginBottom: 10,
   },
 });
 
 /* ─── Divider ─── */
-function Divider() {
-  return <View style={{ height: 1, backgroundColor: '#F5F5F5', marginLeft: 60 }} />;
+function Divider({ color }: { color: string }) {
+  return <View style={{ height: 1, backgroundColor: color, marginLeft: 60 }} />;
 }
 
 /* ─── Main Screen ─── */
 export default function ProfileScreen() {
   const [notifications, setNotifications] = useState(true);
+  const T = useThemeColors();
 
   const iconSize = 20;
-  const iconColor = '#444444';
+  const iconColor = T.icon;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FAFAF5" />
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.bg} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
       >
         {/* ── HERO / NAME CARD ── */}
-        <View style={styles.heroCard}>
+        <View style={[styles.heroCard, { backgroundColor: T.card }]}>
           {/* Avatar */}
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
@@ -117,19 +116,19 @@ export default function ProfileScreen() {
 
           {/* Name + rating */}
           <View style={styles.heroInfo}>
-            <Text style={styles.heroName}>Nana Kofi Agyei</Text>
+            <Text style={[styles.heroName, { color: T.text }]}>Nana Kofi Agyei</Text>
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={15} color={COLORS.accent} />
-              <Text style={styles.ratingText}> 4.84</Text>
+              <Text style={[styles.ratingText, { color: T.text }]}> 4.84</Text>
               <TouchableOpacity onPress={() => Alert.alert('Rating', 'Based on your last 100 jobs.')}>
-                <Ionicons name="information-circle-outline" size={16} color={COLORS.muted} style={{ marginLeft: 4 }} />
+                <Ionicons name="information-circle-outline" size={16} color={T.subText} style={{ marginLeft: 4 }} />
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
         {/* ── STATS STRIP ── */}
-        <View style={styles.statsStrip}>
+        <View style={[styles.statsStrip, { backgroundColor: T.card, borderColor: T.border }]}>
           {[
             { value: '12', label: 'Jobs Posted' },
             { value: '8', label: 'Completed' },
@@ -137,56 +136,56 @@ export default function ProfileScreen() {
           ].map((stat, i) => (
             <TouchableOpacity
               key={i}
-              style={[styles.statItem, i < 2 && styles.statBorder]}
+              style={[styles.statItem, i < 2 && [styles.statBorder, { borderColor: T.border }]]}
               onPress={() => router.push('/bookings' as any)}
               activeOpacity={0.65}
             >
               <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={[styles.statLabel, { color: T.subText }]}>{stat.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* ── SECTION 1: Account ── */}
-        <Section>
-          <MenuItem
+        <Section borderColor={T.border}>
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<Ionicons name="person-circle-outline" size={iconSize} color={iconColor} />}
             label="Profile"
             subtitle="Verify email address"
             onPress={() => router.push('/profile-edit' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<Ionicons name="card-outline" size={iconSize} color={iconColor} />}
             label="Payment Methods"
             onPress={() => router.push('/payment' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<Ionicons name="help-circle-outline" size={iconSize} color={iconColor} />}
             label="Support"
             onPress={() => router.push('/support' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<MaterialCommunityIcons name="shield-check-outline" size={iconSize} color={iconColor} />}
             label="Safety"
             onPress={() => router.push('/safety' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<Ionicons name="location-outline" size={iconSize} color={iconColor} />}
             label="Saved Locations"
             onPress={() => router.push('/saved-locations' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<Ionicons name="settings-outline" size={iconSize} color={iconColor} />}
             label="Settings"
             onPress={() => router.push('/settings' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
             icon={<Ionicons name="notifications-outline" size={iconSize} color={iconColor} />}
             label="Notifications"
             right={
@@ -201,22 +200,22 @@ export default function ProfileScreen() {
         </Section>
 
         {/* ── SECTION 2: Features ── */}
-        <Section>
-          <MenuItem
+        <Section borderColor={T.border}>
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<MaterialCommunityIcons name="tag-outline" size={iconSize} color={iconColor} />}
             label="Promotions"
             subtitle="Promo codes, offers and savings"
             onPress={() => router.push('/promotions' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<MaterialCommunityIcons name="briefcase-plus-outline" size={iconSize} color={iconColor} />}
             label="Post a Job"
             subtitle="Find skilled workers near you"
             onPress={() => router.push('/post-job' as any)}
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<MaterialCommunityIcons name="account-hard-hat-outline" size={iconSize} color={iconColor} />}
             label="Worker Profile"
             subtitle="Offer your services and earn"
@@ -225,8 +224,8 @@ export default function ProfileScreen() {
         </Section>
 
         {/* ── SECTION 3: App info ── */}
-        <Section>
-          <MenuItem
+        <Section borderColor={T.border}>
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<Ionicons name="star-outline" size={iconSize} color={iconColor} />}
             label="Rate the App"
             onPress={() =>
@@ -235,8 +234,8 @@ export default function ProfileScreen() {
               )
             }
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<Ionicons name="share-social-outline" size={iconSize} color={iconColor} />}
             label="Share with Friends"
             onPress={() =>
@@ -246,8 +245,8 @@ export default function ProfileScreen() {
               })
             }
           />
-          <Divider />
-          <MenuItem
+          <Divider color={T.divider} />
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<Ionicons name="document-text-outline" size={iconSize} color={iconColor} />}
             label="Terms & Privacy Policy"
             onPress={() => router.push('/terms' as any)}
@@ -255,8 +254,8 @@ export default function ProfileScreen() {
         </Section>
 
         {/* ── SIGN OUT ── */}
-        <Section>
-          <MenuItem
+        <Section borderColor={T.border}>
+          <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
             icon={<Ionicons name="log-out-outline" size={iconSize} color={COLORS.danger} />}
             label="Sign Out"
             danger
@@ -275,7 +274,7 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* ── BOTTOM NAV ── */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
         {[
           { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
           { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
@@ -302,9 +301,9 @@ export default function ProfileScreen() {
               <Ionicons
                 name={tab.active ? (tab.iconActive as any) : (tab.icon as any)}
                 size={22}
-                color={tab.active ? COLORS.primary : COLORS.muted}
+                color={tab.active ? COLORS.primary : T.subText}
               />
-              <Text style={[styles.navLabel, tab.active && styles.navLabelActive]}>
+              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -316,7 +315,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
+  safe: { flex: 1 },
   scroll: { paddingBottom: 100 },
 
   /* Hero */

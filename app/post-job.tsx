@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../constants/theme';
+import { useThemeColors } from '../context/ThemeContext';
 
 /* ─── Types ─── */
 type Step = 1 | 2 | 3;
@@ -110,6 +111,7 @@ export default function PostJobScreen() {
   const [location, setLocation] = useState('Speedsaf Ayeduase, Kumasi');
   const [date, setDate] = useState('Today');
   const [time, setTime] = useState('10:00 AM');
+  const T = useThemeColors();
 
   const selectedSvc = SERVICES.find(s => s.id === service)!;
 
@@ -132,19 +134,15 @@ export default function PostJobScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.card }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.card} />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* ── TOPBAR ── */}
-        <View style={styles.topbar}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={[styles.topbar, { borderColor: T.border }]}>
           <TouchableOpacity onPress={goBack} style={styles.backBtn} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.text} />
+            <Ionicons name="arrow-back" size={22} color={T.text} />
           </TouchableOpacity>
-          <Text style={styles.topTitle}>Post a Job</Text>
+          <Text style={[styles.topTitle, { color: T.text }]}>Post a Job</Text>
           <View style={{ width: 38 }} />
         </View>
 
@@ -157,40 +155,33 @@ export default function PostJobScreen() {
           keyboardShouldPersistTaps="handled"
         >
 
-          {/* ══════════════ STEP 1 ══════════════ */}
           {step === 1 && (
             <>
-              {/* What service */}
-              <Text style={styles.sectionTitle}>What service do you need?</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>What service do you need?</Text>
 
-              <TouchableOpacity
-                style={styles.serviceCard}
-                onPress={() => setShowPicker(!showPicker)}
-                activeOpacity={0.8}
-              >
+              <TouchableOpacity style={[styles.serviceCard, { backgroundColor: T.card, borderColor: T.border }]} onPress={() => setShowPicker(!showPicker)} activeOpacity={0.8}>
                 <View style={[styles.svcIconWrap, { backgroundColor: selectedSvc.color + '20' }]}>
                   <Text style={styles.svcEmoji}>{selectedSvc.icon}</Text>
                 </View>
                 <View style={styles.svcInfo}>
-                  <Text style={styles.svcName}>{selectedSvc.label}</Text>
-                  <Text style={styles.svcHint} numberOfLines={1}>
+                  <Text style={[styles.svcName, { color: T.text }]}>{selectedSvc.label}</Text>
+                  <Text style={[styles.svcHint, { color: T.subText }]} numberOfLines={1}>
                     {desc.trim().length > 0 ? desc : 'Tap to describe your job'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+                <Ionicons name="chevron-forward" size={18} color={T.subText} />
               </TouchableOpacity>
 
-              {/* Service picker dropdown */}
               {showPicker && (
-                <View style={styles.pickerDropdown}>
+                <View style={[styles.pickerDropdown, { backgroundColor: T.card, borderColor: T.border }]}>
                   {SERVICES.map(svc => (
                     <TouchableOpacity
                       key={svc.id}
-                      style={[styles.pickerItem, svc.id === service && styles.pickerItemActive]}
+                      style={[styles.pickerItem, { borderColor: T.divider }, svc.id === service && styles.pickerItemActive]}
                       onPress={() => { setService(svc.id); setShowPicker(false); }}
                     >
                       <Text style={styles.pickerEmoji}>{svc.icon}</Text>
-                      <Text style={[styles.pickerLabel, svc.id === service && styles.pickerLabelActive]}>
+                      <Text style={[styles.pickerLabel, { color: T.text }, svc.id === service && styles.pickerLabelActive]}>
                         {svc.label}
                       </Text>
                       {svc.id === service && (
@@ -201,12 +192,11 @@ export default function PostJobScreen() {
                 </View>
               )}
 
-              {/* Describe the job */}
-              <Text style={styles.sectionTitle}>Describe the job</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>Describe the job</Text>
               <TextInput
-                style={styles.descInput}
+                style={[styles.descInput, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]}
                 placeholder="There is a leak in the bathroom pipe."
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={T.subText}
                 multiline
                 numberOfLines={4}
                 value={desc}
@@ -214,116 +204,98 @@ export default function PostJobScreen() {
                 textAlignVertical="top"
               />
 
-              {/* Add photos */}
-              <Text style={styles.sectionTitle}>
-                Add photos <Text style={styles.optional}>(optional)</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>
+                Add photos <Text style={[styles.optional, { color: T.subText }]}>(optional)</Text>
               </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.photosRow}
-              >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photosRow}>
                 {photos.map(uri => (
                   <PhotoSlot key={uri} uri={uri} onRemove={() => removePhoto(uri)} />
                 ))}
                 {photos.length < 4 && (
-                  <TouchableOpacity style={styles.addPhotoBtn} onPress={addPhoto} activeOpacity={0.7}>
-                    <Ionicons name="add" size={28} color={COLORS.muted} />
+                  <TouchableOpacity style={[styles.addPhotoBtn, { backgroundColor: T.inputBg, borderColor: T.subText }]} onPress={addPhoto} activeOpacity={0.7}>
+                    <Ionicons name="add" size={28} color={T.subText} />
                   </TouchableOpacity>
                 )}
               </ScrollView>
 
-              {/* Job location */}
-              <Text style={styles.sectionTitle}>Job location</Text>
-              <TouchableOpacity style={styles.locationCard} activeOpacity={0.8}>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>Job location</Text>
+              <TouchableOpacity style={[styles.locationCard, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
                 <Ionicons name="location-outline" size={18} color={COLORS.primary} />
-                <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
-                <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+                <Text style={[styles.locationText, { color: T.text }]} numberOfLines={1}>{location}</Text>
+                <Ionicons name="chevron-forward" size={18} color={T.subText} />
               </TouchableOpacity>
             </>
           )}
 
-          {/* ══════════════ STEP 2 ══════════════ */}
           {step === 2 && (
             <>
-              <Text style={styles.sectionTitle}>Select a date</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>Select a date</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24 }}>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   {DATES.map(d => (
-                    <TouchableOpacity
-                      key={d}
-                      style={[styles.chipBtn, d === date && styles.chipBtnActive]}
-                      onPress={() => setDate(d)}
-                    >
-                      <Text style={[styles.chipText, d === date && styles.chipTextActive]}>{d}</Text>
+                    <TouchableOpacity key={d} style={[styles.chipBtn, { backgroundColor: T.card, borderColor: T.border }, d === date && styles.chipBtnActive]} onPress={() => setDate(d)}>
+                      <Text style={[styles.chipText, { color: T.subText }, d === date && styles.chipTextActive]}>{d}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </ScrollView>
 
-              <Text style={styles.sectionTitle}>Select a time</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>Select a time</Text>
               <View style={styles.timesGrid}>
                 {TIMES.map(t => (
-                  <TouchableOpacity
-                    key={t}
-                    style={[styles.chipBtn, t === time && styles.chipBtnActive]}
-                    onPress={() => setTime(t)}
-                  >
-                    <Text style={[styles.chipText, t === time && styles.chipTextActive]}>{t}</Text>
+                  <TouchableOpacity key={t} style={[styles.chipBtn, { backgroundColor: T.card, borderColor: T.border }, t === time && styles.chipBtnActive]} onPress={() => setTime(t)}>
+                    <Text style={[styles.chipText, { color: T.subText }, t === time && styles.chipTextActive]}>{t}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={styles.sectionTitle}>How urgent is this?</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>How urgent is this?</Text>
               <View style={{ gap: 10 }}>
                 {['Not urgent — anytime this week', 'Somewhat urgent — within 2 days', 'Emergency — as soon as possible'].map(opt => (
-                  <TouchableOpacity key={opt} style={styles.urgencyRow}>
+                  <TouchableOpacity key={opt} style={[styles.urgencyRow, { backgroundColor: T.card, borderColor: T.border }]}>
                     <View style={styles.urgencyRadio}>
                       {opt.includes('urgent — within') && <View style={styles.urgencyDot} />}
                     </View>
-                    <Text style={styles.urgencyText}>{opt}</Text>
+                    <Text style={[styles.urgencyText, { color: T.text }]}>{opt}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </>
           )}
 
-          {/* ══════════════ STEP 3 — REVIEW ══════════════ */}
           {step === 3 && (
             <>
-              <Text style={styles.sectionTitle}>Review your job post</Text>
+              <Text style={[styles.sectionTitle, { color: T.text }]}>Review your job post</Text>
 
-              <View style={styles.reviewCard}>
+              <View style={[styles.reviewCard, { backgroundColor: T.card, borderColor: T.border }]}>
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Service</Text>
-                  <Text style={styles.reviewValue}>{selectedSvc.icon} {selectedSvc.label}</Text>
+                  <Text style={[styles.reviewLabel, { color: T.subText }]}>Service</Text>
+                  <Text style={[styles.reviewValue, { color: T.text }]}>{selectedSvc.icon} {selectedSvc.label}</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: T.divider }]} />
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Description</Text>
-                  <Text style={styles.reviewValue} numberOfLines={2}>
-                    {desc.trim() || '—'}
-                  </Text>
+                  <Text style={[styles.reviewLabel, { color: T.subText }]}>Description</Text>
+                  <Text style={[styles.reviewValue, { color: T.text }]} numberOfLines={2}>{desc.trim() || '—'}</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: T.divider }]} />
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Date</Text>
-                  <Text style={styles.reviewValue}>{date}</Text>
+                  <Text style={[styles.reviewLabel, { color: T.subText }]}>Date</Text>
+                  <Text style={[styles.reviewValue, { color: T.text }]}>{date}</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: T.divider }]} />
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Time</Text>
-                  <Text style={styles.reviewValue}>{time}</Text>
+                  <Text style={[styles.reviewLabel, { color: T.subText }]}>Time</Text>
+                  <Text style={[styles.reviewValue, { color: T.text }]}>{time}</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: T.divider }]} />
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Location</Text>
-                  <Text style={styles.reviewValue} numberOfLines={1}>{location}</Text>
+                  <Text style={[styles.reviewLabel, { color: T.subText }]}>Location</Text>
+                  <Text style={[styles.reviewValue, { color: T.text }]} numberOfLines={1}>{location}</Text>
                 </View>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: T.divider }]} />
                 <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Photos</Text>
-                  <Text style={styles.reviewValue}>{photos.length} added</Text>
+                  <Text style={[styles.reviewLabel, { color: T.subText }]}>Photos</Text>
+                  <Text style={[styles.reviewValue, { color: T.text }]}>{photos.length} added</Text>
                 </View>
               </View>
 
@@ -338,8 +310,7 @@ export default function PostJobScreen() {
 
         </ScrollView>
 
-        {/* ── NEXT BUTTON ── */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: T.card, borderColor: T.border }]}>
           <TouchableOpacity style={styles.nextBtn} onPress={goNext} activeOpacity={0.85}>
             <Text style={styles.nextBtnText}>
               {step === 3 ? 'Post Job' : 'Next'}
@@ -353,9 +324,8 @@ export default function PostJobScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1 },
 
-  /* Topbar */
   topbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -363,33 +333,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
   },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  topTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
+  topTitle: { fontSize: 17, fontWeight: '700' },
 
   /* Scroll */
   scroll: { paddingHorizontal: 20, paddingBottom: 20 },
 
-  /* Section title */
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.text,
     marginBottom: 12,
     marginTop: 4,
   },
-  optional: { fontSize: 13, fontWeight: '500', color: COLORS.muted },
+  optional: { fontSize: 13, fontWeight: '500' },
 
-  /* Service card */
   serviceCard: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 14,
     padding: 14,
-    backgroundColor: '#fff',
     gap: 12,
     marginBottom: 22,
     shadowColor: '#000',
@@ -406,15 +370,12 @@ const styles = StyleSheet.create({
   },
   svcEmoji: { fontSize: 22 },
   svcInfo: { flex: 1 },
-  svcName: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
-  svcHint: { fontSize: 12, color: COLORS.muted },
+  svcName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  svcHint: { fontSize: 12 },
 
-  /* Picker dropdown */
   pickerDropdown: {
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 14,
-    backgroundColor: '#fff',
     marginTop: -16,
     marginBottom: 22,
     overflow: 'hidden',
@@ -430,23 +391,18 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     gap: 12,
     borderBottomWidth: 1,
-    borderColor: '#F5F5F5',
   },
   pickerItemActive: { backgroundColor: COLORS.primaryLight ?? '#E6F4EE' },
   pickerEmoji: { fontSize: 18 },
-  pickerLabel: { flex: 1, fontSize: 14, color: COLORS.text, fontWeight: '500' },
+  pickerLabel: { flex: 1, fontSize: 14, fontWeight: '500' },
   pickerLabelActive: { color: COLORS.primary, fontWeight: '700' },
 
-  /* Description */
   descInput: {
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 14,
     padding: 14,
     fontSize: 14,
-    color: COLORS.text,
     minHeight: 100,
-    backgroundColor: '#FAFAFA',
     marginBottom: 22,
     lineHeight: 21,
   },
@@ -465,15 +421,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
   },
 
-  /* Location */
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 14,
     padding: 14,
-    backgroundColor: '#fff',
     gap: 10,
     marginBottom: 10,
     shadowColor: '#000',
@@ -481,22 +434,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  locationText: { flex: 1, fontSize: 14, color: COLORS.text, fontWeight: '500' },
+  locationText: { flex: 1, fontSize: 14, fontWeight: '500' },
 
-  /* Chips (date/time) */
   chipBtn: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#fff',
   },
   chipBtnActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
-  chipText: { fontSize: 13, color: COLORS.muted, fontWeight: '500' },
+  chipText: { fontSize: 13, fontWeight: '500' },
   chipTextActive: { color: '#fff', fontWeight: '700' },
   timesGrid: {
     flexDirection: 'row',
@@ -505,16 +455,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  /* Urgency */
   urgencyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 12,
-    backgroundColor: '#fff',
   },
   urgencyRadio: {
     width: 20,
@@ -531,14 +478,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: COLORS.primary,
   },
-  urgencyText: { fontSize: 13, color: COLORS.text, flex: 1 },
+  urgencyText: { fontSize: 13, flex: 1 },
 
-  /* Review */
   reviewCard: {
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderRadius: 16,
-    backgroundColor: '#fff',
     marginBottom: 20,
     shadowColor: '#000',
     shadowOpacity: 0.05,
@@ -553,11 +497,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
   },
-  reviewLabel: { fontSize: 13, color: COLORS.muted, fontWeight: '500' },
-  reviewValue: { fontSize: 13, color: COLORS.text, fontWeight: '600', flex: 1, textAlign: 'right' },
-  divider: { height: 1, backgroundColor: '#F2F2F2', marginHorizontal: 16 },
+  reviewLabel: { fontSize: 13, fontWeight: '500' },
+  reviewValue: { fontSize: 13, fontWeight: '600', flex: 1, textAlign: 'right' },
+  divider: { height: 1, marginHorizontal: 16 },
 
-  /* Info box */
   infoBox: {
     flexDirection: 'row',
     gap: 10,
@@ -568,13 +511,10 @@ const styles = StyleSheet.create({
   },
   infoText: { flex: 1, fontSize: 12, color: COLORS.primary, lineHeight: 18, fontWeight: '500' },
 
-  /* Footer */
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderColor: '#F0F0F0',
-    backgroundColor: '#fff',
   },
   nextBtn: {
     backgroundColor: COLORS.primary,

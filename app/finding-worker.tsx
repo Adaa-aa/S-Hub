@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -104,16 +105,16 @@ const sv = StyleSheet.create({
   wrap: { alignItems: 'center', paddingTop: 40, paddingBottom: 30 },
   radarWrap: { width: 160, height: 160, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   centerIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: COLORS.primary + '15', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: COLORS.primary + '30' },
-  title: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', marginBottom: 6 },
-  sub: { fontSize: 13, color: COLORS.muted, textAlign: 'center', lineHeight: 19, marginBottom: 10, paddingHorizontal: 30 },
+  title: { fontSize: 20, fontWeight: '800', marginBottom: 6 },
+  sub: { fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: 10, paddingHorizontal: 30 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   statusText: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
 });
 
 /* ─── Worker card ─── */
-function WorkerCard({ worker, service }: { worker: typeof WORKERS[0]; service: string }) {
+function WorkerCard({ worker, service, T }: { worker: typeof WORKERS[0]; service: string; T: any }) {
   return (
-    <View style={wc.card}>
+    <View style={[wc.card, { backgroundColor: T.card, borderColor: T.border }]}>
       {/* Avatar + online */}
       <View style={wc.avatarWrap}>
         <View style={[wc.avatar, { backgroundColor: worker.color + '20' }]}>
@@ -122,7 +123,6 @@ function WorkerCard({ worker, service }: { worker: typeof WORKERS[0]; service: s
         {worker.online && <View style={wc.onlineDot} />}
       </View>
 
-      {/* Info */}
       <View style={wc.info}>
         <View style={wc.nameRow}>
           <Text style={wc.name}>{worker.name}</Text>
@@ -175,7 +175,7 @@ function WorkerCard({ worker, service }: { worker: typeof WORKERS[0]; service: s
 }
 
 const wc = StyleSheet.create({
-  card: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 14, marginHorizontal: 16, marginBottom: 12, borderWidth: 1, borderColor: '#EDEDED', gap: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  card: { flexDirection: 'row', borderRadius: 16, padding: 14, marginHorizontal: 16, marginBottom: 12, borderWidth: 1, gap: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
   avatarWrap: { position: 'relative', flexShrink: 0 },
   avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   initials: { fontSize: 16, fontWeight: '800' },
@@ -211,6 +211,7 @@ export default function FindingWorkerScreen() {
   const [phase, setPhase]         = useState<'searching' | 'found'>('searching');
   const [activeFilter, setFilter] = useState('Nearest');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const T = useThemeColors();
 
   /* Simulate a 3-second search before showing results */
   useEffect(() => {
@@ -222,17 +223,16 @@ export default function FindingWorkerScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
 
-      {/* ── HEADER ── */}
-      <View style={s.header}>
+      <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
         <View style={s.headerInfo}>
-          <Text style={s.headerTitle}>Finding Workers</Text>
-          <Text style={s.headerSub} numberOfLines={1}>{service} · {jobTitle}</Text>
+          <Text style={[s.headerTitle, { color: T.text }]}>Finding Workers</Text>
+          <Text style={[s.headerSub, { color: T.subText }]} numberOfLines={1}>{service} · {jobTitle}</Text>
         </View>
         <TouchableOpacity
           style={s.myJobsBtn}
@@ -258,36 +258,33 @@ export default function FindingWorkerScreen() {
         {/* ── RESULTS (fade in after search) ── */}
         {phase === 'found' && (
           <Animated.View style={{ opacity: fadeAnim }}>
-            {/* Found count */}
+              {/* Found count */}
             <View style={s.foundRow}>
-              <Text style={s.foundText}>{WORKERS.length} workers found nearby</Text>
+              <Text style={[s.foundText, { color: T.text }]}>{WORKERS.length} workers found nearby</Text>
               <View style={s.liveChip}>
                 <View style={s.liveDot} />
                 <Text style={s.liveText}>Live</Text>
               </View>
             </View>
 
-            {/* Filter chips */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filtersRow}>
               {FILTERS.map(f => (
                 <TouchableOpacity
                   key={f}
-                  style={[s.filterChip, activeFilter === f && s.filterChipActive]}
+                  style={[s.filterChip, { backgroundColor: T.card, borderColor: T.border }, activeFilter === f && s.filterChipActive]}
                   onPress={() => setFilter(f)}
                   activeOpacity={0.75}
                 >
-                  <Text style={[s.filterText, activeFilter === f && s.filterTextActive]}>{f}</Text>
+                  <Text style={[s.filterText, { color: T.subText }, activeFilter === f && s.filterTextActive]}>{f}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
-            {/* Worker cards */}
             {WORKERS.map(w => (
-              <WorkerCard key={w.id} worker={w} service={service} />
+              <WorkerCard key={w.id} worker={w} service={service} T={T} />
             ))}
 
-            {/* Bottom tip */}
-            <View style={s.tipBox}>
+            <View style={[s.tipBox, { backgroundColor: COLORS.primary + '15' }]}>
               <Ionicons name="information-circle-outline" size={16} color={COLORS.primary} />
               <Text style={s.tipText}>
                 More workers may become available over the next few hours. We'll notify you instantly when they respond.
@@ -301,39 +298,33 @@ export default function FindingWorkerScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
+  safe: { flex: 1 },
 
-  /* Header */
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1 },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerInfo: { flex: 1 },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
-  headerSub: { fontSize: 11, color: COLORS.muted, marginTop: 1 },
+  headerTitle: { fontSize: 16, fontWeight: '700' },
+  headerSub: { fontSize: 11, marginTop: 1 },
   myJobsBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.primary },
   myJobsBtnText: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
 
-  /* Posted banner */
   postedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E6F4EE', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: '#C6E6D4' },
   postedBannerText: { fontSize: 12, color: COLORS.primary, fontWeight: '600', flex: 1 },
 
-  /* Scroll */
   scroll: { paddingBottom: 40 },
 
-  /* Found row */
   foundRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
-  foundText: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
+  foundText: { fontSize: 15, fontWeight: '700' },
   liveChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FEECEC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLORS.danger },
   liveText: { fontSize: 11, color: COLORS.danger, fontWeight: '800' },
 
-  /* Filter chips */
   filtersRow: { paddingHorizontal: 16, gap: 8, marginBottom: 14 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: '#E0E0E0', backgroundColor: '#fff' },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
   filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' },
-  filterText: { fontSize: 12, fontWeight: '600', color: COLORS.muted },
+  filterText: { fontSize: 12, fontWeight: '600' },
   filterTextActive: { color: COLORS.primary },
 
-  /* Tip box */
-  tipBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#E6F4EE', borderRadius: 12, padding: 14, marginHorizontal: 16, marginTop: 8 },
+  tipBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, padding: 14, marginHorizontal: 16, marginTop: 8 },
   tipText: { flex: 1, fontSize: 12, color: COLORS.primary, lineHeight: 18, fontWeight: '500' },
 });

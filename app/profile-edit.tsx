@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ export default function ProfileEditScreen() {
   const [email, setEmail] = useState('nana.kofi@gmail.com');
   const [phone, setPhone] = useState('+233 24 000 0000');
   const [city, setCity]   = useState('Kumasi, Ghana');
+  const T = useThemeColors();
 
   const save = () => {
     Alert.alert('Saved!', 'Your profile has been updated.', [
@@ -29,28 +31,23 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
 
-      {/* Header */}
-      <View style={s.header}>
+      <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
-        <Text style={s.title}>Edit Profile</Text>
+        <Text style={[s.title, { color: T.text }]}>Edit Profile</Text>
         <TouchableOpacity onPress={save}>
           <Text style={s.saveText}>Save</Text>
         </TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
-          {/* Avatar */}
-          <View style={s.avatarSection}>
+          <View style={[s.avatarSection, { backgroundColor: T.card }]}>
             <View style={s.avatar}>
               <Text style={s.avatarInitials}>NK</Text>
             </View>
@@ -60,18 +57,16 @@ export default function ProfileEditScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Fields */}
-          <View style={s.card}>
-            <Field label="Full Name" value={name} onChangeText={setName} icon="person-outline" />
-            <View style={s.divider} />
-            <Field label="Email Address" value={email} onChangeText={setEmail} icon="mail-outline" keyboardType="email-address" />
-            <View style={s.divider} />
-            <Field label="Phone Number" value={phone} onChangeText={setPhone} icon="call-outline" keyboardType="phone-pad" />
-            <View style={s.divider} />
-            <Field label="City / Location" value={city} onChangeText={setCity} icon="location-outline" />
+          <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
+            <Field label="Full Name" value={name} onChangeText={setName} icon="person-outline" T={T} />
+            <View style={[s.divider, { backgroundColor: T.divider }]} />
+            <Field label="Email Address" value={email} onChangeText={setEmail} icon="mail-outline" keyboardType="email-address" T={T} />
+            <View style={[s.divider, { backgroundColor: T.divider }]} />
+            <Field label="Phone Number" value={phone} onChangeText={setPhone} icon="call-outline" keyboardType="phone-pad" T={T} />
+            <View style={[s.divider, { backgroundColor: T.divider }]} />
+            <Field label="City / Location" value={city} onChangeText={setCity} icon="location-outline" T={T} />
           </View>
 
-          {/* Email verification banner */}
           <View style={s.verifyBanner}>
             <Ionicons name="alert-circle-outline" size={18} color="#D97706" />
             <Text style={s.verifyText}>Your email address is not verified.</Text>
@@ -91,18 +86,18 @@ export default function ProfileEditScreen() {
 }
 
 function Field({
-  label, value, onChangeText, icon, keyboardType = 'default',
+  label, value, onChangeText, icon, keyboardType = 'default', T,
 }: {
   label: string; value: string; onChangeText: (v: string) => void;
-  icon: string; keyboardType?: any;
+  icon: string; keyboardType?: any; T: any;
 }) {
   return (
     <View style={f.row}>
-      <Ionicons name={icon as any} size={18} color={COLORS.muted} style={f.icon} />
+      <Ionicons name={icon as any} size={18} color={T.subText} style={f.icon} />
       <View style={f.body}>
-        <Text style={f.label}>{label}</Text>
+        <Text style={[f.label, { color: T.subText }]}>{label}</Text>
         <TextInput
-          style={f.input}
+          style={[f.input, { color: T.text }]}
           value={value}
           onChangeText={onChangeText}
           keyboardType={keyboardType}
@@ -122,19 +117,19 @@ const f = StyleSheet.create({
 });
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0' },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: '#1A1A1A' },
+  title: { fontSize: 17, fontWeight: '700' },
   saveText: { fontSize: 15, fontWeight: '700', color: COLORS.primary },
   scroll: { paddingBottom: 40 },
-  avatarSection: { alignItems: 'center', paddingVertical: 28, backgroundColor: '#fff', marginBottom: 10 },
+  avatarSection: { alignItems: 'center', paddingVertical: 28, marginBottom: 10 },
   avatar: { width: 88, height: 88, borderRadius: 44, backgroundColor: COLORS.primary + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: COLORS.primary + '50', marginBottom: 12 },
   avatarInitials: { fontSize: 32, fontWeight: '800', color: COLORS.primary },
   changePhotoBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.primary },
   changePhotoText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
-  card: { backgroundColor: '#fff', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F0F0F0', marginBottom: 14 },
-  divider: { height: 1, backgroundColor: '#F5F5F5', marginLeft: 58 },
+  card: { borderTopWidth: 1, borderBottomWidth: 1, marginBottom: 14 },
+  divider: { height: 1, marginLeft: 58 },
   verifyBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF3C7', marginHorizontal: 16, borderRadius: 12, padding: 12, marginBottom: 20 },
   verifyText: { flex: 1, fontSize: 12, color: '#92400E', fontWeight: '500' },
   verifyLink: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },

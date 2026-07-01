@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import {
@@ -37,59 +38,56 @@ const SECTIONS = [
 ];
 
 export default function TermsScreen() {
+  const T = useThemeColors();
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={s.header}>
+    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
+      <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
-        <Text style={s.title}>Terms & Privacy</Text>
+        <Text style={[s.title, { color: T.text }]}>Terms & Privacy</Text>
         <View style={{ width: 38 }} />
       </View>
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-
-        <Text style={s.lastUpdated}>Last updated: June 2025</Text>
-
+        <Text style={[s.lastUpdated, { color: T.subText }]}>Last updated: June 2025</Text>
         {SECTIONS.map(section => (
           <View key={section.title} style={s.section}>
             <Text style={s.sectionTitle}>{section.title}</Text>
             {section.content.map(item => (
               <View key={item.heading} style={s.item}>
-                <Text style={s.itemHeading}>{item.heading}</Text>
-                <Text style={s.itemBody}>{item.body}</Text>
+                <Text style={[s.itemHeading, { color: T.text }]}>{item.heading}</Text>
+                <Text style={[s.itemBody, { color: T.subText }]}>{item.body}</Text>
               </View>
             ))}
           </View>
         ))}
-
         <View style={s.contactBox}>
           <Ionicons name="mail-outline" size={18} color={COLORS.primary} />
-          <Text style={s.contactText}>
+          <Text style={[s.contactText, { color: T.text }]}>
             Questions? Contact us at{' '}
             <Text style={s.contactLink}>legal@vaker.com.gh</Text>
           </Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0' },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: '#1A1A1A' },
+  title: { fontSize: 17, fontWeight: '700' },
   scroll: { padding: 20, paddingBottom: 40 },
-  lastUpdated: { fontSize: 12, color: COLORS.muted, marginBottom: 20 },
+  lastUpdated: { fontSize: 12, marginBottom: 20 },
   section: { marginBottom: 28 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.primary, marginBottom: 16, borderLeftWidth: 3, borderLeftColor: COLORS.primary, paddingLeft: 12 },
   item: { marginBottom: 14 },
-  itemHeading: { fontSize: 14, fontWeight: '700', color: '#1A1A1A', marginBottom: 4 },
-  itemBody: { fontSize: 13, color: '#555555', lineHeight: 21 },
+  itemHeading: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
+  itemBody: { fontSize: 13, lineHeight: 21 },
   contactBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.primary + '10', borderRadius: 12, padding: 14, marginTop: 8 },
-  contactText: { flex: 1, fontSize: 13, color: '#444', lineHeight: 19 },
+  contactText: { flex: 1, fontSize: 13, lineHeight: 19 },
   contactLink: { color: COLORS.primary, fontWeight: '700' },
 });

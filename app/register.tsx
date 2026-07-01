@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useThemeColors } from '../context/ThemeContext';
 
 const PRIMARY = '#1B8B3A';
 const MUTED = '#888';
@@ -22,6 +23,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'client' | 'worker'>('client');
   const [showPassword, setShowPassword] = useState(false);
+  const T = useThemeColors();
 
   const handleRegister = () => {
     if (!name || !email || !password) return;
@@ -29,112 +31,64 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: '#fff' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Logo row */}
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: T.card }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: T.card }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.logoRow}>
-          <View style={styles.logoIcon}>
+          <View style={[styles.logoIcon, { backgroundColor: PRIMARY + '18' }]}>
             <Text style={{ fontSize: 22 }}>🛠️</Text>
           </View>
-          <Text style={styles.logoText}>SkillHub</Text>
+          <Text style={[styles.logoText, { color: T.text }]}>SkillHub</Text>
         </View>
 
-        <Text style={styles.heading}>Create your account</Text>
-        <Text style={styles.subheading}>Join thousands of workers and clients</Text>
+        <Text style={[styles.heading, { color: T.text }]}>Create your account</Text>
+        <Text style={[styles.subheading, { color: T.subText }]}>Join thousands of workers and clients</Text>
 
-        {/* Role selector */}
         <View style={styles.roleRow}>
-          <TouchableOpacity
-            style={[styles.roleCard, role === 'client' && styles.roleCardActive]}
-            onPress={() => setRole('client')}
-          >
+          <TouchableOpacity style={[styles.roleCard, { backgroundColor: T.inputBg, borderColor: T.border }, role === 'client' && styles.roleCardActive]} onPress={() => setRole('client')}>
             <Text style={styles.roleEmoji}>🔍</Text>
-            <Text style={styles.roleLabel}>Find Workers</Text>
-            <Text style={styles.roleSub}>I need a service</Text>
+            <Text style={[styles.roleLabel, { color: T.text }]}>Find Workers</Text>
+            <Text style={[styles.roleSub, { color: T.subText }]}>I need a service</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleCard, role === 'worker' && styles.roleCardActive]}
-            onPress={() => setRole('worker')}
-          >
+          <TouchableOpacity style={[styles.roleCard, { backgroundColor: T.inputBg, borderColor: T.border }, role === 'worker' && styles.roleCardActive]} onPress={() => setRole('worker')}>
             <Text style={styles.roleEmoji}>💼</Text>
-            <Text style={styles.roleLabel}>Offer Services</Text>
-            <Text style={styles.roleSub}>I am a worker</Text>
+            <Text style={[styles.roleLabel, { color: T.text }]}>Offer Services</Text>
+            <Text style={[styles.roleSub, { color: T.subText }]}>I am a worker</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Full Name */}
         <View style={styles.inputBox}>
-          <Text style={styles.inputLabel}>Full Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Akosua Mensah"
-            placeholderTextColor={MUTED}
-            value={name}
-            onChangeText={setName}
-          />
+          <Text style={[styles.inputLabel, { color: T.subText }]}>Full Name</Text>
+          <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="e.g. Akosua Mensah" placeholderTextColor={T.subText} value={name} onChangeText={setName} />
         </View>
 
-        {/* Email */}
         <View style={styles.inputBox}>
-          <Text style={styles.inputLabel}>Email or Phone</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor={MUTED}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
+          <Text style={[styles.inputLabel, { color: T.subText }]}>Email or Phone</Text>
+          <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="you@example.com" placeholderTextColor={T.subText} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
         </View>
 
-        {/* Password */}
         <View style={styles.inputBox}>
-          <Text style={styles.inputLabel}>Password</Text>
-          <View style={styles.passwordRow}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="••••••••"
-              placeholderTextColor={MUTED}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeBtn}
-            >
+          <Text style={[styles.inputLabel, { color: T.subText }]}>Password</Text>
+          <View style={[styles.passwordRow, { backgroundColor: T.inputBg, borderColor: T.border }]}>
+            <TextInput style={[styles.passwordInput, { color: T.text }]} placeholder="••••••••" placeholderTextColor={T.subText} secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
               <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Register Button */}
-        <TouchableOpacity
-          style={[styles.btn, (!name || !email || !password) && styles.btnDisabled]}
-          onPress={handleRegister}
-          disabled={!name || !email || !password}
-        >
+        <TouchableOpacity style={[styles.btn, (!name || !email || !password) && styles.btnDisabled]} onPress={handleRegister} disabled={!name || !email || !password}>
           <Text style={styles.btnText}>Create Account</Text>
         </TouchableOpacity>
 
-        <Text style={styles.termsText}>
+        <Text style={[styles.termsText, { color: T.subText }]}>
           By registering you agree to our{' '}
           <Text style={{ color: PRIMARY }}>Terms of Service</Text>
           {' '}and{' '}
           <Text style={{ color: PRIMARY }}>Privacy Policy</Text>
         </Text>
 
-        {/* Login Link */}
         <View style={styles.loginRow}>
-          <Text style={styles.loginText}>Already have an account? </Text>
+          <Text style={[styles.loginText, { color: T.subText }]}>Already have an account? </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.loginLink}>Login</Text>
           </TouchableOpacity>
@@ -147,7 +101,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
     paddingHorizontal: 24,
     paddingTop: 64,
     paddingBottom: 40,

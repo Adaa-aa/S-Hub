@@ -13,150 +13,88 @@ import {
   View,
 } from 'react-native';
 import { COLORS } from '../constants/theme';
+import { useThemeColors } from '../context/ThemeContext';
 
 export default function LoginScreen() {
   const [role, setRole] = useState<'customer' | 'worker'>('customer');
   const [credential, setCredential] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const T = useThemeColors();
 
   const handleLogin = () => {
     router.replace('/(tabs)/home' as any);
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: T.card }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.card} />
 
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── BACK ARROW ── */}
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={22} color={COLORS.text} />
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: T.card }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
 
-        {/* ── HEADING ── */}
-        <Text style={styles.heading}>Welcome back! 👋</Text>
-        <Text style={styles.subheading}>Login to continue</Text>
+        <Text style={[styles.heading, { color: T.text }]}>Welcome back! 👋</Text>
+        <Text style={[styles.subheading, { color: T.subText }]}>Login to continue</Text>
 
-        {/* ── CUSTOMER / WORKER TOGGLE ── */}
-        <View style={styles.toggleWrap}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, role === 'customer' && styles.toggleBtnActive]}
-            onPress={() => setRole('customer')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.toggleText, role === 'customer' && styles.toggleTextActive]}>
-              Customer
-            </Text>
+        <View style={[styles.toggleWrap, { backgroundColor: T.inputBg }]}>
+          <TouchableOpacity style={[styles.toggleBtn, role === 'customer' && styles.toggleBtnActive]} onPress={() => setRole('customer')} activeOpacity={0.8}>
+            <Text style={[styles.toggleText, { color: T.subText }, role === 'customer' && styles.toggleTextActive]}>Customer</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, role === 'worker' && styles.toggleBtnActive]}
-            onPress={() => setRole('worker')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.toggleText, role === 'worker' && styles.toggleTextActive]}>
-              Worker
-            </Text>
+          <TouchableOpacity style={[styles.toggleBtn, role === 'worker' && styles.toggleBtnActive]} onPress={() => setRole('worker')} activeOpacity={0.8}>
+            <Text style={[styles.toggleText, { color: T.subText }, role === 'worker' && styles.toggleTextActive]}>Worker</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── PHONE / EMAIL INPUT ── */}
         <View style={styles.inputWrap}>
-          <View style={styles.inputRow}>
-            <FontAwesome5 name="phone-alt" size={15} color={COLORS.muted} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone number or email"
-              placeholderTextColor={COLORS.muted}
-              value={credential}
-              onChangeText={setCredential}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+          <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
+            <FontAwesome5 name="phone-alt" size={15} color={T.subText} style={styles.inputIcon} />
+            <TextInput style={[styles.input, { color: T.text }]} placeholder="Phone number or email" placeholderTextColor={T.subText} value={credential} onChangeText={setCredential} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
           </View>
         </View>
 
-        {/* ── PASSWORD INPUT ── */}
         <View style={styles.inputWrap}>
-          <View style={styles.inputRow}>
-            <FontAwesome5 name="lock" size={15} color={COLORS.muted} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={COLORS.muted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPass}
-              autoCapitalize="none"
-            />
+          <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
+            <FontAwesome5 name="lock" size={15} color={T.subText} style={styles.inputIcon} />
+            <TextInput style={[styles.input, { color: T.text }]} placeholder="Password" placeholderTextColor={T.subText} value={password} onChangeText={setPassword} secureTextEntry={!showPass} autoCapitalize="none" />
             <TouchableOpacity onPress={() => setShowPass(!showPass)} activeOpacity={0.7}>
-              <Ionicons
-                name={showPass ? 'eye' : 'eye-off-outline'}
-                size={18}
-                color={COLORS.muted}
-              />
+              <Ionicons name={showPass ? 'eye' : 'eye-off-outline'} size={18} color={T.subText} />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* ── FORGOT PASSWORD ── */}
         <TouchableOpacity style={styles.forgotRow} activeOpacity={0.7}>
           <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
 
-        {/* ── LOGIN BUTTON ── */}
-        <TouchableOpacity
-          style={styles.loginBtn}
-          onPress={handleLogin}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.85}>
           <Text style={styles.loginBtnText}>Login</Text>
         </TouchableOpacity>
 
-        {/* ── DIVIDER ── */}
         <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or continue with</Text>
-          <View style={styles.dividerLine} />
+          <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
+          <Text style={[styles.dividerText, { color: T.subText }]}>or continue with</Text>
+          <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
         </View>
 
-        {/* ── SOCIAL BUTTONS ── */}
         <View style={styles.socialRow}>
-          <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.socialBtn, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
             <AntDesign name="google" size={18} color="#EA4335" />
-            <Text style={styles.socialBtnText}>Google</Text>
+            <Text style={[styles.socialBtnText, { color: T.text }]}>Google</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.socialBtn, styles.appleSocialBtn]} activeOpacity={0.8}>
-            <AntDesign name="apple1" size={18} color="#000" />
-            <Text style={styles.socialBtnText}>Apple</Text>
+          <TouchableOpacity style={[styles.socialBtn, styles.appleSocialBtn, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
+            <AntDesign name="apple" size={18} color={T.text} />
+            <Text style={[styles.socialBtnText, { color: T.text }]}>Apple</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── REGISTER LINK ── */}
-        <TouchableOpacity
-          style={styles.registerRow}
-          onPress={() => router.push('/register' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.registerText}>
+        <TouchableOpacity style={styles.registerRow} onPress={() => router.push('/register' as any)} activeOpacity={0.7}>
+          <Text style={[styles.registerText, { color: T.subText }]}>
             Don't have an account?{' '}
             <Text style={styles.registerLink}>Register</Text>
           </Text>
         </TouchableOpacity>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -165,7 +103,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
     paddingHorizontal: 24,
     paddingTop: 56,
     paddingBottom: 40,

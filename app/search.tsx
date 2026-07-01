@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -133,6 +134,7 @@ export default function SearchScreen() {
   const [search, setSearch] = useState(q ?? '');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [sortMode, setSortMode] = useState<SortMode>('none');
+  const T = useThemeColors();
 
   // Chip press handlers
   const handleChipPress = (chip: string) => {
@@ -175,29 +177,25 @@ export default function SearchScreen() {
     });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[styles.safe, { backgroundColor: T.card }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.card} />
 
       {/* ── TOP BAR ── */}
-      <View style={styles.topbar}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+      <View style={[styles.topbar, { backgroundColor: T.card }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>Search Workers</Text>
+        <Text style={[styles.topTitle, { color: T.text }]}>Search Workers</Text>
         <View style={{ width: 38 }} />
       </View>
 
       {/* ── SEARCH BAR ── */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color="#AAAAAA" style={styles.searchIcon} />
+      <View style={[styles.searchWrap, { backgroundColor: T.inputBg }]}>
+        <Ionicons name="search-outline" size={18} color={T.subText} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: T.text }]}
           placeholder="Search service or worker"
-          placeholderTextColor="#AAAAAA"
+          placeholderTextColor={T.subText}
           value={search}
           onChangeText={setSearch}
           autoCapitalize="none"
@@ -210,7 +208,7 @@ export default function SearchScreen() {
         {search.length > 0 && (
           <>
             <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}>
-              <Ionicons name="close-circle" size={18} color="#AAAAAA" />
+              <Ionicons name="close-circle" size={18} color={T.subText} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.findBtn}
@@ -231,71 +229,36 @@ export default function SearchScreen() {
       >
         {FILTER_CHIPS.map((chip) => {
           const active = isChipActive(chip);
-          const iconColor = active ? COLORS.primary : '#6B6B6B';
-          // Price chip label shows sort direction arrow
+          const iconColor = active ? COLORS.primary : T.subText;
           let label = chip;
           if (chip === 'Price' && sortMode === 'price_desc') label = 'Price ↓';
           if (chip === 'Price' && sortMode === 'price_asc') label = 'Price ↑';
-
           return (
             <TouchableOpacity
               key={chip}
-              style={[styles.chip, active && styles.chipActive]}
+              style={[styles.chip, { backgroundColor: T.card, borderColor: T.border }, active && styles.chipActive]}
               onPress={() => handleChipPress(chip)}
               activeOpacity={0.75}
             >
-              {chip === 'Filter' && (
-                <MaterialCommunityIcons name="tune-variant" size={13} color={iconColor} style={{ marginRight: 4 }} />
-              )}
-              {chip === 'Price' && (
-                <Ionicons name="pricetag-outline" size={12} color={iconColor} style={{ marginRight: 4 }} />
-              )}
-              {chip === 'Rating' && (
-                <Ionicons name="star-outline" size={12} color={iconColor} style={{ marginRight: 4 }} />
-              )}
-              {chip === 'Availability' && (
-                <Ionicons name="radio-button-on-outline" size={12} color={iconColor} style={{ marginRight: 4 }} />
-              )}
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {label}
-              </Text>
+              {chip === 'Filter' && (<MaterialCommunityIcons name="tune-variant" size={13} color={iconColor} style={{ marginRight: 4 }} />)}
+              {chip === 'Price' && (<Ionicons name="pricetag-outline" size={12} color={iconColor} style={{ marginRight: 4 }} />)}
+              {chip === 'Rating' && (<Ionicons name="star-outline" size={12} color={iconColor} style={{ marginRight: 4 }} />)}
+              {chip === 'Availability' && (<Ionicons name="radio-button-on-outline" size={12} color={iconColor} style={{ marginRight: 4 }} />)}
+              <Text style={[styles.chipText, { color: T.subText }, active && styles.chipTextActive]}>{label}</Text>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
 
       {/* ── LIST / MAP TOGGLE ── */}
-      <View style={styles.toggleRow}>
-        <TouchableOpacity
-          style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
-          onPress={() => setViewMode('list')}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="list"
-            size={15}
-            color={viewMode === 'list' ? COLORS.primary : '#6B6B6B'}
-            style={{ marginRight: 5 }}
-          />
-          <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>
-            List
-          </Text>
+      <View style={[styles.toggleRow, { borderColor: T.border }]}>
+        <TouchableOpacity style={[styles.toggleBtn, { backgroundColor: T.card }, viewMode === 'list' && styles.toggleBtnActive]} onPress={() => setViewMode('list')} activeOpacity={0.8}>
+          <Ionicons name="list" size={15} color={viewMode === 'list' ? COLORS.primary : T.subText} style={{ marginRight: 5 }} />
+          <Text style={[styles.toggleText, { color: T.subText }, viewMode === 'list' && styles.toggleTextActive]}>List</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
-          onPress={() => setViewMode('map')}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="map-outline"
-            size={15}
-            color={viewMode === 'map' ? COLORS.primary : '#6B6B6B'}
-            style={{ marginRight: 5 }}
-          />
-          <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>
-            Map
-          </Text>
+        <TouchableOpacity style={[styles.toggleBtn, { backgroundColor: T.card }, viewMode === 'map' && styles.toggleBtnActive]} onPress={() => setViewMode('map')} activeOpacity={0.8}>
+          <Ionicons name="map-outline" size={15} color={viewMode === 'map' ? COLORS.primary : T.subText} style={{ marginRight: 5 }} />
+          <Text style={[styles.toggleText, { color: T.subText }, viewMode === 'map' && styles.toggleTextActive]}>Map</Text>
         </TouchableOpacity>
       </View>
 
@@ -306,10 +269,29 @@ export default function SearchScreen() {
             data={filtered}
             keyExtractor={(item) => String(item.id)}
             renderItem={({ item }) => (
-              <WorkerCard
-                worker={item}
-                onPress={() => router.push(`/worker-profile?id=${item.id}` as any)}
-              />
+              <TouchableOpacity style={[wc.card, { backgroundColor: T.card, borderColor: T.border }]} onPress={() => router.push(`/worker-profile?id=${item.id}` as any)} activeOpacity={0.8}>
+                <View style={[wc.avatar, { backgroundColor: item.color + '20' }]}>
+                  <Text style={[wc.initials, { color: item.color }]}>{item.initials}</Text>
+                  {item.available && <View style={wc.onlineDot} />}
+                </View>
+                <View style={wc.info}>
+                  <Text style={[wc.name, { color: T.text }]}>{item.name}</Text>
+                  <Text style={[wc.skill, { color: T.subText }]}>{item.skill}</Text>
+                  <View style={wc.metaRow}>
+                    <Ionicons name="star" size={11} color={COLORS.accent} />
+                    <Text style={[wc.rating, { color: T.text }]}> {item.rating}</Text>
+                    <Text style={[wc.reviews, { color: T.subText }]}> ({item.reviews})</Text>
+                  </View>
+                  <View style={wc.distRow}>
+                    <Ionicons name="location-outline" size={11} color={T.subText} />
+                    <Text style={[wc.dist, { color: T.subText }]}> {item.distance} away</Text>
+                  </View>
+                </View>
+                <View style={wc.priceCol}>
+                  <Text style={[wc.fromLabel, { color: T.subText }]}>From</Text>
+                  <Text style={wc.price}>GH₵ {item.price}</Text>
+                </View>
+              </TouchableOpacity>
             )}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 90 }}
@@ -317,30 +299,26 @@ export default function SearchScreen() {
         ) : (
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={styles.emptyTitle}>No workers found</Text>
-            <Text style={styles.emptySub}>Try a different search term or clear your filters.</Text>
+            <Text style={[styles.emptyTitle, { color: T.text }]}>No workers found</Text>
+            <Text style={[styles.emptySub, { color: T.subText }]}>Try a different search term or clear your filters.</Text>
           </View>
         )
       ) : (
-        /* Map placeholder */
         <View style={styles.mapPlaceholder}>
           <Ionicons name="map" size={48} color={COLORS.primary + '60'} />
-          <Text style={styles.mapText}>Map view coming soon</Text>
+          <Text style={[styles.mapText, { color: T.subText }]}>Map view coming soon</Text>
         </View>
       )}
 
-      {/* ── BOTTOM BAR ── */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: T.card, borderColor: T.navBorder }]}>
         <TouchableOpacity style={styles.bottomBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="sort" size={18} color={COLORS.text} />
-          <Text style={styles.bottomBtnText}>Sort</Text>
+          <MaterialCommunityIcons name="sort" size={18} color={T.text} />
+          <Text style={[styles.bottomBtnText, { color: T.text }]}>Sort</Text>
         </TouchableOpacity>
-
-        <View style={styles.bottomDivider} />
-
+        <View style={[styles.bottomDivider, { backgroundColor: T.border }]} />
         <TouchableOpacity style={styles.bottomBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="tune-variant" size={18} color={COLORS.text} />
-          <Text style={styles.bottomBtnText}>Filter</Text>
+          <MaterialCommunityIcons name="tune-variant" size={18} color={T.text} />
+          <Text style={[styles.bottomBtnText, { color: T.text }]}>Filter</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -348,47 +326,13 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
-
-  /* Topbar */
-  topbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1A1A1A',
-  },
-
-  /* Search */
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    marginHorizontal: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 10,
-    marginBottom: 14,
-  },
+  safe: { flex: 1 },
+  topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  topTitle: { fontSize: 17, fontWeight: '700' },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, marginHorizontal: 18, paddingHorizontal: 14, paddingVertical: 12, gap: 10, marginBottom: 14 },
   searchIcon: {},
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1A1A1A',
-  },
+  searchInput: { flex: 1, fontSize: 14 },
   findBtn: {
     backgroundColor: COLORS.primary,
     borderRadius: 8,

@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -41,6 +42,7 @@ const RECOMMENDED = [
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [saved, setSaved] = useState<number[]>([]);
+  const T = useThemeColors();
 
   const toggleSave = (id: number) =>
     setSaved((prev) =>
@@ -48,11 +50,11 @@ export default function HomeScreen() {
     );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.card} />
+    <View style={[styles.container, { backgroundColor: T.bg }]}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
 
       {/* ── HEADER ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: T.header }]}>
         {/* Brand row */}
         <View style={styles.brandRow}>
           <View style={styles.logoGroup}>
@@ -60,10 +62,10 @@ export default function HomeScreen() {
             <View style={styles.logoMark}>
               <Text style={styles.logoMarkText}>⚡</Text>
             </View>
-            <Text style={styles.brandName}>Vaker</Text>
+            <Text style={[styles.brandName, { color: T.text }]}>Vaker</Text>
           </View>
-          <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7} onPress={() => router.push('/notifications' as any)}>
-            <Ionicons name="notifications-outline" size={22} color={COLORS.text} />
+          <TouchableOpacity style={[styles.bellBtn, { backgroundColor: T.inputBg }]} activeOpacity={0.7} onPress={() => router.push('/notifications' as any)}>
+            <Ionicons name="notifications-outline" size={22} color={T.text} />
             {/* Notification dot */}
             <View style={styles.bellDot} />
           </TouchableOpacity>
@@ -72,17 +74,17 @@ export default function HomeScreen() {
         {/* Location row */}
         <TouchableOpacity style={styles.locationRow} activeOpacity={0.7}>
           <Ionicons name="location-sharp" size={15} color={COLORS.primary} />
-          <Text style={styles.locationText}>Kumasi, Ghana</Text>
-          <Ionicons name="chevron-down" size={14} color={COLORS.muted} />
+          <Text style={[styles.locationText, { color: T.text }]}>Kumasi, Ghana</Text>
+          <Ionicons name="chevron-down" size={14} color={T.subText} />
         </TouchableOpacity>
 
         {/* Search bar */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color={COLORS.muted} />
+        <View style={[styles.searchBar, { backgroundColor: T.inputBg }]}>
+          <Ionicons name="search-outline" size={18} color={T.subText} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: T.text }]}
             placeholder="What work do you need done?"
-            placeholderTextColor={COLORS.muted}
+            placeholderTextColor={T.subText}
             value={search}
             onChangeText={setSearch}
             returnKeyType="search"
@@ -105,7 +107,7 @@ export default function HomeScreen() {
       >
         {/* ── POPULAR SERVICES ── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Popular Services</Text>
+          <Text style={[styles.sectionTitle, { color: T.text }]}>Popular Services</Text>
           <TouchableOpacity onPress={() => router.push('/search')}>
             <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
@@ -123,10 +125,10 @@ export default function HomeScreen() {
               activeOpacity={0.75}
               onPress={() => router.push('/search')}
             >
-              <View style={styles.svcIconWrap}>
+              <View style={[styles.svcIconWrap, { backgroundColor: T.card, borderColor: T.border }]}>
                 <Text style={styles.svcIcon}>{svc.icon}</Text>
               </View>
-              <Text style={styles.svcLabel}>{svc.name}</Text>
+              <Text style={[styles.svcLabel, { color: T.text }]}>{svc.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -160,7 +162,7 @@ export default function HomeScreen() {
 
         {/* ── RECOMMENDED FOR YOU ── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recommended for you</Text>
+          <Text style={[styles.sectionTitle, { color: T.text }]}>Recommended for you</Text>
           <TouchableOpacity onPress={() => router.push('/search')}>
             <Text style={styles.seeAll}>See all</Text>
           </TouchableOpacity>
@@ -169,7 +171,7 @@ export default function HomeScreen() {
         {RECOMMENDED.map((worker) => (
           <TouchableOpacity
             key={worker.id}
-            style={styles.workerCard}
+            style={[styles.workerCard, { backgroundColor: T.card }]}
             activeOpacity={0.8}
             onPress={() => router.push(`/worker-profile?id=${worker.id}` as any)}
           >
@@ -182,15 +184,15 @@ export default function HomeScreen() {
 
             {/* Info */}
             <View style={styles.workerInfo}>
-              <Text style={styles.workerName}>{worker.name}</Text>
-              <Text style={styles.workerSkill}>{worker.skill}</Text>
+              <Text style={[styles.workerName, { color: T.text }]}>{worker.name}</Text>
+              <Text style={[styles.workerSkill, { color: T.subText }]}>{worker.skill}</Text>
               <View style={styles.workerMeta}>
                 <Ionicons name="star" size={11} color={COLORS.accent} />
-                <Text style={styles.workerRating}> {worker.rating}</Text>
-                <Text style={styles.workerReviews}> ({worker.reviews})</Text>
-                <Text style={styles.workerDot}> · </Text>
-                <Ionicons name="location-outline" size={11} color={COLORS.muted} />
-                <Text style={styles.workerDist}> {worker.distance}</Text>
+                <Text style={[styles.workerRating, { color: T.text }]}> {worker.rating}</Text>
+                <Text style={[styles.workerReviews, { color: T.subText }]}> ({worker.reviews})</Text>
+                <Text style={[styles.workerDot, { color: T.subText }]}> · </Text>
+                <Ionicons name="location-outline" size={11} color={T.subText} />
+                <Text style={[styles.workerDist, { color: T.subText }]}> {worker.distance}</Text>
               </View>
             </View>
 
@@ -203,10 +205,10 @@ export default function HomeScreen() {
                 <Ionicons
                   name={saved.includes(worker.id) ? 'heart' : 'heart-outline'}
                   size={20}
-                  color={saved.includes(worker.id) ? COLORS.danger : COLORS.muted}
+                  color={saved.includes(worker.id) ? COLORS.danger : T.subText}
                 />
               </TouchableOpacity>
-              <Text style={styles.workerFrom}>From</Text>
+              <Text style={[styles.workerFrom, { color: T.subText }]}>From</Text>
               <Text style={styles.workerPrice}>GH₵ {worker.price}</Text>
             </View>
           </TouchableOpacity>
@@ -215,7 +217,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* ── BOTTOM NAV ── */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
         {[
           { icon: 'home', iconFocused: 'home', label: 'Home', route: '/home', active: true },
           { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
@@ -242,9 +244,9 @@ export default function HomeScreen() {
               <Ionicons
                 name={(tab.active ? tab.iconFocused : tab.icon) as any}
                 size={22}
-                color={tab.active ? COLORS.primary : COLORS.muted}
+                color={tab.active ? COLORS.primary : T.subText}
               />
-              <Text style={[styles.navLabel, tab.active && styles.navLabelActive]}>
+              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -256,7 +258,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1 },
 
   /* ── Header ── */
   header: {

@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -81,19 +82,19 @@ const CHAT_DATA: Record<string, Message[]> = {
 };
 
 /* ─── Message bubble ─── */
-function MessageBubble({ msg, workerColor }: { msg: Message; workerColor: string }) {
+function MessageBubble({ msg, workerColor, T }: { msg: Message; workerColor: string; T: any }) {
   return (
     <View style={[mb.wrap, msg.mine ? mb.mine : mb.theirs]}>
-      <View style={[mb.bubble, msg.mine ? mb.bubbleMine : mb.bubbleTheirs]}>
-        <Text style={[mb.text, msg.mine ? mb.textMine : mb.textTheirs]}>{msg.text}</Text>
+      <View style={[mb.bubble, msg.mine ? mb.bubbleMine : [mb.bubbleTheirs, { backgroundColor: T.card, borderColor: T.border }]]}>
+        <Text style={[mb.text, msg.mine ? mb.textMine : [mb.textTheirs, { color: T.text }]]}>{msg.text}</Text>
       </View>
       <View style={[mb.metaRow, msg.mine && { justifyContent: 'flex-end' }]}>
-        <Text style={mb.time}>{msg.time}</Text>
+        <Text style={[mb.time, { color: T.subText }]}>{msg.time}</Text>
         {msg.mine && (
           <Ionicons
             name={msg.status === 'read' ? 'checkmark-done' : msg.status === 'delivered' ? 'checkmark-done-outline' : 'checkmark-outline'}
             size={13}
-            color={msg.status === 'read' ? COLORS.primary : COLORS.muted}
+            color={msg.status === 'read' ? COLORS.primary : T.subText}
           />
         )}
       </View>
@@ -107,28 +108,28 @@ const mb = StyleSheet.create({
   theirs: { alignSelf: 'flex-start', alignItems: 'flex-start' },
   bubble: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   bubbleMine: { backgroundColor: COLORS.primary, borderBottomRightRadius: 4 },
-  bubbleTheirs: { backgroundColor: '#fff', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#EBEBEB' },
+  bubbleTheirs: { borderBottomLeftRadius: 4, borderWidth: 1 },
   text: { fontSize: 14, lineHeight: 21 },
   textMine: { color: '#fff' },
-  textTheirs: { color: '#1A1A1A' },
+  textTheirs: {},
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3, paddingHorizontal: 4 },
-  time: { fontSize: 10, color: COLORS.muted },
+  time: { fontSize: 10 },
 });
 
 /* ─── Date separator ─── */
-function DateSep({ label }: { label: string }) {
+function DateSep({ label, T }: { label: string; T: any }) {
   return (
     <View style={ds.wrap}>
-      <View style={ds.line} />
-      <Text style={ds.text}>{label}</Text>
-      <View style={ds.line} />
+      <View style={[ds.line, { backgroundColor: T.divider }]} />
+      <Text style={[ds.text, { color: T.subText }]}>{label}</Text>
+      <View style={[ds.line, { backgroundColor: T.divider }]} />
     </View>
   );
 }
 const ds = StyleSheet.create({
   wrap: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 10 },
-  line: { flex: 1, height: 1, backgroundColor: '#EBEBEB' },
-  text: { fontSize: 11, color: COLORS.muted, fontWeight: '600' },
+  line: { flex: 1, height: 1 },
+  text: { fontSize: 11, fontWeight: '600' },
 });
 
 /* ─── Quick replies ─── */
@@ -163,15 +164,15 @@ export default function ChatScreen() {
   }, []);
 
   if (!convo) return null;
+  const T = useThemeColors();
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
 
-      {/* ── HEADER ── */}
-      <View style={s.header}>
+      <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
 
         {/* Worker avatar */}
@@ -182,29 +183,17 @@ export default function ChatScreen() {
           {convo.online && <View style={s.headerOnlineDot} />}
         </View>
 
-        {/* Worker info */}
         <View style={s.headerInfo}>
-          <Text style={s.headerName}>{convo.workerName}</Text>
-          <Text style={s.headerStatus}>{convo.online ? '🟢 Online now' : 'Last seen recently'}</Text>
+          <Text style={[s.headerName, { color: T.text }]}>{convo.workerName}</Text>
+          <Text style={[s.headerStatus, { color: T.subText }]}>{convo.online ? '🟢 Online now' : 'Last seen recently'}</Text>
         </View>
 
-        {/* Actions */}
-        <View style={s.headerActions}>
-          <TouchableOpacity
-            style={s.headerActionBtn}
-            activeOpacity={0.75}
-            onPress={() => Alert.alert('Call', `Calling ${convo.workerName}...`)}
-          >
-            <Ionicons name="call-outline" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.headerActionBtn}
-            activeOpacity={0.75}
-            onPress={() => Alert.alert('More', 'Options: View profile, Block, Report')}
-          >
-            <Ionicons name="ellipsis-vertical" size={20} color="#555" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={s.headerActionBtn} activeOpacity={0.75} onPress={() => Alert.alert('Call', `Calling ${convo.workerName}...`)}>
+          <Ionicons name="call-outline" size={20} color={COLORS.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity style={s.headerActionBtn} activeOpacity={0.75} onPress={() => Alert.alert('More', 'Options: View profile, Block, Report')}>
+          <Ionicons name="ellipsis-vertical" size={20} color={T.subText} />
+        </TouchableOpacity>
       </View>
 
       {/* ── JOB CONTEXT BANNER ── */}
@@ -230,11 +219,9 @@ export default function ChatScreen() {
           keyExtractor={item => item.id}
           renderItem={({ item, index }) => (
             <View>
-              {/* Date separator before first message */}
-              {index === 0 && <DateSep label="Earlier" />}
-              {/* Date separator before last few messages */}
-              {index === messages.length - 3 && messages.length > 5 && <DateSep label="Today" />}
-              <MessageBubble msg={item} workerColor={convo.workerColor} />
+              {index === 0 && <DateSep label="Earlier" T={T} />}
+              {index === messages.length - 3 && messages.length > 5 && <DateSep label="Today" T={T} />}
+              <MessageBubble msg={item} workerColor={convo.workerColor} T={T} />
             </View>
           )}
           contentContainerStyle={s.msgList}
@@ -242,9 +229,8 @@ export default function ChatScreen() {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         />
 
-        {/* ── QUICK REPLIES ── */}
         {showQuick && (
-          <View style={s.quickWrap}>
+          <View style={[s.quickWrap, { backgroundColor: T.card, borderColor: T.border }]}>
             {QUICK_REPLIES.map(qr => (
               <TouchableOpacity key={qr} style={s.quickChip} onPress={() => send(qr)} activeOpacity={0.75}>
                 <Text style={s.quickText}>{qr}</Text>
@@ -253,27 +239,21 @@ export default function ChatScreen() {
           </View>
         )}
 
-        {/* ── INPUT BAR ── */}
-        <View style={s.inputBar}>
+        <View style={[s.inputBar, { backgroundColor: T.card, borderColor: T.border }]}>
           <TouchableOpacity style={s.attachBtn} activeOpacity={0.75} onPress={() => Alert.alert('Attach', 'File picker coming soon.')}>
-            <Ionicons name="attach-outline" size={22} color={COLORS.muted} />
+            <Ionicons name="attach-outline" size={22} color={T.subText} />
           </TouchableOpacity>
           <TextInput
-            style={s.input}
+            style={[s.input, { backgroundColor: T.inputBg, color: T.text }]}
             placeholder="Type a message..."
-            placeholderTextColor={COLORS.muted}
+            placeholderTextColor={T.subText}
             value={input}
             onChangeText={v => { setInput(v); setShowQuick(false); }}
             multiline
             maxLength={500}
             returnKeyType="default"
           />
-          <TouchableOpacity
-            style={[s.sendBtn, input.trim().length === 0 && s.sendBtnDisabled]}
-            onPress={() => send(input)}
-            activeOpacity={0.8}
-            disabled={input.trim().length === 0}
-          >
+          <TouchableOpacity style={[s.sendBtn, input.trim().length === 0 && s.sendBtnDisabled]} onPress={() => send(input)} activeOpacity={0.8} disabled={input.trim().length === 0}>
             <Ionicons name="send" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -283,38 +263,33 @@ export default function ChatScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
+  safe: { flex: 1 },
 
-  /* Header */
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0', gap: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 10, borderBottomWidth: 1, gap: 8 },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerAvatarWrap: { position: 'relative' },
   headerAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   headerInitials: { fontSize: 15, fontWeight: '800' },
   headerOnlineDot: { position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#fff' },
   headerInfo: { flex: 1 },
-  headerName: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
-  headerStatus: { fontSize: 11, color: COLORS.muted, marginTop: 1 },
+  headerName: { fontSize: 15, fontWeight: '700' },
+  headerStatus: { fontSize: 11, marginTop: 1 },
   headerActions: { flexDirection: 'row', gap: 4 },
   headerActionBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 
-  /* Job banner */
   jobBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primary + '10', paddingHorizontal: 16, paddingVertical: 9, borderBottomWidth: 1, borderColor: COLORS.primary + '25' },
   jobBannerIcon: { fontSize: 16 },
   jobBannerText: { flex: 1, fontSize: 12, color: COLORS.primary, fontWeight: '600' },
 
-  /* Message list */
   msgList: { paddingHorizontal: 14, paddingBottom: 12, paddingTop: 4 },
 
-  /* Quick replies */
-  quickWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#F0F0F0' },
+  quickWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1 },
   quickChip: { borderRadius: 18, borderWidth: 1.5, borderColor: COLORS.primary, paddingHorizontal: 12, paddingVertical: 6 },
   quickText: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
 
-  /* Input bar */
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 8, gap: 8, borderTopWidth: 1, borderColor: '#F0F0F0' },
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 10, paddingVertical: 8, gap: 8, borderTopWidth: 1 },
   attachBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  input: { flex: 1, backgroundColor: '#F2F2F2', borderRadius: 22, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, color: '#1A1A1A', maxHeight: 110, lineHeight: 20 },
+  input: { flex: 1, borderRadius: 22, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, maxHeight: 110, lineHeight: 20 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
   sendBtnDisabled: { backgroundColor: COLORS.primary + '50' },
 });

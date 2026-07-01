@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useAppTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -15,107 +16,115 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
+  const { isDark, toggleDark } = useAppTheme();
   const [language, setLanguage] = useState('English');
   const [currency, setCurrency] = useState('GHS (₵)');
   const [pushNotifs, setPushNotifs] = useState(true);
   const [emailNotifs, setEmailNotifs] = useState(true);
-  const [smsNotifs, setSmsNotifs]     = useState(false);
-  const [darkMode, setDarkMode]       = useState(false);
+  const [smsNotifs, setSmsNotifs] = useState(false);
 
   const LANGUAGES = ['English', 'Twi', 'Ga', 'Ewe', 'Hausa'];
 
+  const bg = isDark ? '#121212' : '#F5F5F0';
+  const cardBg = isDark ? '#1E1E1E' : '#fff';
+  const headerBg = isDark ? '#1A1A1A' : '#fff';
+  const textColor = isDark ? '#ECEDEE' : '#1A1A1A';
+  const subColor = isDark ? '#9BA1A6' : COLORS.muted;
+  const borderColor = isDark ? '#2C2C2C' : '#F0F0F0';
+  const iconColor = isDark ? '#9BA1A6' : '#444';
+
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={s.header}>
+    <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={headerBg} />
+      <View style={[s.header, { backgroundColor: headerBg, borderColor }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={textColor} />
         </TouchableOpacity>
-        <Text style={s.title}>Settings</Text>
+        <Text style={[s.title, { color: textColor }]}>Settings</Text>
         <View style={{ width: 38 }} />
       </View>
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Preferences */}
-        <Text style={s.sectionLabel}>Preferences</Text>
-        <View style={s.card}>
+        <Text style={[s.sectionLabel, { color: subColor }]}>Preferences</Text>
+        <View style={[s.card, { backgroundColor: cardBg, borderColor }]}>
           <TouchableOpacity
             style={s.row}
             activeOpacity={0.7}
             onPress={() =>
               Alert.alert('Language', 'Choose language:', LANGUAGES.map(l => ({
                 text: l, onPress: () => setLanguage(l),
-              })).concat([{ text: 'Cancel', onPress: () => {} }]))
+              })).concat([{ text: 'Cancel', onPress: () => { } }]))
             }
           >
-            <Ionicons name="language-outline" size={20} color="#444" style={s.icon} />
-            <Text style={s.rowLabel}>Language</Text>
-            <Text style={s.rowValue}>{language}</Text>
+            <Ionicons name="language-outline" size={20} color={iconColor} style={s.icon} />
+            <Text style={[s.rowLabel, { color: textColor }]}>Language</Text>
+            <Text style={[s.rowValue, { color: subColor }]}>{language}</Text>
             <Ionicons name="chevron-forward" size={18} color="#BBB" />
           </TouchableOpacity>
-          <View style={s.divider} />
+          <View style={[s.divider, { backgroundColor: borderColor }]} />
           <TouchableOpacity
             style={s.row}
             activeOpacity={0.7}
             onPress={() => Alert.alert('Currency', 'Currency selection coming soon.')}
           >
-            <Ionicons name="cash-outline" size={20} color="#444" style={s.icon} />
-            <Text style={s.rowLabel}>Currency</Text>
-            <Text style={s.rowValue}>{currency}</Text>
+            <Ionicons name="cash-outline" size={20} color={iconColor} style={s.icon} />
+            <Text style={[s.rowLabel, { color: textColor }]}>Currency</Text>
+            <Text style={[s.rowValue, { color: subColor }]}>{currency}</Text>
             <Ionicons name="chevron-forward" size={18} color="#BBB" />
           </TouchableOpacity>
-          <View style={s.divider} />
+          <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
-            <Ionicons name="moon-outline" size={20} color="#444" style={s.icon} />
+            <Ionicons name="moon-outline" size={20} color={iconColor} style={s.icon} />
             <View style={s.rowInfo}>
-              <Text style={s.rowLabel}>Dark Mode</Text>
-              <Text style={s.rowSub}>Coming soon</Text>
+              <Text style={[s.rowLabel, { color: textColor }]}>Dark Mode</Text>
+              <Text style={[s.rowSub, { color: subColor }]}>{isDark ? 'On' : 'Off'}</Text>
             </View>
-            <Switch value={darkMode} onValueChange={setDarkMode} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" disabled />
+            <Switch value={isDark} onValueChange={toggleDark} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
           </View>
         </View>
 
         {/* Notifications */}
-        <Text style={s.sectionLabel}>Notifications</Text>
-        <View style={s.card}>
+        <Text style={[s.sectionLabel, { color: subColor }]}>Notifications</Text>
+        <View style={[s.card, { backgroundColor: cardBg, borderColor }]}>
           <View style={s.row}>
-            <Ionicons name="notifications-outline" size={20} color="#444" style={s.icon} />
+            <Ionicons name="notifications-outline" size={20} color={iconColor} style={s.icon} />
             <View style={s.rowInfo}>
-              <Text style={s.rowLabel}>Push Notifications</Text>
-              <Text style={s.rowSub}>Job updates and messages</Text>
+              <Text style={[s.rowLabel, { color: textColor }]}>Push Notifications</Text>
+              <Text style={[s.rowSub, { color: subColor }]}>Job updates and messages</Text>
             </View>
             <Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
           </View>
-          <View style={s.divider} />
+          <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
-            <Ionicons name="mail-outline" size={20} color="#444" style={s.icon} />
+            <Ionicons name="mail-outline" size={20} color={iconColor} style={s.icon} />
             <View style={s.rowInfo}>
-              <Text style={s.rowLabel}>Email Notifications</Text>
-              <Text style={s.rowSub}>Receipts and account updates</Text>
+              <Text style={[s.rowLabel, { color: textColor }]}>Email Notifications</Text>
+              <Text style={[s.rowSub, { color: subColor }]}>Receipts and account updates</Text>
             </View>
             <Switch value={emailNotifs} onValueChange={setEmailNotifs} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
           </View>
-          <View style={s.divider} />
+          <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
-            <Ionicons name="chatbox-outline" size={20} color="#444" style={s.icon} />
+            <Ionicons name="chatbox-outline" size={20} color={iconColor} style={s.icon} />
             <View style={s.rowInfo}>
-              <Text style={s.rowLabel}>SMS Notifications</Text>
-              <Text style={s.rowSub}>Text message alerts</Text>
+              <Text style={[s.rowLabel, { color: textColor }]}>SMS Notifications</Text>
+              <Text style={[s.rowSub, { color: subColor }]}>Text message alerts</Text>
             </View>
             <Switch value={smsNotifs} onValueChange={setSmsNotifs} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
           </View>
         </View>
 
         {/* Account actions */}
-        <Text style={s.sectionLabel}>Account</Text>
-        <View style={s.card}>
+        <Text style={[s.sectionLabel, { color: subColor }]}>Account</Text>
+        <View style={[s.card, { backgroundColor: cardBg, borderColor }]}>
           <TouchableOpacity style={s.row} activeOpacity={0.7} onPress={() => Alert.alert('Clear Cache', 'App cache cleared.')}>
-            <Ionicons name="trash-outline" size={20} color="#444" style={s.icon} />
-            <Text style={s.rowLabel}>Clear App Cache</Text>
+            <Ionicons name="trash-outline" size={20} color={iconColor} style={s.icon} />
+            <Text style={[s.rowLabel, { color: textColor }]}>Clear App Cache</Text>
             <Ionicons name="chevron-forward" size={18} color="#BBB" />
           </TouchableOpacity>
-          <View style={s.divider} />
+          <View style={[s.divider, { backgroundColor: borderColor }]} />
           <TouchableOpacity
             style={s.row}
             activeOpacity={0.7}
@@ -137,7 +146,7 @@ export default function SettingsScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
+  safe: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0' },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 17, fontWeight: '700', color: '#1A1A1A' },

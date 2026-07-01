@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -24,6 +25,7 @@ const PROMOS = [
 
 export default function PromotionsScreen() {
   const [code, setCode] = useState('');
+  const T = useThemeColors();
 
   const applyCode = () => {
     if (!code.trim()) return;
@@ -37,26 +39,25 @@ export default function PromotionsScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <View style={s.header}>
+    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
+      <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#1A1A1A" />
+          <Ionicons name="arrow-back" size={22} color={T.text} />
         </TouchableOpacity>
-        <Text style={s.title}>Promotions</Text>
+        <Text style={[s.title, { color: T.text }]}>Promotions</Text>
         <View style={{ width: 38 }} />
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
-          {/* Enter promo code */}
-          <View style={s.inputCard}>
+          <View style={[s.inputCard, { backgroundColor: T.card, borderColor: T.border }]}>
             <MaterialCommunityIcons name="tag-outline" size={20} color={COLORS.primary} />
             <TextInput
-              style={s.codeInput}
+              style={[s.codeInput, { color: T.text }]}
               placeholder="Enter promo code"
-              placeholderTextColor={COLORS.muted}
+              placeholderTextColor={T.subText}
               value={code}
               onChangeText={setCode}
               autoCapitalize="characters"
@@ -68,30 +69,25 @@ export default function PromotionsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Active promos */}
-          <Text style={s.sectionLabel}>Your Promotions</Text>
+          <Text style={[s.sectionLabel, { color: T.subText }]}>Your Promotions</Text>
           {PROMOS.map((promo) => (
-            <View key={promo.code} style={[s.promoCard, promo.used && s.promoCardUsed]}>
+            <View key={promo.code} style={[s.promoCard, { backgroundColor: T.card, borderColor: T.border }, promo.used && s.promoCardUsed]}>
               <View style={s.promoLeft}>
-                <View style={[s.promoIconWrap, { backgroundColor: promo.used ? '#F5F5F5' : COLORS.primary + '18' }]}>
-                  <MaterialCommunityIcons name="ticket-percent-outline" size={22} color={promo.used ? COLORS.muted : COLORS.primary} />
+                <View style={[s.promoIconWrap, { backgroundColor: promo.used ? T.inputBg : COLORS.primary + '18' }]}>
+                  <MaterialCommunityIcons name="ticket-percent-outline" size={22} color={promo.used ? T.subText : COLORS.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={s.promoTop}>
-                    <Text style={[s.promoCode, promo.used && s.textUsed]}>{promo.code}</Text>
-                    {promo.used && <View style={s.usedBadge}><Text style={s.usedBadgeText}>Used</Text></View>}
+                    <Text style={[s.promoCode, { color: T.text }, promo.used && { color: T.subText }]}>{promo.code}</Text>
+                    {promo.used && <View style={[s.usedBadge, { backgroundColor: T.inputBg }]}><Text style={[s.usedBadgeText, { color: T.subText }]}>Used</Text></View>}
                   </View>
                   <Text style={s.promoDiscount}>{promo.discount}</Text>
-                  <Text style={s.promoDesc}>{promo.description}</Text>
-                  <Text style={s.promoExpiry}>Expires {promo.expires}</Text>
+                  <Text style={[s.promoDesc, { color: T.subText }]}>{promo.description}</Text>
+                  <Text style={[s.promoExpiry, { color: T.subText }]}>Expires {promo.expires}</Text>
                 </View>
               </View>
               {!promo.used && (
-                <TouchableOpacity
-                  style={s.promoUseBtn}
-                  activeOpacity={0.8}
-                  onPress={() => Alert.alert('Use Code', `${promo.code} will be applied to your next job.`)}
-                >
+                <TouchableOpacity style={s.promoUseBtn} activeOpacity={0.8} onPress={() => Alert.alert('Use Code', `${promo.code} will be applied to your next job.`)}>
                   <Text style={s.promoUseBtnText}>Use</Text>
                 </TouchableOpacity>
               )}
@@ -105,28 +101,28 @@ export default function PromotionsScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F5F5F0' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0' },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: '#1A1A1A' },
+  title: { fontSize: 17, fontWeight: '700' },
   scroll: { padding: 16, paddingBottom: 40 },
-  inputCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, gap: 10, borderWidth: 1, borderColor: '#E8E8E8', marginBottom: 24 },
-  codeInput: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1A1A1A', letterSpacing: 1 },
+  inputCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, gap: 10, borderWidth: 1, marginBottom: 24 },
+  codeInput: { flex: 1, fontSize: 15, fontWeight: '600', letterSpacing: 1 },
   applyBtn: { backgroundColor: COLORS.primary, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
   applyBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  sectionLabel: { fontSize: 12, fontWeight: '700', color: COLORS.muted, marginBottom: 12, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.8 },
-  promoCard: { backgroundColor: '#fff', borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#E8E8E8', flexDirection: 'row', alignItems: 'center', gap: 12 },
+  sectionLabel: { fontSize: 12, fontWeight: '700', marginBottom: 12, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.8 },
+  promoCard: { borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   promoCardUsed: { opacity: 0.6 },
   promoLeft: { flex: 1, flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   promoIconWrap: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   promoTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  promoCode: { fontSize: 15, fontWeight: '800', color: '#1A1A1A', letterSpacing: 0.5 },
+  promoCode: { fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
   textUsed: { color: COLORS.muted },
-  usedBadge: { backgroundColor: '#F0F0F0', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  usedBadgeText: { fontSize: 10, fontWeight: '700', color: COLORS.muted },
+  usedBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  usedBadgeText: { fontSize: 10, fontWeight: '700' },
   promoDiscount: { fontSize: 13, fontWeight: '700', color: COLORS.primary, marginBottom: 2 },
-  promoDesc: { fontSize: 12, color: COLORS.muted },
-  promoExpiry: { fontSize: 11, color: '#BBBBBB', marginTop: 4 },
+  promoDesc: { fontSize: 12 },
+  promoExpiry: { fontSize: 11, marginTop: 4 },
   promoUseBtn: { backgroundColor: COLORS.primary + '18', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   promoUseBtnText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
 });
