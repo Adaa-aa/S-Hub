@@ -27,7 +27,11 @@ export default function RegisterScreen() {
 
   const handleRegister = () => {
     if (!name || !email || !password) return;
-    router.replace('/(tabs)/home');
+    if (role === 'worker') {
+      router.replace('/worker-setup');
+    } else {
+      router.replace('/(tabs)/home');
+    }
   };
 
   return (

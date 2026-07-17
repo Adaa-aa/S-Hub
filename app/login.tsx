@@ -23,7 +23,11 @@ export default function LoginScreen() {
   const T = useThemeColors();
 
   const handleLogin = () => {
-    router.replace('/(tabs)/home' as any);
+    if (role === 'worker') {
+      router.replace('/worker-setup' as any);
+    } else {
+      router.replace('/(tabs)/home' as any);
+    }
   };
 
   return (
