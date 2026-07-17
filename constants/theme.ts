@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const COLORS = {
   // ── Primary Brand ──
   primary: '#006B3F',  // Ghana green
@@ -70,8 +72,6 @@ export const SHADOWS = {
     elevation: 8,
   },
 };
-
-import { Platform } from 'react-native';
 
 export const Colors = {
   light: {

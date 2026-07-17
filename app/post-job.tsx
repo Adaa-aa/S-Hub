@@ -302,7 +302,7 @@ export default function PostJobScreen() {
               <View style={styles.infoBox}>
                 <MaterialIcons name="info-outline" size={16} color={COLORS.primary} />
                 <Text style={styles.infoText}>
-                  Workers near you will be notified and you'll receive quotes within minutes.
+                  Workers near you will be notified and you&apos;ll receive quotes within minutes.
                 </Text>
               </View>
             </>

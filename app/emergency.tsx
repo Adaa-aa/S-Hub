@@ -282,7 +282,7 @@ export default function EmergencyScreen() {
           <View style={s.body}>
 
             {/* ── SERVICE SELECTOR ── */}
-            <Text style={[s.sectionTitle, { color: T.text }]}>What's the emergency?</Text>
+            <Text style={[s.sectionTitle, { color: T.text }]}>What&apos;s the emergency?</Text>
             <View style={s.chipsGrid}>
               {EMERGENCY_SERVICES.map(svc => (
                 <ServiceChip

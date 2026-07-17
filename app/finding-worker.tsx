@@ -287,7 +287,7 @@ export default function FindingWorkerScreen() {
             <View style={[s.tipBox, { backgroundColor: COLORS.primary + '15' }]}>
               <Ionicons name="information-circle-outline" size={16} color={COLORS.primary} />
               <Text style={s.tipText}>
-                More workers may become available over the next few hours. We'll notify you instantly when they respond.
+                More workers may become available over the next few hours. We&apos;ll notify you instantly when they respond.
               </Text>
             </View>
           </Animated.View>

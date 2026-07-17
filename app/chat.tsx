@@ -163,8 +163,8 @@ export default function ChatScreen() {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 150);
   }, []);
 
-  if (!convo) return null;
   const T = useThemeColors();
+  if (!convo) return null;
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
