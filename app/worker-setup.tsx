@@ -105,7 +105,51 @@ export default function WorkerSetupScreen() {
   const T = useThemeColors();
   const [isOnline, setIsOnline] = useState(MY_PROFILE.online);
   const [notifs, setNotifs] = useState(true);
+  const [incomingRequest, setIncomingRequest] = useState<{
+    id: string; client: string; initials: string; color: string;
+    service: string; location: string; distance: string; price: number; note: string;
+  } | null>({
+    id: 'req1',
+    client: 'Yaw Boateng',
+    initials: 'YB',
+    color: '#1D6FBA',
+    service: 'Kitchen sink leak repair',
+    location: 'Ahodwo, Kumasi',
+    distance: '2.4 km away',
+    price: 380,
+    note: 'Leaking under the sink — needs a fix today if possible.',
+  });
   const p = MY_PROFILE;
+
+  const handleAcceptRequest = () => {
+    if (!incomingRequest) return;
+    Alert.alert(
+      'Accept this job?',
+      `You'll take on ${incomingRequest.client}'s job for GH₵ ${incomingRequest.price}.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Accept',
+          onPress: () => {
+            setIncomingRequest(null);
+            Alert.alert('Job Accepted', 'The client has been notified. Check "My Jobs" for details.');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeclineRequest = () => {
+    if (!incomingRequest) return;
+    Alert.alert(
+      'Decline this job?',
+      'It will be passed to another nearby worker.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Decline', style: 'destructive', onPress: () => setIncomingRequest(null) },
+      ]
+    );
+  };
 
   const handleShare = () =>
     Share.share({
@@ -131,7 +175,70 @@ export default function WorkerSetupScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* ══ MODE SWITCHER ══ */}
+      <View style={[s.modeStrip, { backgroundColor: T.card, borderColor: T.border }]}>
+        <View style={s.modeLeft}>
+          <Ionicons name="hammer-outline" size={14} color={COLORS.primary} />
+          <Text style={[s.modeText, { color: T.text }]}>Working as a Worker</Text>
+        </View>
+        <TouchableOpacity
+          style={s.switchBtn}
+          onPress={() => router.replace('/(tabs)/home' as any)}
+          activeOpacity={0.8}
+        >
+          <Text style={s.switchBtnText}>Switch to Customer View</Text>
+          <Ionicons name="swap-horizontal" size={14} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
+
+        {/* ══ INCOMING JOB REQUEST ══ */}
+        {incomingRequest && (
+          <View style={[s.requestCard, { backgroundColor: T.card, borderColor: COLORS.primary }]}>
+            <View style={s.requestBadgeRow}>
+              <View style={s.requestBadge}>
+                <View style={s.requestDot} />
+                <Text style={s.requestBadgeText}>NEW JOB REQUEST</Text>
+              </View>
+              <Text style={[s.requestDistance, { color: T.subText }]}>{incomingRequest.distance}</Text>
+            </View>
+
+            <View style={s.requestRow}>
+              <View style={[s.requestAvatar, { backgroundColor: incomingRequest.color + '20' }]}>
+                <Text style={[s.requestAvatarText, { color: incomingRequest.color }]}>{incomingRequest.initials}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.requestClient, { color: T.text }]}>{incomingRequest.client}</Text>
+                <Text style={[s.requestService, { color: T.subText }]}>{incomingRequest.service}</Text>
+              </View>
+              <Text style={[s.requestPrice, { color: COLORS.primary }]}>GH₵ {incomingRequest.price}</Text>
+            </View>
+
+            <View style={s.requestLocRow}>
+              <Ionicons name="location-outline" size={13} color={T.subText} />
+              <Text style={[s.requestLocText, { color: T.subText }]}>{incomingRequest.location}</Text>
+            </View>
+            <Text style={[s.requestNote, { color: T.subText }]}>{incomingRequest.note}</Text>
+
+            <View style={s.requestActions}>
+              <TouchableOpacity
+                style={[s.declineBtn, { borderColor: COLORS.danger }]}
+                onPress={handleDeclineRequest}
+                activeOpacity={0.8}
+              >
+                <Text style={[s.declineText, { color: COLORS.danger }]}>Decline</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.acceptBtn, { backgroundColor: COLORS.primary }]}
+                onPress={handleAcceptRequest}
+                activeOpacity={0.8}
+              >
+                <Text style={s.acceptText}>Accept Job</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* ══ PROFILE HERO ══ */}
         <View style={[s.heroCard, { backgroundColor: COLORS.primary }]}>
@@ -463,6 +570,35 @@ const s = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  /* Mode switcher */
+  modeStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
+  modeLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  modeText: { fontSize: 12, fontWeight: '600' },
+  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: COLORS.primary + '14', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  switchBtnText: { fontSize: 11, fontWeight: '700', color: COLORS.primary },
+
+  /* Incoming job request */
+  requestCard: { borderRadius: 16, borderWidth: 1.5, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14 },
+  requestBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  requestBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  requestDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#22C55E' },
+  requestBadgeText: { fontSize: 11, fontWeight: '800', color: '#22C55E', letterSpacing: 0.5 },
+  requestDistance: { fontSize: 11, fontWeight: '600' },
+  requestRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  requestAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  requestAvatarText: { fontSize: 15, fontWeight: '800' },
+  requestClient: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
+  requestService: { fontSize: 12, fontWeight: '500' },
+  requestPrice: { fontSize: 16, fontWeight: '900' },
+  requestLocRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+  requestLocText: { fontSize: 12 },
+  requestNote: { fontSize: 12, lineHeight: 17, marginBottom: 14 },
+  requestActions: { flexDirection: 'row', gap: 10 },
+  declineBtn: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5 },
+  declineText: { fontSize: 13, fontWeight: '700' },
+  acceptBtn: { flex: 1.4, alignItems: 'center', paddingVertical: 12, borderRadius: 12 },
+  acceptText: { fontSize: 13, fontWeight: '800', color: '#fff' },
 
   /* Hero card */
   heroCard: { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingBottom: 20 },
