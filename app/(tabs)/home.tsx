@@ -19,6 +19,13 @@ const SERVICES = [
   { name: 'Carpentry', icon: '🪚' },
   { name: 'Painting', icon: '🖌️' },
   { name: 'Cleaning', icon: '🧹' },
+  { id: 'masonry', icon: '🧱' },
+  { id: 'welding', icon: '🔩' },
+  { id: 'ac', icon: '❄️' },
+  { id: 'tiling', icon: '🏗️' },
+  { id: 'roofing', icon: '🏚️' },
+  { id: 'security', icon: '📷' },
+  { id: 'other', icon: '⋯' },
 ];
 
 const RECOMMENDED = [
