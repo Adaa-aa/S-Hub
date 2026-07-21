@@ -1,4 +1,5 @@
-import { AntDesign, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { AntDesign, FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -15,11 +16,15 @@ import {
 import { COLORS } from '../constants/theme';
 import { useThemeColors } from '../context/ThemeContext';
 
+// Dark, near-black header to match the reference (independent of light/dark theme toggle)
+const HEADER_BG: [string, string] = ['#1B1F27', '#0C0E12'];
+
 export default function LoginScreen() {
   const [role, setRole] = useState<'customer' | 'worker'>('customer');
   const [credential, setCredential] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const T = useThemeColors();
 
   const handleLogin = () => {
@@ -31,138 +36,207 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: T.card }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <StatusBar barStyle={T.statusBar} backgroundColor={T.card} />
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#0C0E12' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar barStyle="light-content" backgroundColor="#0C0E12" />
 
-      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: T.card }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color={T.text} />
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-        <Text style={[styles.heading, { color: T.text }]}>Welcome back! 👋</Text>
-        <Text style={[styles.subheading, { color: T.subText }]}>Login to continue</Text>
-
-        <View style={[styles.toggleWrap, { backgroundColor: T.inputBg }]}>
-          <TouchableOpacity style={[styles.toggleBtn, role === 'customer' && styles.toggleBtnActive]} onPress={() => setRole('customer')} activeOpacity={0.8}>
-            <Text style={[styles.toggleText, { color: T.subText }, role === 'customer' && styles.toggleTextActive]}>Customer</Text>
+        {/* ══ DARK HEADER ══ */}
+        <LinearGradient colors={HEADER_BG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.toggleBtn, role === 'worker' && styles.toggleBtnActive]} onPress={() => setRole('worker')} activeOpacity={0.8}>
-            <Text style={[styles.toggleText, { color: T.subText }, role === 'worker' && styles.toggleTextActive]}>Worker</Text>
-          </TouchableOpacity>
-        </View>
+          <Text style={styles.heading}>Go ahead and{'\n'}Log In to your account</Text>
+          <Text style={styles.subheading}>Login to continue using the app.</Text>
+        </LinearGradient>
 
-        <View style={styles.inputWrap}>
-          <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
-            <FontAwesome5 name="phone-alt" size={15} color={T.subText} style={styles.inputIcon} />
-            <TextInput style={[styles.input, { color: T.text }]} placeholder="Phone number or email" placeholderTextColor={T.subText} value={credential} onChangeText={setCredential} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
-          </View>
-        </View>
+        {/* ══ WHITE CARD — slides up and overlaps the header ══ */}
+        <View style={[styles.card, { backgroundColor: T.card }]}>
 
-        <View style={styles.inputWrap}>
-          <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
-            <FontAwesome5 name="lock" size={15} color={T.subText} style={styles.inputIcon} />
-            <TextInput style={[styles.input, { color: T.text }]} placeholder="Password" placeholderTextColor={T.subText} value={password} onChangeText={setPassword} secureTextEntry={!showPass} autoCapitalize="none" />
-            <TouchableOpacity onPress={() => setShowPass(!showPass)} activeOpacity={0.7}>
-              <Ionicons name={showPass ? 'eye' : 'eye-off-outline'} size={18} color={T.subText} />
+          <View style={[styles.toggleWrap, { backgroundColor: T.inputBg }]}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, role === 'customer' && [styles.toggleBtnActive, { backgroundColor: T.card }]]}
+              onPress={() => setRole('customer')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleText, { color: T.subText }, role === 'customer' && [styles.toggleTextActive, { color: T.text }]]}>Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, role === 'worker' && [styles.toggleBtnActive, { backgroundColor: T.card }]]}
+              onPress={() => setRole('worker')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleText, { color: T.subText }, role === 'worker' && [styles.toggleTextActive, { color: T.text }]]}>Register</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        <TouchableOpacity style={styles.forgotRow} activeOpacity={0.7}>
-          <Text style={styles.forgotText}>Forgot password?</Text>
-        </TouchableOpacity>
+          {/* Email field with floating label */}
+          <View style={styles.inputWrap}>
+            <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
+              <View style={[styles.iconBadge, { backgroundColor: T.card }]}>
+                <FontAwesome5 name="envelope" size={14} color={COLORS.primary} />
+              </View>
+              <View style={styles.inputTextCol}>
+                <Text style={[styles.inputLabel, { color: T.subText }]}>Email Address</Text>
+                <TextInput
+                  style={[styles.input, { color: T.text }]}
+                  placeholder="you@example.com"
+                  placeholderTextColor={T.subText}
+                  value={credential}
+                  onChangeText={setCredential}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+          </View>
 
-        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.85}>
-          <Text style={styles.loginBtnText}>Login</Text>
-        </TouchableOpacity>
+          {/* Password field with floating label */}
+          <View style={styles.inputWrap}>
+            <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
+              <View style={[styles.iconBadge, { backgroundColor: T.card }]}>
+                <FontAwesome5 name="lock" size={14} color={COLORS.primary} />
+              </View>
+              <View style={styles.inputTextCol}>
+                <Text style={[styles.inputLabel, { color: T.subText }]}>Password</Text>
+                <TextInput
+                  style={[styles.input, { color: T.text }]}
+                  placeholder="••••••••"
+                  placeholderTextColor={T.subText}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPass}
+                  autoCapitalize="none"
+                />
+              </View>
+              <TouchableOpacity onPress={() => setShowPass(!showPass)} activeOpacity={0.7} hitSlop={8}>
+                <Ionicons name={showPass ? 'eye' : 'eye-off-outline'} size={18} color={T.subText} />
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        <View style={styles.dividerRow}>
-          <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
-          <Text style={[styles.dividerText, { color: T.subText }]}>or continue with</Text>
-          <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
-        </View>
+          {/* Remember me + Forgot password */}
+          <View style={styles.rememberRow}>
+            <TouchableOpacity style={styles.rememberLeft} onPress={() => setRememberMe(!rememberMe)} activeOpacity={0.7}>
+              <Ionicons
+                name={rememberMe ? 'checkbox' : 'square-outline'}
+                size={18}
+                color={rememberMe ? COLORS.primary : T.subText}
+              />
+              <Text style={[styles.rememberText, { color: T.subText }]}>Remember me</Text>
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.socialRow}>
-          <TouchableOpacity style={[styles.socialBtn, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
-            <AntDesign name="google" size={18} color="#EA4335" />
-            <Text style={[styles.socialBtnText, { color: T.text }]}>Google</Text>
+          {/* Gradient Login button */}
+          <TouchableOpacity onPress={handleLogin} activeOpacity={0.85} style={styles.loginBtnWrap}>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.loginBtn}
+            >
+              <Text style={styles.loginBtnText}>Login</Text>
+            </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.socialBtn, styles.appleSocialBtn, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
-            <AntDesign name="apple" size={18} color={T.text} />
-            <Text style={[styles.socialBtnText, { color: T.text }]}>Apple</Text>
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
+            <Text style={[styles.dividerText, { color: T.subText }]}>Or login with</Text>
+            <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
+          </View>
+
+          <View style={styles.socialRow}>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
+              <AntDesign name="google" size={18} color="#EA4335" />
+              <Text style={[styles.socialBtnText, { color: T.text }]}>Google</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: T.card, borderColor: T.border }]} activeOpacity={0.8}>
+              <FontAwesome name="facebook" size={18} color="#1877F2" />
+              <Text style={[styles.socialBtnText, { color: T.text }]}>Facebook</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.registerRow} onPress={() => router.push('/sign-up' as any)} activeOpacity={0.7}>
+            <Text style={[styles.registerText, { color: T.subText }]}>
+              Don&apos;t have an account?{' '}
+              <Text style={styles.registerLink}>Register</Text>
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.registerRow} onPress={() => router.push('/register' as any)} activeOpacity={0.7}>
-          <Text style={[styles.registerText, { color: T.subText }]}>
-            Don&apos;t have an account?{' '}
-            <Text style={styles.registerLink}>Register</Text>
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
+  /* Dark header */
+  header: {
     paddingHorizontal: 24,
     paddingTop: 56,
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
-
-  /* Back */
   backBtn: {
     width: 38,
     height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
     marginLeft: -4,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 19,
   },
-
-  /* Heading */
   heading: {
     fontSize: 26,
+    lineHeight: 32,
     fontWeight: '800',
-    color: COLORS.text,
-    marginBottom: 6,
+    color: '#fff',
+    marginBottom: 10,
   },
   subheading: {
     fontSize: 14,
-    color: COLORS.muted,
-    marginBottom: 28,
+    color: 'rgba(255,255,255,0.6)',
+  },
+
+  /* Card overlaps header via negative margin */
+  card: {
+    marginTop: -56,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 40,
+    minHeight: 560,
   },
 
   /* Toggle */
   toggleWrap: {
     flexDirection: 'row',
-    backgroundColor: '#F2F2F2',
     borderRadius: 30,
     padding: 4,
-    marginBottom: 28,
+    marginBottom: 26,
   },
   toggleBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 26,
     alignItems: 'center',
   },
   toggleBtnActive: {
-    backgroundColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOpacity: 0.3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
     shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
   toggleText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.muted,
   },
   toggleTextActive: {
-    color: '#fff',
     fontWeight: '700',
   },
 
@@ -173,26 +247,46 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     gap: 12,
   },
-  inputIcon: {
-    width: 18,
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputTextCol: {
+    flex: 1,
+  },
+  inputLabel: {
+    fontSize: 11,
+    marginBottom: 2,
   },
   input: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: '600',
+    padding: 0,
   },
 
-  /* Forgot */
-  forgotRow: {
-    alignSelf: 'flex-end',
+  /* Remember me / Forgot */
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 24,
     marginTop: 4,
+  },
+  rememberLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rememberText: {
+    fontSize: 13,
   },
   forgotText: {
     fontSize: 13,
@@ -201,16 +295,20 @@ const styles = StyleSheet.create({
   },
 
   /* Login button */
-  loginBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: 'center',
+  loginBtnWrap: {
+    borderRadius: 30,
     marginBottom: 24,
     shadowColor: COLORS.primary,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  loginBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 30,
+    paddingVertical: 16,
   },
   loginBtnText: {
     color: '#fff',
@@ -228,11 +326,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E8E8E8',
   },
   dividerText: {
     fontSize: 12,
-    color: COLORS.muted,
     fontWeight: '500',
   },
 
@@ -249,18 +345,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 13,
-    backgroundColor: '#fff',
-  },
-  appleSocialBtn: {
-    borderColor: '#CCCCCC',
   },
   socialBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
   },
 
   /* Register */
@@ -269,7 +359,6 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 13,
-    color: COLORS.muted,
   },
   registerLink: {
     color: COLORS.primary,

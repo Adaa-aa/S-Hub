@@ -148,7 +148,7 @@ export default function BookingsScreen() {
               </>
             )}
             {activeTab === 'cancelled' && (
-              <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/post-job' as any)}>
+              <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/post-a-job' as any)}>
                 <Text style={s.solidBtnText}>Re-post Job</Text>
               </TouchableOpacity>
             )}
@@ -157,7 +157,7 @@ export default function BookingsScreen() {
                 <TouchableOpacity style={[s.outlineBtn, { borderColor: T.border }]} onPress={handleUnsave} activeOpacity={0.75}>
                   <Text style={[s.outlineBtnText, { color: T.subText }]}>Remove</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/post-job' as any)}>
+                <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/post-a-job' as any)}>
                   <Text style={s.solidBtnText}>Hire</Text>
                 </TouchableOpacity>
               </>
@@ -174,7 +174,7 @@ export default function BookingsScreen() {
 
       <View style={[s.header, { backgroundColor: T.header }]}>
         <Text style={[s.headerTitle, { color: T.text }]}>My Jobs</Text>
-        <TouchableOpacity style={s.postBtn} onPress={() => router.push('/post-job' as any)} activeOpacity={0.85}>
+        <TouchableOpacity style={s.postBtn} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
           <Ionicons name="add" size={18} color="#fff" />
           <Text style={s.postBtnText}>Post Job</Text>
         </TouchableOpacity>
@@ -232,7 +232,7 @@ export default function BookingsScreen() {
         {[
           { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
           { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: true },
-          { icon: 'add', iconActive: 'add', label: '', route: '/post-job', center: true },
+          { icon: 'add', iconActive: 'add', label: '', route: '/post-a-job', center: true },
           { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: false },
           { icon: 'person-outline', iconActive: 'person', label: 'Profile', route: '/profile', active: false },
         ].map(tab =>

@@ -1,13 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const PRIMARY = '#1B8B3A';
 const PRIMARY_DARK = '#0F5C26';
 
 export default function SplashScreen() {
-  const spinAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -17,29 +17,11 @@ export default function SplashScreen() {
       duration: 600,
       useNativeDriver: true,
     }).start();
-
-    // Spin loader
-    Animated.loop(
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 1000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-
-    // Navigate after 3 seconds
-    const timer = setTimeout(() => {
-      router.replace('/login');
-    }, 3000);
-
-    return () => clearTimeout(timer);
   }, []);
 
-  const spin = spinAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  const handleGetStarted = () => {
+    router.replace('/onboarding' as any);
+  };
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
@@ -111,11 +93,11 @@ export default function SplashScreen() {
         <Text style={styles.verifiedText}>Verified. Rated. Reliable.</Text>
         <Text style={styles.verifiedSub}>Your go-to app for skilled{'\n'}workers near you.</Text>
 
-        {/* Spinner */}
-        <View style={styles.loaderArea}>
-          <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+        {/* Get Started button */}
+        <TouchableOpacity style={styles.getStartedBtn} onPress={handleGetStarted} activeOpacity={0.85}>
+          <Text style={styles.getStartedText}>Get Started</Text>
+          <Ionicons name="arrow-forward" size={18} color="#fff" />
+        </TouchableOpacity>
 
       </View>
 
@@ -270,22 +252,25 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
 
-  loaderArea: {
+  getStartedBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 10,
+    backgroundColor: PRIMARY,
+    paddingHorizontal: 36,
+    paddingVertical: 15,
+    borderRadius: 30,
+    shadowColor: PRIMARY,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
-  spinner: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: '#D4EDD9',
-    borderTopColor: PRIMARY,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: PRIMARY,
-    fontWeight: '600',
+  getStartedText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
 });
 

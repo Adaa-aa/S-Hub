@@ -31,6 +31,7 @@ export const CONVERSATIONS: Conversation[] = [
 
 export default function MessagesScreen() {
   const [search, setSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const T = useThemeColors();
 
   const totalUnread = CONVERSATIONS.reduce((sum, c) => sum + c.unread, 0);
@@ -51,34 +52,49 @@ export default function MessagesScreen() {
             <View style={s.unreadBadge}><Text style={s.unreadBadgeText}>{totalUnread}</Text></View>
           )}
         </View>
-        <TouchableOpacity style={s.newBtn} activeOpacity={0.8} onPress={() => router.push('/search' as any)}>
-          <Ionicons name="create-outline" size={20} color={COLORS.primary} />
-        </TouchableOpacity>
+        <View style={s.headerRight}>
+          <TouchableOpacity
+            style={s.iconBtn}
+            activeOpacity={0.8}
+            onPress={() => {
+              setShowSearch(!showSearch);
+              if (showSearch) setSearch('');
+            }}
+          >
+            <Ionicons name={showSearch ? 'close' : 'search-outline'} size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={s.iconBtn} activeOpacity={0.8} onPress={() => router.push('/new-message' as any)}>
+            <Ionicons name="create-outline" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={[s.searchWrap, { backgroundColor: T.inputBg }]}>
-        <Ionicons name="search-outline" size={17} color={T.subText} />
-        <TextInput
-          style={[s.searchInput, { color: T.text }]}
-          placeholder="Search conversations..."
-          placeholderTextColor={T.subText}
-          value={search}
-          onChangeText={setSearch}
-          autoCapitalize="none"
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={17} color={T.subText} />
-          </TouchableOpacity>
-        )}
-      </View>
+      {showSearch && (
+        <View style={[s.searchWrap, { backgroundColor: T.inputBg }]}>
+          <Ionicons name="search-outline" size={17} color={T.subText} />
+          <TextInput
+            style={[s.searchInput, { color: T.text }]}
+            placeholder="Search"
+            placeholderTextColor={T.subText}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoFocus
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Ionicons name="close-circle" size={17} color={T.subText} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {filtered.length === 0 ? (
         <View style={s.empty}>
           <Ionicons name="chatbubbles-outline" size={54} color={COLORS.primary + '50'} />
           <Text style={[s.emptyTitle, { color: T.text }]}>No conversations</Text>
           <Text style={[s.emptySub, { color: T.subText }]}>Post a job and connect with workers to start chatting.</Text>
-          <TouchableOpacity style={s.emptyCta} onPress={() => router.push('/post-job' as any)} activeOpacity={0.85}>
+          <TouchableOpacity style={s.emptyCta} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
             <Text style={s.emptyCtaText}>Post a Job</Text>
           </TouchableOpacity>
         </View>
@@ -128,7 +144,7 @@ export default function MessagesScreen() {
         {[
           { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
           { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
-          { icon: 'add', iconActive: 'add', label: '', route: '/post-job', center: true },
+          { icon: 'add', iconActive: 'add', label: '', route: '/post-a-job', center: true },
           { icon: 'chatbubble', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: true },
           { icon: 'person-outline', iconActive: 'person', label: 'Profile', route: '/profile', active: false },
         ].map(tab =>
@@ -155,7 +171,8 @@ const s = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800' },
   unreadBadge: { backgroundColor: COLORS.danger, borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   unreadBadgeText: { fontSize: 11, fontWeight: '800', color: '#fff' },
-  newBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primary + '12', borderRadius: 20 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primary + '12', borderRadius: 20 },
   searchWrap: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, marginHorizontal: 16, marginVertical: 10, paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
   searchInput: { flex: 1, fontSize: 14 },
   list: { paddingBottom: 100 },

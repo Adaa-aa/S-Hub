@@ -275,7 +275,7 @@ export default function EmergencyScreen() {
             <Ionicons name="warning" size={16} color={COLORS.danger} />
             <Text style={s.urgencyText}>
               Emergency workers charge a premium rate. Standard jobs are available via{' '}
-              <Text style={s.urgencyLink} onPress={() => router.push('/post-job' as any)}>Post a Job</Text>.
+              <Text style={s.urgencyLink} onPress={() => router.push('/post-a-job' as any)}>Post a Job</Text>.
             </Text>
           </View>
 

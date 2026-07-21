@@ -212,7 +212,7 @@ export default function ProfileScreen() {
             icon={<MaterialCommunityIcons name="briefcase-plus-outline" size={iconSize} color={iconColor} />}
             label="Post a Job"
             subtitle="Find skilled workers near you"
-            onPress={() => router.push('/post-job' as any)}
+            onPress={() => router.push('/post-a-job' as any)}
           />
           <Divider color={T.divider} />
           <MenuItem cardBg={T.card} textColor={T.text} subColor={T.subText}
@@ -262,7 +262,7 @@ export default function ProfileScreen() {
             onPress={() =>
               Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Sign Out', style: 'destructive', onPress: () => router.replace('/login') },
+                { text: 'Sign Out', style: 'destructive', onPress: () => router.replace('/sign-in') },
               ])
             }
           />
@@ -278,7 +278,7 @@ export default function ProfileScreen() {
         {[
           { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
           { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
-          { icon: 'add', iconActive: 'add', label: '', route: '/post-job', center: true },
+          { icon: 'add', iconActive: 'add', label: '', route: '/post-a-job', center: true },
           { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: false },
           { icon: 'person', iconActive: 'person', label: 'Profile', route: '/profile', active: true },
         ].map((tab) =>

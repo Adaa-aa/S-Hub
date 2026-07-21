@@ -183,7 +183,7 @@ export default function OnboardingScreen() {
             flatRef.current?.scrollToIndex({ index: currentIndex + 1 });
             setCurrentIndex(currentIndex + 1);
         } else {
-            router.replace('/Sign In');
+            router.replace('/sign-in');
         }
     };
 
@@ -197,7 +197,7 @@ export default function OnboardingScreen() {
     return (
         <View style={styles.container}>
             {/* Skip */}
-            <TouchableOpacity style={styles.skipBtn} onPress={() => router.replace('/SignIn')}>
+            <TouchableOpacity style={styles.skipBtn} onPress={() => router.replace('/sign-in')}>
                 <Text style={styles.skipText}>Skip</Text>
             </TouchableOpacity>
 

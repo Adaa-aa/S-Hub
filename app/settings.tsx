@@ -130,7 +130,7 @@ export default function SettingsScreen() {
             activeOpacity={0.7}
             onPress={() => Alert.alert('Delete Account', 'This will permanently delete your account and all data. This cannot be undone.', [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete', style: 'destructive', onPress: () => router.replace('/login') },
+              { text: 'Delete', style: 'destructive', onPress: () => router.replace('/sign-in') },
             ])}
           >
             <Ionicons name="person-remove-outline" size={20} color={COLORS.danger} style={s.icon} />
