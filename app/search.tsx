@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 /* ─── Data ─── */
 const FILTER_CHIPS = ['Filter', 'Price', 'Rating', 'Availability'];
 
-const WORKERS = [
+export const WORKERS = [
   {
     id: 1, name: 'Kofi Mensah', skill: 'Plumber',
     rating: 4.8, reviews: 120, distance: '2.1 km',

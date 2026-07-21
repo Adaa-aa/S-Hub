@@ -213,7 +213,7 @@ export default function WorkerSetupScreen() {
           <TouchableOpacity
             style={s.successPrimaryBtn}
             activeOpacity={0.85}
-            onPress={() => router.push('/worker-setup' as any)}
+            onPress={() => router.replace('/worker-setup' as any)}
           >
             <MaterialCommunityIcons name="account-hard-hat-outline" size={18} color="#fff" />
             <Text style={s.successPrimaryBtnText}>View My Worker Setup</Text>

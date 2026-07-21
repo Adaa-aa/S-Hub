@@ -52,7 +52,7 @@ function FindIllustration() {
                         <Text style={{ fontSize: 22 }}>👷🏿</Text>
                     </View>
                     <View>
-                        <Text style={ill.workerName}>Kofi Mensah</Text>
+                        <Text style={ill.workerName}>Kofi Mensa</Text>
                         <Text style={ill.workerRole}>Plumber • ⭐ 4.8</Text>
                     </View>
                     <Text style={ill.workerPrice}>GHC 450</Text>
@@ -112,7 +112,7 @@ function ScheduleIllustration() {
     return (
         <View style={ill.container}>
             <View style={ill.calendarBox}>
-                <Text style={ill.calendarMonth}>May 2024</Text>
+                <Text style={ill.calendarMonth}>May 2026</Text>
                 {/* Day headers */}
                 <View style={ill.calRow}>
                     {days.map((d, i) => (
@@ -183,7 +183,7 @@ export default function OnboardingScreen() {
             flatRef.current?.scrollToIndex({ index: currentIndex + 1 });
             setCurrentIndex(currentIndex + 1);
         } else {
-            router.replace('/login');
+            router.replace('/SignIn');
         }
     };
 
@@ -197,7 +197,7 @@ export default function OnboardingScreen() {
     return (
         <View style={styles.container}>
             {/* Skip */}
-            <TouchableOpacity style={styles.skipBtn} onPress={() => router.replace('/login')}>
+            <TouchableOpacity style={styles.skipBtn} onPress={() => router.replace('/SignIn')}>
                 <Text style={styles.skipText}>Skip</Text>
             </TouchableOpacity>
 

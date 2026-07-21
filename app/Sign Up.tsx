@@ -17,7 +17,7 @@ const MUTED = '#888';
 const BORDER = '#E8E8E8';
 const BG = '#F9F9F9';
 
-export default function RegisterScreen() {
+export default function SignUpScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,10 +25,10 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const T = useThemeColors();
 
-  const handleRegister = () => {
+  const handleSignUp = () => {
     if (!name || !email || !password) return;
     if (role === 'worker') {
-      router.replace('/worker-setup');
+      router.replace('/become-worker');
     } else {
       router.replace('/(tabs)/home');
     }
@@ -41,7 +41,7 @@ export default function RegisterScreen() {
           <View style={[styles.logoIcon, { backgroundColor: PRIMARY + '18' }]}>
             <Text style={{ fontSize: 22 }}>🛠️</Text>
           </View>
-          <Text style={[styles.logoText, { color: T.text }]}>SkillHub</Text>
+          <Text style={[styles.logoText, { color: T.text }]}>Vaker</Text>
         </View>
 
         <Text style={[styles.heading, { color: T.text }]}>Create your account</Text>
@@ -62,18 +62,18 @@ export default function RegisterScreen() {
 
         <View style={styles.inputBox}>
           <Text style={[styles.inputLabel, { color: T.subText }]}>Full Name</Text>
-          <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="e.g. Akosua Mensah" placeholderTextColor={T.subText} value={name} onChangeText={setName} />
+          <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="e.g. Enter your Full Name" placeholderTextColor={T.subText} value={name} onChangeText={setName} />
         </View>
 
         <View style={styles.inputBox}>
           <Text style={[styles.inputLabel, { color: T.subText }]}>Email or Phone</Text>
-          <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="you@example.com" placeholderTextColor={T.subText} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+          <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="e.g. Enter your Phone Number or Email" placeholderTextColor={T.subText} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
         </View>
 
         <View style={styles.inputBox}>
           <Text style={[styles.inputLabel, { color: T.subText }]}>Password</Text>
           <View style={[styles.passwordRow, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-            <TextInput style={[styles.passwordInput, { color: T.text }]} placeholder="••••••••" placeholderTextColor={T.subText} secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
+            <TextInput style={[styles.passwordInput, { color: T.text }]} placeholder="Enter your Password" placeholderTextColor={T.subText} secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
               <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
             </TouchableOpacity>
@@ -94,7 +94,7 @@ export default function RegisterScreen() {
         <View style={styles.loginRow}>
           <Text style={[styles.loginText, { color: T.subText }]}>Already have an account? </Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.loginLink}>Login</Text>
+            <Text style={styles.loginLink}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
