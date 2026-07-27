@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
 
@@ -21,6 +22,23 @@ export default function PostAJobScreen() {
   const [category, setCategory] = useState<CategoryKey>((params.category as CategoryKey) || 'plumbing');
   const [description, setDescription] = useState('');
   const [urgency, setUrgency] = useState<Urgency>('now');
+  const [photos, setPhotos] = useState<string[]>([]);
+
+  const handleAddPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets?.length) {
+      setPhotos((prev) => [...prev, result.assets[0].uri]);
+    }
+  };
+
+  const handleRemovePhoto = (uri: string) => {
+    setPhotos((prev) => prev.filter((p) => p !== uri));
+  };
 
   const handlePostJob = () => {
     // TODO: POST to your job-requests endpoint
@@ -81,10 +99,21 @@ export default function PostAJobScreen() {
             onChangeText={setDescription}
           />
 
-          <TouchableOpacity style={[styles.addPhotoButton, { borderColor: T.border }]}>
-            <Ionicons name="camera-outline" size={22} color={T.subText} />
-            <Text style={[styles.addPhotoText, { color: T.subText }]}>ADD PHOTO</Text>
-          </TouchableOpacity>
+          <Text style={[styles.sectionLabel, { color: T.subText, marginTop: 4 }]}>PHOTOS (OPTIONAL)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity style={[styles.addPhotoButton, { borderColor: T.border }]} onPress={handleAddPhoto}>
+              <Ionicons name="camera-outline" size={22} color={T.subText} />
+              <Text style={[styles.addPhotoText, { color: T.subText }]}>ADD PHOTO</Text>
+            </TouchableOpacity>
+            {photos.map((uri) => (
+              <View key={uri} style={styles.photoThumbWrap}>
+                <Image source={{ uri }} style={styles.photoThumb} />
+                <TouchableOpacity style={styles.photoRemoveBtn} onPress={() => handleRemovePhoto(uri)}>
+                  <Ionicons name="close" size={14} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
         </View>
 
         <View style={styles.section}>
@@ -114,6 +143,9 @@ export default function PostAJobScreen() {
             <TouchableOpacity>
               <Text style={styles.changeText}>Change</Text>
             </TouchableOpacity>
+          </View>
+          <View style={[styles.mapPlaceholder, { backgroundColor: T.inputBg }]}>
+            <Ionicons name="map-outline" size={32} color={T.subText} />
           </View>
         </View>
 
@@ -173,12 +205,19 @@ const styles = StyleSheet.create({
   categoryLabel: { fontSize: 12 },
   card: { borderRadius: 20, borderWidth: 1, padding: 16 },
   textArea: { minHeight: 100, borderRadius: 16, borderBottomWidth: 2, padding: 12, fontSize: 15, textAlignVertical: 'top', marginBottom: 12 },
-  addPhotoButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderWidth: 2, borderStyle: 'dashed', borderRadius: 16 },
-  addPhotoText: { fontSize: 12, fontWeight: '700' },
+  addPhotoButton: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderStyle: 'dashed', borderRadius: 16, marginRight: 12 },
+  addPhotoText: { fontSize: 10, fontWeight: '700' },
+  photoThumbWrap: { width: 96, height: 96, borderRadius: 16, marginRight: 12, overflow: 'hidden' },
+  photoThumb: { width: '100%', height: '100%' },
+  photoRemoveBtn: {
+    position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11,
+    backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center',
+  },
   urgencyRow: { flexDirection: 'row', borderRadius: 999, padding: 4, maxWidth: 320 },
   urgencyTab: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
   urgencyText: { fontSize: 15, fontWeight: '700' },
-  locationCard: { borderRadius: 20, borderWidth: 1 },
+  locationCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
+  mapPlaceholder: { height: 140, alignItems: 'center', justifyContent: 'center' },
   locationRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
   locationLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   locationText: { fontSize: 14, fontWeight: '600' },
