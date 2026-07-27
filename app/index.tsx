@@ -11,7 +11,6 @@ export default function SplashScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Fade in
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
@@ -26,18 +25,15 @@ export default function SplashScreen() {
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
 
-      {/* ── TOP GREEN SECTION ── */}
       <View style={styles.topSection}>
 
-        {/* Logo */}
         <View style={styles.logoArea}>
           <View style={styles.logoRow}>
-            {/* W with checkmark */}
             <Text style={styles.logoW}>W</Text>
             <View style={styles.checkBadge}>
               <Text style={styles.checkMark}>✓</Text>
             </View>
-            <Text style={styles.logoRest}>aker</Text>
+            <Text style={styles.logoRest}>Vaker</Text>
           </View>
           <Text style={styles.tagline1}>Find trusted workers.</Text>
           <Text style={styles.tagline2}>Get work done.</Text>
@@ -59,7 +55,6 @@ export default function SplashScreen() {
           </View>
         </View>
 
-        {/* Worker illustration placeholder */}
         <View style={styles.workersArea}>
           <View style={styles.workersRow}>
             {[
@@ -78,10 +73,8 @@ export default function SplashScreen() {
 
       </View>
 
-      {/* ── BOTTOM WHITE SECTION ── */}
       <View style={styles.bottomSection}>
 
-        {/* Shield icon */}
         <View style={styles.shieldRow}>
           <View style={styles.dividerShort} />
           <View style={styles.shieldIcon}>
@@ -93,7 +86,6 @@ export default function SplashScreen() {
         <Text style={styles.verifiedText}>Verified. Rated. Reliable.</Text>
         <Text style={styles.verifiedSub}>Your go-to app for skilled{'\n'}workers near you.</Text>
 
-        {/* Get Started button */}
         <TouchableOpacity style={styles.getStartedBtn} onPress={handleGetStarted} activeOpacity={0.85}>
           <Text style={styles.getStartedText}>Get Started</Text>
           <Ionicons name="arrow-forward" size={18} color="#fff" />
@@ -110,8 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PRIMARY_DARK,
   },
-
-  /* ── TOP ── */
   topSection: {
     flex: 1,
     backgroundColor: PRIMARY_DARK,
@@ -120,7 +110,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
   },
-
   logoArea: {
     alignItems: 'center',
     marginBottom: 24,
@@ -168,7 +157,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#4ADE80',
   },
-
   iconsRow: {
     flexDirection: 'row',
     gap: 16,
@@ -185,7 +173,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   iconEmoji: { fontSize: 22 },
-
   workersArea: {
     width: '100%',
     paddingHorizontal: 20,
@@ -207,15 +194,12 @@ const styles = StyleSheet.create({
   },
   workerEmoji: { fontSize: 36 },
   workerTool: { fontSize: 18 },
-
-  /* ── BOTTOM ── */
   bottomSection: {
     backgroundColor: '#F2F2F2',
     paddingTop: 32,
     paddingBottom: 48,
     alignItems: 'center',
   },
-
   shieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -236,8 +220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shieldEmoji: { fontSize: 26 },
-
+  shieldEmoji: { fontSize: 30 },
   verifiedText: {
     fontSize: 18,
     fontWeight: '800',
@@ -251,7 +234,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 28,
   },
-
   getStartedBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -262,7 +244,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 30,
     shadowColor: PRIMARY,
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.55,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
@@ -270,7 +252,6 @@ const styles = StyleSheet.create({
   getStartedText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    color: '#ffffffff',
   },
 });
-

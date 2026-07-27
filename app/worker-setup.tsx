@@ -1,6 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -17,24 +17,25 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /* ─── Mock worker state ─── */
-const MY_PROFILE = {
+export const MY_PROFILE = {
   name: 'Kofi Mensah',
   initials: 'KM',
   service: 'Master Plumber',
   phone: '+233 24 123 4567',
   location: 'Kumasi, Ashanti Region',
+  languages: 'English, Twi',
   rating: 4.9,
   reviews: 143,
   jobs: 143,
   onTime: 98,
   experience: '6 yrs',
   price: 450,
+  hourlyRate: 450,
+  minJobValue: 200,
   verified: true,
   online: true,
   profileComplete: 88,
-  earnings: { week: 1840, month: 6420, total: 38200 },
   skills: ['Pipe Repair', 'Leak Detection', 'Bathroom Fitting', 'Drainage', 'Water Heater', 'Gutter Repair'],
-  certifications: ['Ghana Water & Sanitation', 'GESE Certified', 'First Aid'],
   availability: [
     { day: 'Mon', on: true }, { day: 'Tue', on: true }, { day: 'Wed', on: true },
     { day: 'Thu', on: true }, { day: 'Fri', on: true }, { day: 'Sat', on: false },
@@ -157,8 +158,8 @@ export default function WorkerSetupScreen() {
       message: `Hire me on S-Hub! ⭐ ${p.rating} · ${p.jobs} jobs · GH₵ ${p.price} starting.\nhttps://s-hub.com.gh`,
     });
 
-  const statusColor = (s: string) => s === 'completed' ? '#22C55E' : s === 'pending' ? '#F59E0B' : '#CE1126';
-  const statusLabel = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const statusColor = (st: string) => st === 'completed' ? '#22C55E' : st === 'pending' ? '#F59E0B' : '#CE1126';
+  const statusLabel = (st: string) => st.charAt(0).toUpperCase() + st.slice(1);
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
@@ -242,7 +243,6 @@ export default function WorkerSetupScreen() {
 
         {/* ══ PROFILE HERO ══ */}
         <View style={[s.heroCard, { backgroundColor: COLORS.primary }]}>
-          {/* Avatar + online toggle */}
           <View style={s.heroRow}>
             <View style={s.avatarWrap}>
               <View style={s.avatar}>
@@ -324,61 +324,11 @@ export default function WorkerSetupScreen() {
           )}
         </View>
 
-        {/* ══ EARNINGS ══ */}
-        <SectionCard title="Earnings Overview" T={T}>
-          <View style={s.earningsGrid}>
-            {[
-              { label: 'This Week', value: p.earnings.week, color: COLORS.primary },
-              { label: 'This Month', value: p.earnings.month, color: '#1D6FBA' },
-              { label: 'All Time', value: p.earnings.total, color: '#7C3AED' },
-            ].map(e => (
-              <View key={e.label} style={[s.earningsTile, { backgroundColor: e.color + '0E' }]}>
-                <Text style={[s.earningsAmount, { color: e.color }]}>GH₵ {e.value.toLocaleString()}</Text>
-                <Text style={[s.earningsLabel, { color: T.subText }]}>{e.label}</Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity
-            style={[s.earningsAction, { borderColor: T.border }]}
-            onPress={() => Alert.alert('Withdraw', 'Withdrawal to MoMo/bank coming soon.')}
-            activeOpacity={0.8}
-          >
-            <MaterialCommunityIcons name="bank-transfer-out" size={18} color={COLORS.primary} />
-            <Text style={[s.earningsActionText, { color: COLORS.primary }]}>Withdraw Earnings</Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
-          </TouchableOpacity>
-        </SectionCard>
-
-        {/* ══ QUICK ACTIONS ══ */}
-        <Text style={[s.sectionHeading, { color: T.text }]}>Quick Actions</Text>
-        <View style={s.quickGrid}>
-          {[
-            { icon: 'person-outline', label: 'Edit Profile', onPress: () => Alert.alert('Edit Profile', 'Profile editor coming soon.') },
-            { icon: 'briefcase-outline', label: 'My Jobs', onPress: () => router.push('/bookings' as any) },
-            { icon: 'chatbubble-outline', label: 'Messages', onPress: () => router.push('/messages' as any) },
-            { icon: 'notifications-outline', label: 'Notifications', onPress: () => router.push('/notifications' as any) },
-            { icon: 'stats-chart-outline', label: 'Analytics', onPress: () => Alert.alert('Analytics', 'Analytics dashboard coming soon.') },
-            { icon: 'help-circle-outline', label: 'Support', onPress: () => router.push('/support' as any) },
-          ].map(action => (
-            <TouchableOpacity
-              key={action.label}
-              style={[s.quickTile, { backgroundColor: T.card, borderColor: T.border }]}
-              onPress={action.onPress}
-              activeOpacity={0.8}
-            >
-              <View style={[s.quickIcon, { backgroundColor: COLORS.primaryLight }]}>
-                <Ionicons name={action.icon as any} size={20} color={COLORS.primary} />
-              </View>
-              <Text style={[s.quickLabel, { color: T.text }]}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {/* ══ SKILLS ══ */}
         <SectionCard
           title="Skills & Services"
           T={T}
-          onEdit={() => Alert.alert('Edit Skills', 'Skill editor coming soon.')}
+          onEdit={() => router.push('/worker-skills' as any)}
         >
           <View style={s.skillsGrid}>
             {p.skills.map(sk => (
@@ -401,7 +351,7 @@ export default function WorkerSetupScreen() {
         <SectionCard
           title="Weekly Availability"
           T={T}
-          onEdit={() => Alert.alert('Edit Availability', 'Availability editor coming soon.')}
+          onEdit={() => router.push('/worker-availability' as any)}
         >
           <View style={s.availGrid}>
             {p.availability.map(day => (
@@ -422,20 +372,20 @@ export default function WorkerSetupScreen() {
         <SectionCard
           title="Pricing"
           T={T}
-          onEdit={() => Alert.alert('Edit Pricing', 'Pricing editor coming soon.')}
+          onEdit={() => router.push('/worker-pricing' as any)}
         >
           <InfoRow icon="cash-outline" label="Starting price" value={`GH₵ ${p.price}`} T={T} />
           <CardDivider T={T} />
-          <InfoRow icon="time-outline" label="Hourly rate" value={`GH₵ ${p.price} / hr`} T={T} />
+          <InfoRow icon="time-outline" label="Hourly rate" value={`GH₵ ${p.hourlyRate} / hr`} T={T} />
           <CardDivider T={T} />
-          <InfoRow icon="briefcase-outline" label="Min. job value" value="GH₵ 200" T={T} />
+          <InfoRow icon="briefcase-outline" label="Min. job value" value={`GH₵ ${p.minJobValue}`} T={T} />
         </SectionCard>
 
         {/* ══ PERSONAL INFO ══ */}
         <SectionCard
           title="Personal Information"
           T={T}
-          onEdit={() => Alert.alert('Edit Info', 'Profile editor coming soon.')}
+          onEdit={() => router.push('/worker-personal-info' as any)}
         >
           <InfoRow icon="person-outline" label="Full name" value={p.name} T={T} />
           <CardDivider T={T} />
@@ -443,56 +393,7 @@ export default function WorkerSetupScreen() {
           <CardDivider T={T} />
           <InfoRow icon="location-outline" label="Location" value={p.location} T={T} />
           <CardDivider T={T} />
-          <InfoRow icon="globe-outline" label="Languages" value="English, Twi" T={T} />
-        </SectionCard>
-
-        {/* ══ CERTIFICATIONS ══ */}
-        <SectionCard
-          title="Certifications"
-          T={T}
-          onEdit={() => Alert.alert('Add Certification', 'Certification upload coming soon.')}
-        >
-          {p.certifications.map((cert, i) => (
-            <View key={cert}>
-              {i > 0 && <CardDivider T={T} />}
-              <View style={s.certRow}>
-                <View style={[s.certIcon, { backgroundColor: COLORS.primaryLight }]}>
-                  <Ionicons name="ribbon-outline" size={15} color={COLORS.primary} />
-                </View>
-                <Text style={[s.certText, { color: T.text }]}>{cert}</Text>
-                <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
-              </View>
-            </View>
-          ))}
-        </SectionCard>
-
-        {/* ══ VERIFICATION ══ */}
-        <SectionCard title="Verification & Trust" T={T}>
-          {[
-            { icon: 'shield-checkmark-outline', label: 'Identity Verified', ok: true },
-            { icon: 'document-text-outline', label: 'Background Check Passed', ok: true },
-            { icon: 'card-outline', label: 'GH ID Card on File', ok: true },
-            { icon: 'phone-portrait-outline', label: 'Phone Verified', ok: true },
-            { icon: 'camera-outline', label: 'Selfie with ID', ok: false },
-          ].map((item, i, arr) => (
-            <View key={item.label}>
-              {i > 0 && <CardDivider T={T} />}
-              <TouchableOpacity
-                style={s.verifyRow}
-                activeOpacity={item.ok ? 1 : 0.8}
-                onPress={() => !item.ok && Alert.alert('Upload Selfie', 'Please upload a selfie with your ID to complete verification.')}
-              >
-                <Ionicons name={item.icon as any} size={18} color={item.ok ? COLORS.primary : T.subText} />
-                <Text style={[s.verifyLabel, { color: item.ok ? T.text : T.subText }]}>{item.label}</Text>
-                {item.ok
-                  ? <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
-                  : <View style={[s.pendingBadge, { backgroundColor: '#FEF3C7' }]}>
-                    <Text style={s.pendingText}>Pending</Text>
-                  </View>
-                }
-              </TouchableOpacity>
-            </View>
-          ))}
+          <InfoRow icon="globe-outline" label="Languages" value={p.languages} T={T} />
         </SectionCard>
 
         {/* ══ RECENT JOBS ══ */}
@@ -555,8 +456,31 @@ export default function WorkerSetupScreen() {
         </TouchableOpacity>
 
         <Text style={[s.version, { color: T.subText }]}>S-Hub Worker v1.0.0 · Made in Ghana 🇬🇭</Text>
-        <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* ── BOTTOM NAV ── */}
+      <View style={[s.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
+        {[
+          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/worker-setup', active: true },
+          { icon: 'person-outline', iconActive: 'person', label: 'Profile', route: '/profile', active: false },
+          { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'My Jobs', route: '/bookings', active: false },
+          { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: false },
+        ].map(tab => (
+          <TouchableOpacity
+            key={tab.label}
+            style={s.navTab}
+            activeOpacity={0.7}
+            onPress={() => router.push(tab.route as any)}
+          >
+            <Ionicons
+              name={(tab.active ? tab.iconActive : tab.icon) as any}
+              size={22}
+              color={tab.active ? COLORS.primary : T.subText}
+            />
+            <Text style={[s.navLabel, { color: T.subText }, tab.active && s.navLabelActive]}>{tab.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 }
@@ -564,7 +488,7 @@ export default function WorkerSetupScreen() {
 /* ─── Styles ─── */
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingBottom: 40 },
+  scroll: { paddingBottom: 110 },
 
   /* Header */
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
@@ -636,22 +560,8 @@ const s = StyleSheet.create({
   completenessHint: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.accent + '18', borderRadius: 8, padding: 10 },
   completenessHintText: { flex: 1, fontSize: 11, color: COLORS.accent, fontWeight: '500' },
 
-  /* Earnings */
-  earningsGrid: { flexDirection: 'row', gap: 10, padding: 14 },
-  earningsTile: { flex: 1, alignItems: 'center', borderRadius: 12, paddingVertical: 14 },
-  earningsAmount: { fontSize: 13, fontWeight: '800', marginBottom: 3 },
-  earningsLabel: { fontSize: 10, fontWeight: '500' },
-  earningsAction: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 13 },
-  earningsActionText: { flex: 1, fontSize: 13, fontWeight: '700' },
-
   /* Section heading */
   sectionHeading: { fontSize: 14, fontWeight: '800', paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
-
-  /* Quick actions */
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10, marginBottom: 16 },
-  quickTile: { width: '30.5%', alignItems: 'center', borderRadius: 14, borderWidth: 1, paddingVertical: 14, gap: 8 },
-  quickIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { fontSize: 11, fontWeight: '700', textAlign: 'center' },
 
   /* Skills */
   skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
@@ -664,17 +574,6 @@ const s = StyleSheet.create({
   availGrid: { flexDirection: 'row', gap: 6, padding: 14, justifyContent: 'space-between' },
   availCell: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, gap: 3 },
   availDay: { fontSize: 10, fontWeight: '700' },
-
-  /* Certifications */
-  certRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  certIcon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  certText: { flex: 1, fontSize: 13, fontWeight: '600' },
-
-  /* Verification */
-  verifyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13 },
-  verifyLabel: { flex: 1, fontSize: 13, fontWeight: '600' },
-  pendingBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  pendingText: { fontSize: 10, fontWeight: '700', color: '#D97706' },
 
   /* Recent jobs */
   recentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
@@ -700,5 +599,26 @@ const s = StyleSheet.create({
   deactivateText: { fontSize: 13, fontWeight: '700', color: COLORS.danger },
 
   /* Version */
-  version: { fontSize: 11, textAlign: 'center', marginTop: 16 },
+  version: { fontSize: 11, textAlign: 'center', marginTop: 16, marginBottom: 4 },
+
+  /* Bottom nav */
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 22,
+    paddingTop: 10,
+    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  navTab: { flex: 1, alignItems: 'center', gap: 3 },
+  navLabel: { fontSize: 10, fontWeight: '500' },
+  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
 });

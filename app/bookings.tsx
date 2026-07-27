@@ -1,311 +1,202 @@
-import { COLORS } from '@/constants/theme';
-import { useThemeColors } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMemo, useState } from 'react';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
 
-type Tab = 'posted' | 'scheduled' | 'cancelled' | 'saved';
+type Status = 'ongoing' | 'upcoming' | 'completed' | 'cancelled';
+type Filter = 'all' | 'upcoming' | 'completed';
 
-interface Job {
-  id: number; title: string; service: string; icon: string; serviceColor: string;
-  worker?: string; workerInitials?: string; date: string; time?: string;
-  location: string; price: number; status: 'open' | 'assigned' | 'scheduled' | 'completed' | 'cancelled';
-  saved?: boolean;
-}
+type Booking = {
+  id: string;
+  service: string;
+  worker: string;
+  icon: string;
+  status: Status;
+  date: string;
+  price: string;
+};
 
-const ALL_JOBS: Job[] = [
-  { id: 1, title: 'Fix leaking bathroom pipe', service: 'Plumbing', icon: '🔧', serviceColor: '#006B3F', worker: 'Kofi Mensah', workerInitials: 'KM', date: 'Today', location: 'Speedsaf, Kumasi', price: 450, status: 'assigned' },
-  { id: 2, title: 'Install ceiling fan', service: 'Electrical', icon: '⚡', serviceColor: '#F59E0B', date: 'Posted 2 days ago', location: 'Osu, Accra', price: 300, status: 'open' },
-  { id: 3, title: 'Paint living room walls', service: 'Painting', icon: '🖌️', serviceColor: '#3B82F6', date: 'Posted 3 days ago', location: 'Tema Station, Accra', price: 600, status: 'open' },
-  { id: 4, title: 'Kitchen cabinet repair', service: 'Carpentry', icon: '🪚', serviceColor: '#92400E', worker: 'Yaw Boateng', workerInitials: 'YB', date: 'Thu, Jun 19', time: '10:00 AM', location: 'East Legon, Accra', price: 350, status: 'scheduled' },
-  { id: 5, title: 'Full house deep cleaning', service: 'Cleaning', icon: '🧹', serviceColor: '#8B5CF6', worker: 'Nana Asante', workerInitials: 'NA', date: 'Sat, Jun 21', time: '8:00 AM', location: 'Ayeduase, Kumasi', price: 250, status: 'scheduled' },
-  { id: 6, title: 'Rewire bedroom sockets', service: 'Electrical', icon: '⚡', serviceColor: '#F59E0B', worker: 'Kwame Adjei', workerInitials: 'KA', date: 'Mon, Jun 23', time: '2:00 PM', location: 'Labone, Accra', price: 400, status: 'scheduled' },
-  { id: 7, title: 'Roof leak repair', service: 'Masonry', icon: '🏗️', serviceColor: '#6B7280', date: 'Cancelled Jun 10', location: 'Ashaiman, Accra', price: 800, status: 'cancelled' },
-  { id: 8, title: 'Window frame replacement', service: 'Carpentry', icon: '🪚', serviceColor: '#92400E', date: 'Cancelled Jun 8', location: 'Achimota, Accra', price: 500, status: 'cancelled' },
-  { id: 9, title: 'Kofi Mensah', service: 'Plumber', icon: '🔧', serviceColor: '#006B3F', date: 'Saved Jun 12', location: '2.1 km away', price: 450, status: 'open', saved: true },
-  { id: 10, title: 'Ama Owusu', service: 'Painter', icon: '🖌️', serviceColor: '#3B82F6', date: 'Saved Jun 11', location: '3.0 km away', price: 300, status: 'open', saved: true },
-  { id: 11, title: 'Nana Asante', service: 'Cleaner', icon: '🧹', serviceColor: '#8B5CF6', date: 'Saved Jun 9', location: '1.2 km away', price: 200, status: 'open', saved: true },
+const BOOKINGS: Booking[] = [
+  { id: '1', service: 'Electrical Repair', worker: 'Kwame Appiah', icon: 'flash-outline', status: 'ongoing', date: 'Oct 24, 2023', price: 'GH₵ 250' },
+  { id: '2', service: 'Pipe Leakage', worker: 'Abena Mensah', icon: 'water-outline', status: 'upcoming', date: 'Oct 26, 2023', price: 'GH₵ 180' },
+  { id: '3', service: 'House Cleaning', worker: 'Kojo Boateng', icon: 'sparkles-outline', status: 'completed', date: 'Oct 20, 2023', price: 'GH₵ 400' },
+  { id: '4', service: 'Wall Painting', worker: 'Efua Asare', icon: 'color-palette-outline', status: 'cancelled', date: 'Oct 18, 2023', price: 'GH₵ 1,200' },
 ];
 
-const TAB_DATA: Record<Tab, Job[]> = {
-  posted: ALL_JOBS.filter(j => j.status === 'open' || j.status === 'assigned'),
-  scheduled: ALL_JOBS.filter(j => j.status === 'scheduled'),
-  cancelled: ALL_JOBS.filter(j => j.status === 'cancelled'),
-  saved: ALL_JOBS.filter(j => j.saved),
-};
-
-const STATUS_MAP: Record<string, { label: string; bg: string; color: string }> = {
-  open:      { label: 'Open',      bg: '#E6F4EE', color: COLORS.primary },
-  assigned:  { label: 'Assigned',  bg: '#E3F2FD', color: '#1565C0' },
-  scheduled: { label: 'Scheduled', bg: '#FFF8E1', color: '#F57F17' },
-  completed: { label: 'Completed', bg: '#E8F5E9', color: '#2E7D32' },
-  cancelled: { label: 'Cancelled', bg: '#FEECEC', color: COLORS.danger },
-};
-
 export default function BookingsScreen() {
-  const [activeTab, setActiveTab] = useState<Tab>('posted');
   const T = useThemeColors();
-  const jobs = TAB_DATA[activeTab];
+  const [filter, setFilter] = useState<Filter>('all');
 
-  const TABS: { key: Tab; label: string }[] = [
-    { key: 'posted', label: 'Posted' },
-    { key: 'scheduled', label: 'Scheduled' },
-    { key: 'cancelled', label: 'Cancelled' },
-    { key: 'saved', label: 'Saved' },
-  ];
+  const filteredBookings = useMemo(() => {
+    if (filter === 'all') return BOOKINGS;
+    if (filter === 'upcoming') return BOOKINGS.filter((b) => b.status === 'upcoming' || b.status === 'ongoing');
+    return BOOKINGS.filter((b) => b.status === 'completed');
+  }, [filter]);
 
-  const handleCancel = () =>
-    Alert.alert('Cancel Job', 'Are you sure you want to cancel this job?', [
-      { text: 'No', style: 'cancel' },
-      { text: 'Yes, Cancel', style: 'destructive', onPress: () => Alert.alert('Cancelled', 'Your job has been cancelled.') },
-    ]);
-
-  const handleUnsave = () =>
-    Alert.alert('Remove', 'Remove this worker from saved?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive' },
-    ]);
-
-  const renderJob = ({ item: job }: { item: Job }) => {
-    const m = STATUS_MAP[job.status];
-    return (
-      <TouchableOpacity
-        style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}
-        activeOpacity={0.82}
-        onPress={() => router.push(`/worker-profile?id=${job.id}` as any)}
-      >
-        <View style={s.topRow}>
-          <View style={[s.iconWrap, { backgroundColor: job.serviceColor + '18' }]}>
-            <Text style={s.icon}>{job.icon}</Text>
-          </View>
-          <View style={s.topInfo}>
-            <Text style={[s.jobTitle, { color: T.text }]} numberOfLines={1}>{job.title}</Text>
-            <Text style={[s.service, { color: T.subText }]}>{job.service}</Text>
-          </View>
-          <View style={[s.chip, { backgroundColor: m.bg }]}>
-            <Text style={[s.chipText, { color: m.color }]}>{m.label}</Text>
-          </View>
-        </View>
-
-        <View style={s.metaRow}>
-          <View style={s.metaItem}>
-            <Ionicons name="calendar-outline" size={13} color={T.subText} />
-            <Text style={[s.metaText, { color: T.subText }]}>{job.date}{job.time ? ` · ${job.time}` : ''}</Text>
-          </View>
-          <View style={s.metaItem}>
-            <Ionicons name="location-outline" size={13} color={T.subText} />
-            <Text style={[s.metaText, { color: T.subText }]} numberOfLines={1}>{job.location}</Text>
-          </View>
-        </View>
-
-        {job.worker && (
-          <View style={[s.workerRow, { backgroundColor: T.inputBg }]}>
-            <View style={[s.workerAvatar, { backgroundColor: job.serviceColor + '18' }]}>
-              <Text style={[s.workerInitials, { color: job.serviceColor }]}>{job.workerInitials}</Text>
-            </View>
-            <Text style={[s.workerName, { color: T.text }]}>{job.worker}</Text>
-            <TouchableOpacity style={s.chatBtn} activeOpacity={0.75} onPress={() => router.push('/messages' as any)}>
-              <Ionicons name="chatbubble-outline" size={14} color={COLORS.primary} />
-              <Text style={s.chatBtnText}>Chat</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        <View style={[s.bottomRow, { borderColor: T.border }]}>
-          <View>
-            <Text style={[s.priceLabel, { color: T.subText }]}>Budget</Text>
-            <Text style={s.price}>GH₵ {job.price}</Text>
-          </View>
-          <View style={s.actions}>
-            {activeTab === 'posted' && (
-              <>
-                <TouchableOpacity style={[s.outlineBtn, { borderColor: T.border }]} onPress={handleCancel} activeOpacity={0.75}>
-                  <Text style={[s.outlineBtnText, { color: T.subText }]}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/search' as any)}>
-                  <Text style={s.solidBtnText}>Find Workers</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {activeTab === 'scheduled' && (
-              <>
-                <TouchableOpacity style={[s.outlineBtn, { borderColor: T.border }]} onPress={handleCancel} activeOpacity={0.75}>
-                  <Text style={[s.outlineBtnText, { color: T.subText }]}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => Alert.alert('Reschedule', 'Date picker coming soon.')}>
-                  <Text style={s.solidBtnText}>Reschedule</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {activeTab === 'cancelled' && (
-              <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/post-a-job' as any)}>
-                <Text style={s.solidBtnText}>Re-post Job</Text>
-              </TouchableOpacity>
-            )}
-            {activeTab === 'saved' && (
-              <>
-                <TouchableOpacity style={[s.outlineBtn, { borderColor: T.border }]} onPress={handleUnsave} activeOpacity={0.75}>
-                  <Text style={[s.outlineBtnText, { color: T.subText }]}>Remove</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={s.solidBtn} activeOpacity={0.8} onPress={() => router.push('/post-a-job' as any)}>
-                  <Text style={s.solidBtnText}>Hire</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
+  const statusStyle = (status: Status) => {
+    switch (status) {
+      case 'ongoing':
+        return { bg: COLORS.accentLight, fg: COLORS.accentDark, label: 'Ongoing' };
+      case 'upcoming':
+        return { bg: COLORS.primaryLight, fg: COLORS.primary, label: 'Upcoming' };
+      case 'completed':
+        return { bg: COLORS.primaryLight, fg: COLORS.primary, label: 'Completed' };
+      default:
+        return { bg: T.inputBg, fg: T.subText, label: 'Cancelled' };
+    }
   };
 
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
-      <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
+    <View style={[styles.container, { backgroundColor: T.bg }]}>
+      <StatusBar barStyle={T.statusBar} />
 
-      <View style={[s.header, { backgroundColor: T.header }]}>
-        <Text style={[s.headerTitle, { color: T.text }]}>My Jobs</Text>
-        <TouchableOpacity style={s.postBtn} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
-          <Ionicons name="add" size={18} color="#fff" />
-          <Text style={s.postBtnText}>Post Job</Text>
-        </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.logo}>Waker</Text>
+        <View style={[styles.avatarSmall, { backgroundColor: T.inputBg }]} />
       </View>
 
-      <View style={[s.summaryStrip, { backgroundColor: T.card, borderColor: T.border }]}>
-        {(['posted', 'scheduled', 'cancelled', 'saved'] as Tab[]).map((tab, i, arr) => (
-          <TouchableOpacity
-            key={tab}
-            style={[s.summaryItem, i < arr.length - 1 && [s.summaryBorder, { borderColor: T.border }]]}
-            onPress={() => setActiveTab(tab)}
-            activeOpacity={0.75}
-          >
-            <Text style={[s.summaryCount, { color: activeTab === tab ? COLORS.primary : T.subText }]}>{TAB_DATA[tab].length}</Text>
-            <Text style={[s.summaryLabel, { color: T.subText }]}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={[s.tabBar, { backgroundColor: T.card, borderColor: T.border }]}>
-        {TABS.map(tab => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[s.tab, activeTab === tab.key && s.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-            activeOpacity={0.75}
-          >
-            <Text style={[s.tabText, { color: T.subText }, activeTab === tab.key && s.tabTextActive]}>{tab.label}</Text>
-            {TAB_DATA[tab.key].length > 0 && (
-              <View style={[s.tabBadge, { backgroundColor: T.inputBg }, activeTab === tab.key && s.tabBadgeActive]}>
-                <Text style={[s.tabBadgeText, { color: T.subText }, activeTab === tab.key && s.tabBadgeTextActive]}>{TAB_DATA[tab.key].length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {jobs.length === 0 ? (
-        <View style={s.empty}>
-          <Text style={s.emptyIcon}>📋</Text>
-          <Text style={[s.emptyTitle, { color: T.text }]}>No jobs here</Text>
-          <Text style={[s.emptySub, { color: T.subText }]}>Jobs will appear here once you post or book them.</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.titleBlock}>
+          <Text style={[styles.title, { color: T.text }]}>My Bookings</Text>
+          <Text style={[styles.subtitle, { color: T.subText }]}>Manage your scheduled services</Text>
         </View>
-      ) : (
-        <FlatList
-          data={jobs}
-          keyExtractor={item => String(item.id)}
-          renderItem={renderJob}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={s.list}
-        />
-      )}
 
-      <View style={[s.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+          {(['all', 'upcoming', 'completed'] as Filter[]).map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.chip, { backgroundColor: T.inputBg }, filter === f && { backgroundColor: COLORS.primary }]}
+              onPress={() => setFilter(f)}
+            >
+              <Text style={[styles.chipText, { color: T.subText }, filter === f && { color: '#fff' }]}>
+                {f === 'all' ? 'All' : f === 'upcoming' ? 'Upcoming' : 'Completed'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={{ gap: 12 }}>
+          {filteredBookings.map((booking) => {
+            const s = statusStyle(booking.status);
+            return (
+              <TouchableOpacity
+                key={booking.id}
+                style={[styles.card, { backgroundColor: T.card, borderColor: T.border }, booking.status === 'cancelled' && { opacity: 0.7 }]}
+                activeOpacity={0.85}
+              >
+                <View style={styles.cardTopRow}>
+                  <View style={styles.cardLeft}>
+                    <View style={[styles.iconWrap, { backgroundColor: T.inputBg }]}>
+                      <Ionicons name={booking.icon as any} size={22} color={COLORS.primary} />
+                    </View>
+                    <View>
+                      <Text style={[styles.serviceName, { color: T.text }]}>{booking.service}</Text>
+                      <Text style={[styles.workerName, { color: T.subText }]}>{booking.worker}</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.statusPill, { backgroundColor: s.bg }]}>
+                    <Text style={[styles.statusPillText, { color: s.fg }]}>{s.label}</Text>
+                  </View>
+                </View>
+                <View style={[styles.cardBottomRow, { borderTopColor: T.border }]}>
+                  <View>
+                    <Text style={[styles.metaLabel, { color: T.subText }]}>Date</Text>
+                    <Text style={[styles.metaValue, { color: T.text }]}>{booking.date}</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={[styles.metaLabel, { color: T.subText }]}>Price</Text>
+                    <Text
+                      style={[
+                        styles.metaValuePrice,
+                        booking.status === 'cancelled' && { textDecorationLine: 'line-through', color: T.subText },
+                      ]}
+                    >
+                      {booking.price}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+
+          <View style={styles.promoCard}>
+            <Text style={styles.promoTitle}>Need more help?</Text>
+            <Text style={styles.promoBody}>Book a trusted professional for your next home project in minutes.</Text>
+            <TouchableOpacity style={styles.promoButton} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
+              <Text style={styles.promoButtonText}>Post a Job</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* ── BOTTOM NAV ── */}
+      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
         {[
-          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
-          { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: true },
-          { icon: 'add', iconActive: 'add', label: '', route: '/post-a-job', center: true },
-          { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: false },
-          { icon: 'person-outline', iconActive: 'person', label: 'Profile', route: '/profile', active: false },
-        ].map(tab =>
+          { icon: 'home-outline', iconFocused: 'home', label: 'Home', route: '/home', active: false },
+          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: true },
+          { icon: 'add', iconFocused: 'add', label: '', route: '/post-a-job', center: true },
+          { icon: 'chatbubble-outline', iconFocused: 'chatbubble', label: 'Messages', route: '/messages', active: false },
+          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
+        ].map((tab) =>
           (tab as any).center ? (
-            <TouchableOpacity key="center" style={s.centerBtn} activeOpacity={0.85} onPress={() => router.push(tab.route as any)}>
+            <TouchableOpacity key="center" style={styles.centerBtn} activeOpacity={0.85} onPress={() => router.push(tab.route as any)}>
               <Ionicons name="add" size={28} color="#fff" />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity key={tab.label} style={s.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name={tab.active ? (tab.iconActive as any) : (tab.icon as any)} size={22} color={tab.active ? COLORS.primary : T.subText} />
-              <Text style={[s.navLabel, { color: T.subText }, tab.active && s.navLabelActive]}>{tab.label}</Text>
+            <TouchableOpacity key={tab.label} style={styles.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
+              <Ionicons name={(tab.active ? tab.iconFocused : tab.icon) as any} size={22} color={tab.active ? COLORS.primary : T.subText} />
+              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>{tab.label}</Text>
             </TouchableOpacity>
           )
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10 },
-  headerTitle: { fontSize: 22, fontWeight: '800' },
-  postBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: COLORS.primary, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 22, shadowColor: COLORS.primary, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3 },
-  postBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  summaryStrip: { flexDirection: 'row', borderBottomWidth: 1 },
-  summaryItem: { flex: 1, alignItems: 'center', paddingVertical: 12 },
-  summaryBorder: { borderRightWidth: 1 },
-  summaryCount: { fontSize: 18, fontWeight: '800', marginBottom: 2 },
-  summaryLabel: { fontSize: 10, fontWeight: '500' },
-  tabBar: { flexDirection: 'row', borderBottomWidth: 1, paddingHorizontal: 4 },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 12, borderBottomWidth: 2.5, borderColor: 'transparent' },
-  tabActive: { borderColor: COLORS.primary },
-  tabText: { fontSize: 13, fontWeight: '600' },
-  tabTextActive: { color: COLORS.primary, fontWeight: '700' },
-  tabBadge: { borderRadius: 8, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  tabBadgeActive: { backgroundColor: COLORS.primary + '20' },
-  tabBadgeText: { fontSize: 10, fontWeight: '800' },
-  tabBadgeTextActive: { color: COLORS.primary },
-  list: { paddingTop: 14, paddingBottom: 110 },
-  card: { marginHorizontal: 16, marginBottom: 12, borderRadius: 16, padding: 14, borderWidth: 1, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  iconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  icon: { fontSize: 22 },
-  topInfo: { flex: 1 },
-  jobTitle: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  service: { fontSize: 12 },
-  chip: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8 },
-  chipText: { fontSize: 11, fontWeight: '700' },
-  metaRow: { gap: 5, marginBottom: 10 },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaText: { fontSize: 12, flex: 1 },
-  workerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, padding: 10, marginBottom: 10 },
-  workerAvatar: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  workerInitials: { fontSize: 11, fontWeight: '800' },
-  workerName: { flex: 1, fontSize: 13, fontWeight: '600' },
-  chatBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: COLORS.primary },
-  chatBtnText: { fontSize: 12, fontWeight: '600', color: COLORS.primary },
-  bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, paddingTop: 10 },
-  priceLabel: { fontSize: 10, fontWeight: '500' },
-  price: { fontSize: 15, fontWeight: '800', color: COLORS.primary },
-  actions: { flexDirection: 'row', gap: 8 },
-  solidBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  solidBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  outlineBtn: { borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  outlineBtnText: { fontSize: 12, fontWeight: '600' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
-  emptyIcon: { fontSize: 52, marginBottom: 14 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', marginBottom: 6 },
-  emptySub: { fontSize: 13, textAlign: 'center', lineHeight: 20 },
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 10 },
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
+  logo: { fontSize: 20, fontWeight: '900', color: COLORS.primary },
+  avatarSmall: { width: 40, height: 40, borderRadius: 20 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
+  titleBlock: { marginTop: 4, marginBottom: 16 },
+  title: { fontSize: 26, fontWeight: '800' },
+  subtitle: { fontSize: 14 },
+  chipRow: { marginBottom: 20 },
+  chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, marginRight: 8 },
+  chipText: { fontSize: 13, fontWeight: '600' },
+  card: { borderWidth: 1, borderRadius: 20, padding: 16, gap: 12 },
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardLeft: { flexDirection: 'row', gap: 12, flex: 1 },
+  iconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  serviceName: { fontSize: 16, fontWeight: '700' },
+  workerName: { fontSize: 14 },
+  statusPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
+  statusPillText: { fontSize: 11, fontWeight: '700' },
+  cardBottomRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, paddingTop: 12 },
+  metaLabel: { fontSize: 11, textTransform: 'uppercase', fontWeight: '700' },
+  metaValue: { fontSize: 14, fontWeight: '600' },
+  metaValuePrice: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  promoCard: { backgroundColor: COLORS.primary, borderRadius: 20, padding: 20, gap: 6, minHeight: 180, justifyContent: 'center' },
+  promoTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  promoBody: { fontSize: 14, color: '#fff', maxWidth: '80%' },
+  promoButton: { backgroundColor: '#fff', alignSelf: 'flex-start', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, marginTop: 12 },
+  promoButtonText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  bottomNav: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    borderTopWidth: 1, flexDirection: 'row', alignItems: 'center',
+    paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10,
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
+  },
   navTab: { flex: 1, alignItems: 'center', gap: 3 },
   navLabel: { fontSize: 10, fontWeight: '500' },
   navLabelActive: { color: COLORS.primary, fontWeight: '700' },
-  centerBtn: { width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: COLORS.primary, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8 },
+  centerBtn: {
+    width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+    shadowColor: COLORS.primary, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8,
+  },
 });

@@ -1,0 +1,144 @@
+import { COLORS } from '@/constants/theme';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import {
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MY_PROFILE } from './worker-setup';
+
+function PriceField({ label, hint, value, onChangeText, T }: {
+  label: string; hint: string; value: string; onChangeText: (v: string) => void; T: any;
+}) {
+  return (
+    <View style={s.fieldWrap}>
+      <Text style={[s.fieldLabel, { color: T.text }]}>{label}</Text>
+      <Text style={[s.fieldHint, { color: T.subText }]}>{hint}</Text>
+      <View style={[s.inputRow, { backgroundColor: T.inputBg, borderColor: T.border }]}>
+        <Text style={[s.currencyPrefix, { color: T.subText }]}>GH₵</Text>
+        <TextInput
+          style={[s.input, { color: T.text }]}
+          keyboardType="number-pad"
+          value={value}
+          onChangeText={onChangeText}
+          placeholder="0"
+          placeholderTextColor={T.subText}
+        />
+      </View>
+    </View>
+  );
+}
+
+export default function WorkerPricingScreen() {
+  const T = useThemeColors();
+  const [price, setPrice] = useState(String(MY_PROFILE.price));
+  const [hourlyRate, setHourlyRate] = useState(String(MY_PROFILE.hourlyRate));
+  const [minJobValue, setMinJobValue] = useState(String(MY_PROFILE.minJobValue));
+
+  const handleSave = () => {
+    const p = parseInt(price, 10);
+    const h = parseInt(hourlyRate, 10);
+    const m = parseInt(minJobValue, 10);
+
+    if (!p || !h || !m) {
+      Alert.alert('Check your numbers', 'All three prices need to be valid amounts greater than 0.');
+      return;
+    }
+
+    MY_PROFILE.price = p;
+    MY_PROFILE.hourlyRate = h;
+    MY_PROFILE.minJobValue = m;
+    Alert.alert('Saved', 'Your pricing has been updated.', [
+      { text: 'OK', onPress: () => router.back() },
+    ]);
+  };
+
+  return (
+    <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+
+      <View style={[s.header, { backgroundColor: COLORS.primary }]}>
+        <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
+        </TouchableOpacity>
+        <Text style={s.headerTitle}>Pricing</Text>
+        <View style={s.backBtn} />
+      </View>
+
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
+          <PriceField
+            label="Starting price"
+            hint="What clients see first when browsing your profile"
+            value={price}
+            onChangeText={setPrice}
+            T={T}
+          />
+          <View style={[s.fieldDivider, { backgroundColor: T.divider }]} />
+          <PriceField
+            label="Hourly rate"
+            hint="Used for jobs billed by the hour"
+            value={hourlyRate}
+            onChangeText={setHourlyRate}
+            T={T}
+          />
+          <View style={[s.fieldDivider, { backgroundColor: T.divider }]} />
+          <PriceField
+            label="Minimum job value"
+            hint="The smallest job you're willing to accept"
+            value={minJobValue}
+            onChangeText={setMinJobValue}
+            T={T}
+          />
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      <View style={[s.footer, { backgroundColor: T.card, borderColor: T.border }]}>
+        <TouchableOpacity onPress={handleSave} activeOpacity={0.85}>
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.saveBtn}
+          >
+            <Text style={s.saveBtnText}>Save Changes</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
+  backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  scroll: { padding: 16 },
+  card: { borderRadius: 16, borderWidth: 1, padding: 16 },
+  fieldDivider: { height: 1, marginVertical: 16 },
+
+  fieldWrap: {},
+  fieldLabel: { fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  fieldHint: { fontSize: 12, marginBottom: 10 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, gap: 8 },
+  currencyPrefix: { fontSize: 15, fontWeight: '700' },
+  input: { flex: 1, fontSize: 15, paddingVertical: 13 },
+
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, borderTopWidth: 1, padding: 16, paddingBottom: 28 },
+  saveBtn: { borderRadius: 30, paddingVertical: 15, alignItems: 'center' },
+  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+});
