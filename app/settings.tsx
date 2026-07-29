@@ -46,6 +46,22 @@ export default function SettingsScreen() {
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
+        {/* Profile summary */}
+        <TouchableOpacity
+          style={[s.profileCard, { backgroundColor: cardBg, borderColor }]}
+          activeOpacity={0.8}
+          onPress={() => router.push('/worker-personal-info' as any)}
+        >
+          <View style={[s.profileAvatar, { backgroundColor: COLORS.primary }]}>
+            <Ionicons name="person" size={26} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[s.profileName, { color: textColor }]}>Kofi Mensah</Text>
+            <Text style={[s.profileMeta, { color: COLORS.primary }]}>Verified Pro • Accra</Text>
+          </View>
+          <Ionicons name="pencil-outline" size={18} color={iconColor} />
+        </TouchableOpacity>
+
         {/* Preferences */}
         <Text style={[s.sectionLabel, { color: subColor }]}>Preferences</Text>
         <View style={[s.card, { backgroundColor: cardBg, borderColor }]}>
@@ -58,7 +74,9 @@ export default function SettingsScreen() {
               })).concat([{ text: 'Cancel', onPress: () => { } }]))
             }
           >
-            <Ionicons name="language-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="language-outline" size={18} color={iconColor} />
+            </View>
             <Text style={[s.rowLabel, { color: textColor }]}>Language</Text>
             <Text style={[s.rowValue, { color: subColor }]}>{language}</Text>
             <Ionicons name="chevron-forward" size={18} color="#BBB" />
@@ -69,14 +87,18 @@ export default function SettingsScreen() {
             activeOpacity={0.7}
             onPress={() => Alert.alert('Currency', 'Currency selection coming soon.')}
           >
-            <Ionicons name="cash-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="cash-outline" size={18} color={iconColor} />
+            </View>
             <Text style={[s.rowLabel, { color: textColor }]}>Currency</Text>
             <Text style={[s.rowValue, { color: subColor }]}>{currency}</Text>
             <Ionicons name="chevron-forward" size={18} color="#BBB" />
           </TouchableOpacity>
           <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
-            <Ionicons name="moon-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="moon-outline" size={18} color={iconColor} />
+            </View>
             <View style={s.rowInfo}>
               <Text style={[s.rowLabel, { color: textColor }]}>Dark Mode</Text>
               <Text style={[s.rowSub, { color: subColor }]}>{isDark ? 'On' : 'Off'}</Text>
@@ -89,7 +111,9 @@ export default function SettingsScreen() {
         <Text style={[s.sectionLabel, { color: subColor }]}>Notifications</Text>
         <View style={[s.card, { backgroundColor: cardBg, borderColor }]}>
           <View style={s.row}>
-            <Ionicons name="notifications-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="notifications-outline" size={18} color={iconColor} />
+            </View>
             <View style={s.rowInfo}>
               <Text style={[s.rowLabel, { color: textColor }]}>Push Notifications</Text>
               <Text style={[s.rowSub, { color: subColor }]}>Job updates and messages</Text>
@@ -98,7 +122,9 @@ export default function SettingsScreen() {
           </View>
           <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
-            <Ionicons name="mail-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="mail-outline" size={18} color={iconColor} />
+            </View>
             <View style={s.rowInfo}>
               <Text style={[s.rowLabel, { color: textColor }]}>Email Notifications</Text>
               <Text style={[s.rowSub, { color: subColor }]}>Receipts and account updates</Text>
@@ -107,7 +133,9 @@ export default function SettingsScreen() {
           </View>
           <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
-            <Ionicons name="chatbox-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="chatbox-outline" size={18} color={iconColor} />
+            </View>
             <View style={s.rowInfo}>
               <Text style={[s.rowLabel, { color: textColor }]}>SMS Notifications</Text>
               <Text style={[s.rowSub, { color: subColor }]}>Text message alerts</Text>
@@ -120,22 +148,45 @@ export default function SettingsScreen() {
         <Text style={[s.sectionLabel, { color: subColor }]}>Account</Text>
         <View style={[s.card, { backgroundColor: cardBg, borderColor }]}>
           <TouchableOpacity style={s.row} activeOpacity={0.7} onPress={() => Alert.alert('Clear Cache', 'App cache cleared.')}>
-            <Ionicons name="trash-outline" size={20} color={iconColor} style={s.icon} />
+            <View style={[s.iconChip, { backgroundColor: borderColor }]}>
+              <Ionicons name="trash-outline" size={18} color={iconColor} />
+            </View>
             <Text style={[s.rowLabel, { color: textColor }]}>Clear App Cache</Text>
             <Ionicons name="chevron-forward" size={18} color="#BBB" />
           </TouchableOpacity>
-          <View style={[s.divider, { backgroundColor: borderColor }]} />
+        </View>
+
+        <TouchableOpacity
+          style={s.logoutButton}
+          activeOpacity={0.85}
+          onPress={() => Alert.alert('Log Out?', 'You will need to sign in again to access your jobs.', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Log Out', style: 'destructive', onPress: () => router.replace('/sign-in' as any) },
+          ])}
+        >
+          <Ionicons name="log-out-outline" size={18} color={COLORS.danger} />
+          <Text style={s.logoutButtonText}>Log Out</Text>
+        </TouchableOpacity>
+
+        <View style={s.dangerZone}>
+          <View style={s.dangerZoneHeader}>
+            <Ionicons name="warning-outline" size={16} color={COLORS.danger} />
+            <Text style={s.dangerZoneTitle}>Danger Zone</Text>
+          </View>
+          <Text style={s.dangerZoneBody}>
+            Deleting your account is permanent. All your job history, earned badges, and
+            verification status will be lost forever.
+          </Text>
           <TouchableOpacity
-            style={s.row}
+            style={s.deleteButton}
             activeOpacity={0.7}
             onPress={() => Alert.alert('Delete Account', 'This will permanently delete your account and all data. This cannot be undone.', [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete', style: 'destructive', onPress: () => router.replace('/sign-in') },
+              { text: 'Delete', style: 'destructive', onPress: () => router.replace('/sign-in' as any) },
             ])}
           >
-            <Ionicons name="person-remove-outline" size={20} color={COLORS.danger} style={s.icon} />
-            <Text style={[s.rowLabel, { color: COLORS.danger }]}>Delete Account</Text>
-            <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            <Ionicons name="trash-outline" size={16} color={COLORS.danger} />
+            <Text style={s.deleteButtonText}>Delete My Account</Text>
           </TouchableOpacity>
         </View>
 
@@ -153,12 +204,37 @@ const s = StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 40 },
   sectionLabel: { fontSize: 12, fontWeight: '700', color: COLORS.muted, marginBottom: 8, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.8 },
   card: { backgroundColor: '#fff', borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#F0F0F0', overflow: 'hidden' },
+  profileCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 24,
+  },
+  profileAvatar: { width: 52, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  profileName: { fontSize: 17, fontWeight: '800' },
+  profileMeta: { fontSize: 13, fontWeight: '600', marginTop: 2 },
   divider: { height: 1, backgroundColor: '#F5F5F5', marginLeft: 56 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13, gap: 12 },
   icon: { width: 24 },
+  iconChip: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   rowInfo: { flex: 1 },
   rowLabel: { fontSize: 14, fontWeight: '500', color: '#1A1A1A', flex: 1 },
   rowValue: { fontSize: 13, color: COLORS.muted, marginRight: 6 },
   rowSub: { fontSize: 11, color: COLORS.muted, marginTop: 2 },
   version: { textAlign: 'center', fontSize: 12, color: '#BBBBBB', marginTop: 4 },
+  logoutButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    height: 52, borderRadius: 14, backgroundColor: COLORS.dangerLight,
+    marginBottom: 20,
+  },
+  logoutButtonText: { fontSize: 15, fontWeight: '700', color: COLORS.danger },
+  dangerZone: {
+    borderWidth: 1, borderColor: COLORS.danger, borderRadius: 16, padding: 16, marginBottom: 24, gap: 10,
+  },
+  dangerZoneHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dangerZoneTitle: { fontSize: 14, fontWeight: '800', color: COLORS.danger },
+  dangerZoneBody: { fontSize: 12, lineHeight: 18, color: COLORS.danger },
+  deleteButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    height: 46, borderRadius: 12, borderWidth: 1, borderColor: COLORS.danger,
+  },
+  deleteButtonText: { fontSize: 13, fontWeight: '700', color: COLORS.danger },
 });

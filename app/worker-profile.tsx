@@ -224,7 +224,13 @@ export default function WorkerProfileScreen() {
 
                 {/* ══ REVIEWS ══ */}
                 <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
-                    <Text style={[s.cardTitle, { color: T.text }]}>Reviews ({worker.reviews})</Text>
+                    <View style={s.reviewsHeaderRow}>
+                        <Text style={[s.cardTitle, { color: T.text, marginBottom: 0 }]}>Reviews ({worker.reviews})</Text>
+                        <View style={s.recentRow}>
+                            <Ionicons name="filter-outline" size={13} color={COLORS.primary} />
+                            <Text style={[s.recentText, { color: COLORS.primary }]}>Recent</Text>
+                        </View>
+                    </View>
                     {details.reviews.map((rev, i) => (
                         <View key={rev.author} style={[s.reviewRow, i > 0 && { borderTopWidth: 1, borderColor: T.divider }]}>
                             <View style={s.reviewTop}>
@@ -324,6 +330,9 @@ const s = StyleSheet.create({
     certText: { flex: 1, fontSize: 13, fontWeight: '600' },
 
     /* Reviews */
+    reviewsHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    recentRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    recentText: { fontSize: 12, fontWeight: '700' },
     reviewRow: { paddingVertical: 12 },
     reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
     reviewAvatar: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },

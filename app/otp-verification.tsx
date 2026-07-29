@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   NativeSyntheticEvent,
   StatusBar,
   StyleSheet,
@@ -13,14 +14,18 @@ import {
 } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 59;
 
 export default function OtpVerificationScreen() {
   const T = useThemeColors();
+  const { identifier, mode } = useLocalSearchParams<{ identifier?: string; mode?: 'phone' | 'email' }>();
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [timeLeft, setTimeLeft] = useState(RESEND_SECONDS);
+  const [error, setError] = useState('');
+  const [verifying, setVerifying] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
   useEffect(() => {
@@ -43,15 +48,37 @@ export default function OtpVerificationScreen() {
     }
   };
 
-  const handleResend = () => {
-    if (timeLeft > 0) return;
+  const handleResend = async () => {
+    if (timeLeft > 0 || !identifier) return;
     setTimeLeft(RESEND_SECONDS);
-    // TODO: call your resend-OTP endpoint
+    setError('');
+    const { error: resendError } = await supabase.auth.resend(
+      mode === 'phone'
+        ? { type: 'sms', phone: identifier }
+        : { type: 'signup', email: identifier }
+    );
+    if (resendError) setError(resendError.message);
   };
 
-  const handleVerify = () => {
-    // TODO: verify code with your API
-    router.replace('/sign-in' as any);
+  const handleVerify = async () => {
+    const token = digits.join('');
+    if (token.length !== OTP_LENGTH || !identifier) {
+      setError('Enter the full 6-digit code.');
+      return;
+    }
+    setError('');
+    setVerifying(true);
+    const { error: verifyError } = await supabase.auth.verifyOtp(
+      mode === 'phone'
+        ? { phone: identifier, token, type: 'sms' }
+        : { email: identifier, token, type: 'signup' }
+    );
+    setVerifying(false);
+    if (verifyError) {
+      setError(verifyError.message);
+      return;
+    }
+    router.replace('/home' as any);
   };
 
   const formattedTime = `(00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft})`;
@@ -73,7 +100,7 @@ export default function OtpVerificationScreen() {
           <Text style={[styles.title, { color: T.text }]}>Verify Phone Number</Text>
           <Text style={[styles.subtitle, { color: T.subText }]}>
             We&apos;ve sent a 6-digit verification code to{' '}
-            <Text style={[styles.bold, { color: T.text }]}>+233 24 567 8901</Text>. Please enter it below.
+            <Text style={[styles.bold, { color: T.text }]}>{identifier ?? 'your phone/email'}</Text>. Please enter it below.
           </Text>
         </View>
 
@@ -102,8 +129,15 @@ export default function OtpVerificationScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.verifyButton} onPress={handleVerify} activeOpacity={0.85}>
-          <Text style={styles.verifyText}>Verify</Text>
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+        <TouchableOpacity
+          style={styles.verifyButton}
+          onPress={handleVerify}
+          disabled={verifying}
+          activeOpacity={0.85}
+        >
+          {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.verifyText}>Verify</Text>}
         </TouchableOpacity>
 
         <View style={[styles.securityNote, { backgroundColor: T.inputBg, borderColor: T.border }]}>
@@ -140,6 +174,7 @@ const styles = StyleSheet.create({
   resendBlock: { alignItems: 'center', gap: 6, marginBottom: 28 },
   resendLabel: { fontSize: 13 },
   resendButton: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+  errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center', marginBottom: 12 },
   verifyButton: { minHeight: 56, borderRadius: 16, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
   verifyText: { fontSize: 16, fontWeight: '700', color: '#fff' },
   securityNote: { marginTop: 28, padding: 16, borderRadius: 16, borderWidth: 1, alignItems: 'center', gap: 8 },

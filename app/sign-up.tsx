@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 type Mode = 'phone' | 'email';
 
@@ -28,14 +29,59 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = () => {
-    // TODO: wire up to your registration API
+  const handleSubmit = async () => {
+    setError('');
+
+    if (!fullName.trim() || !password) {
+      setError('Please fill in your name and password.');
+      return;
+    }
+    if (mode === 'email' && !email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (mode === 'phone' && !phone.trim()) {
+      setError('Please enter your phone number.');
+      return;
+    }
+
     setSubmitting(true);
-    setTimeout(() => {
+
+    if (mode === 'email') {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { full_name: fullName.trim() } },
+      });
       setSubmitting(false);
-      router.push('/otp-verification' as any);
-    }, 900);
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+      router.push({
+        pathname: '/otp-verification',
+        params: { identifier: email.trim(), mode: 'email' },
+      } as any);
+    } else {
+      const digitsOnly = phone.replace(/\D/g, '').replace(/^0/, '');
+      const fullPhone = `+233${digitsOnly}`;
+      const { error: signUpError } = await supabase.auth.signUp({
+        phone: fullPhone,
+        password,
+        options: { data: { full_name: fullName.trim() } },
+      });
+      setSubmitting(false);
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+      router.push({
+        pathname: '/otp-verification',
+        params: { identifier: fullPhone, mode: 'phone' },
+      } as any);
+    }
   };
 
   return (
@@ -144,6 +190,8 @@ export default function SignUpScreen() {
           </View>
         </View>
 
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+
         <TouchableOpacity style={styles.termsRow} onPress={() => setAgreed((v) => !v)}>
           <Ionicons
             name={agreed ? 'checkbox' : 'square-outline'}
@@ -207,6 +255,7 @@ const styles = StyleSheet.create({
   termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 6 },
   termsText: { fontSize: 12, flex: 1, lineHeight: 18 },
   termsLink: { color: COLORS.primary, fontWeight: '700' },
+  errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center' },
   submitButton: {
     height: 56,
     borderRadius: 16,

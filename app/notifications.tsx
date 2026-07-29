@@ -115,13 +115,20 @@ export default function NotificationsScreen() {
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
-          {visible.map((notif, i) => {
-            const meta = TYPE_META[notif.type];
-            return (
-              <View key={notif.id}>
-                {i > 0 && <View style={[s.divider, { backgroundColor: T.divider }]} />}
+          {(() => {
+            const unread = visible.filter((n) => !n.read);
+            const read = visible.filter((n) => n.read);
+            const renderNotif = (notif: Notif, bordered: boolean) => {
+              const meta = TYPE_META[notif.type];
+              return (
                 <TouchableOpacity
-                  style={[s.row, { backgroundColor: !notif.read ? COLORS.primary + '08' : T.card }]}
+                  key={notif.id}
+                  style={[
+                    s.row,
+                    bordered
+                      ? { backgroundColor: T.card, borderWidth: 1, borderColor: T.border, borderRadius: 14, marginBottom: 10 }
+                      : { backgroundColor: COLORS.primary + '08', borderRadius: 14, marginBottom: 10 },
+                  ]}
                   onPress={() => markRead(notif.id)}
                   activeOpacity={0.78}
                 >
@@ -138,9 +145,25 @@ export default function NotificationsScreen() {
                     <Ionicons name="close-outline" size={18} color={T.subText} />
                   </TouchableOpacity>
                 </TouchableOpacity>
-              </View>
+              );
+            };
+            return (
+              <>
+                {unread.length > 0 && (
+                  <>
+                    <Text style={s.sectionLabel}>NEW</Text>
+                    {unread.map((n) => renderNotif(n, false))}
+                  </>
+                )}
+                {read.length > 0 && (
+                  <>
+                    <Text style={[s.sectionLabel, { color: T.subText }]}>EARLIER</Text>
+                    {read.map((n) => renderNotif(n, true))}
+                  </>
+                )}
+              </>
             );
-          })}
+          })()}
           {notifs.filter(n => n.read).length > 0 && (
             <TouchableOpacity style={s.clearBtn} onPress={clearAll} activeOpacity={0.7}>
               <Ionicons name="trash-outline" size={15} color={T.subText} />

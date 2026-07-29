@@ -1,6 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -27,6 +27,7 @@ interface Message {
   mine: boolean;
   time: string;
   status?: 'sent' | 'delivered' | 'read';
+  offer?: { kind: 'offer' | 'counter' | 'suggestion'; amount: number; label?: string };
 }
 
 /* ─── Sample chat histories keyed by conversation id ─── */
@@ -41,6 +42,9 @@ const CHAT_DATA: Record<string, Message[]> = {
     { id: 'm7',  mine: false, text: 'Perfect. My rate is GH₵ 450 for standard pipe repair. Materials included.', time: '9:13 AM', status: 'read' },
     { id: 'm8',  mine: true,  text: 'That\'s fine. See you at 11.', time: '9:14 AM', status: 'read' },
     { id: 'm9',  mine: false, text: 'I\'m about 10 minutes away, please make sure the main valve is accessible.', time: '10:52 AM', status: 'delivered' },
+    { id: 'm10', mine: false, text: 'Based on the room sizes, I can do this job for GH₵ 220. This includes all cleaning supplies and transport.', time: '10:55 AM', status: 'delivered', offer: { kind: 'offer', amount: 220, label: 'Worker Offer' } },
+    { id: 'm11', mine: true, text: 'My budget is slightly lower. Would you be able to do it for GH₵ 150?', time: '10:58 AM', status: 'read', offer: { kind: 'counter', amount: 150, label: 'Your Counter' } },
+    { id: 'm12', mine: false, text: "That's a bit low for the effort required. Let's meet in the middle?", time: '11:02 AM', status: 'delivered', offer: { kind: 'suggestion', amount: 180, label: 'New Suggested Price' } },
   ],
   c2: [
     { id: 'm1', mine: false, text: 'Good day! I\'m a certified electrician. I can rewire your bedroom sockets.', time: 'Mon 2:00 PM', status: 'read' },
@@ -85,6 +89,53 @@ const CHAT_DATA: Record<string, Message[]> = {
 
 /* ─── Message bubble ─── */
 function MessageBubble({ msg, workerColor, T }: { msg: Message; workerColor: string; T: any }) {
+  if (msg.offer) {
+    const { kind, amount, label } = msg.offer;
+    const isCounter = kind === 'counter';
+    return (
+      <View style={[mb.wrap, msg.mine ? mb.mine : mb.theirs, { maxWidth: '85%' }]}>
+        <View
+          style={[
+            ob.card,
+            isCounter
+              ? { backgroundColor: COLORS.primary }
+              : kind === 'suggestion'
+              ? { backgroundColor: T.card, borderColor: COLORS.accent, borderWidth: 1, borderLeftWidth: 4 }
+              : { backgroundColor: T.card, borderColor: T.border, borderWidth: 1 },
+          ]}
+        >
+          <Text style={[ob.label, { color: isCounter ? 'rgba(255,255,255,0.85)' : COLORS.primary }]}>{label}</Text>
+          {kind === 'suggestion' ? (
+            <View style={ob.suggestionRow}>
+              <Text style={[ob.text, { color: T.text }]}>{msg.text}</Text>
+              <View style={[ob.priceBox, { backgroundColor: T.inputBg }]}>
+                <Text style={[ob.priceBoxLabel, { color: T.subText }]}>{label}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={[ob.priceBoxValue, { color: COLORS.primary }]}>GH₵ {amount}</Text>
+                  <MaterialCommunityIcons name="handshake-outline" size={16} color={COLORS.accentDark} />
+                </View>
+              </View>
+            </View>
+          ) : (
+            <>
+              <Text style={[ob.text, { color: isCounter ? '#fff' : T.text }]}>
+                {msg.text.split(String(amount)).map((part, i, arr) => (
+                  <Text key={i}>
+                    {part}
+                    {i < arr.length - 1 && <Text style={{ fontWeight: '800' }}>{amount}</Text>}
+                  </Text>
+                ))}
+              </Text>
+            </>
+          )}
+        </View>
+        <View style={[mb.metaRow, msg.mine && { justifyContent: 'flex-end' }]}>
+          <Text style={[mb.time, { color: T.subText }]}>{msg.time}</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={[mb.wrap, msg.mine ? mb.mine : mb.theirs]}>
       <View style={[mb.bubble, msg.mine ? mb.bubbleMine : [mb.bubbleTheirs, { backgroundColor: T.card, borderColor: T.border }]]}>
@@ -103,6 +154,16 @@ function MessageBubble({ msg, workerColor, T }: { msg: Message; workerColor: str
     </View>
   );
 }
+
+const ob = StyleSheet.create({
+  card: { borderRadius: 14, padding: 12, gap: 6 },
+  label: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  text: { fontSize: 13, lineHeight: 19 },
+  suggestionRow: { gap: 8 },
+  priceBox: { borderRadius: 10, padding: 10, gap: 2 },
+  priceBoxLabel: { fontSize: 11, fontWeight: '600' },
+  priceBoxValue: { fontSize: 16, fontWeight: '800' },
+});
 
 const mb = StyleSheet.create({
   wrap: { marginBottom: 10, maxWidth: '80%' },
@@ -145,7 +206,12 @@ export default function ChatScreen() {
   const [input, setInput] = useState('');
   const [showQuick, setShowQuick] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [counterMode, setCounterMode] = useState(false);
+  const [counterAmount, setCounterAmount] = useState('');
+  const [negotiationResolved, setNegotiationResolved] = useState(false);
   const listRef = useRef<FlatList>(null);
+
+  const lastOffer = [...messages].reverse().find(m => m.offer)?.offer;
 
   const send = (text: string) => {
     if (!text.trim()) return;
@@ -168,6 +234,42 @@ export default function ChatScreen() {
 
   const T = useThemeColors();
   if (!convo) return null;
+
+  const handleAcceptOffer = () => {
+    if (!lastOffer) return;
+    setNegotiationResolved(true);
+    setMessages(prev => [...prev, {
+      id: `m_${Date.now()}`,
+      mine: true,
+      text: `Accepted at GH₵ ${lastOffer.amount}. Looking forward to it!`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'sent',
+    }]);
+    Alert.alert('Offer Accepted', `You've accepted GH₵ ${lastOffer.amount} for this job.`);
+  };
+
+  const handleCancelRequest = () => {
+    Alert.alert('Cancel Request?', 'This will cancel the current job request with this worker.', [
+      { text: 'Keep Request', style: 'cancel' },
+      { text: 'Cancel Request', style: 'destructive', onPress: () => setNegotiationResolved(true) },
+    ]);
+  };
+
+  const sendCounterOffer = () => {
+    const amount = parseFloat(counterAmount);
+    if (!amount || amount <= 0) return;
+    setMessages(prev => [...prev, {
+      id: `m_${Date.now()}`,
+      mine: true,
+      text: `I can do it for GH₵ ${amount}.`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'sent',
+      offer: { kind: 'counter', amount, label: 'Your Counter' },
+    }]);
+    setCounterAmount('');
+    setCounterMode(false);
+    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+  };
 
   const handleViewProfile = () => {
     setMenuVisible(false);
@@ -314,6 +416,44 @@ export default function ChatScreen() {
           </View>
         )}
 
+        {lastOffer && !negotiationResolved && (
+          <View style={[s.negotiationBar, { backgroundColor: T.card, borderColor: T.border }]}>
+            <View style={s.negotiationActionsRow}>
+              <TouchableOpacity style={s.acceptOfferBtn} activeOpacity={0.85} onPress={handleAcceptOffer}>
+                <Ionicons name="checkmark-circle-outline" size={17} color="#fff" />
+                <Text style={s.acceptOfferBtnText}>Accept GH₵{lastOffer.amount}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.cancelReqBtn, { borderColor: T.border }]} activeOpacity={0.85} onPress={handleCancelRequest}>
+                <Ionicons name="close-circle-outline" size={17} color={T.text} />
+                <Text style={[s.cancelReqBtnText, { color: T.text }]}>Cancel Request</Text>
+              </TouchableOpacity>
+            </View>
+            {counterMode ? (
+              <View style={s.counterInputRow}>
+                <View style={[s.counterAmountBox, { backgroundColor: T.inputBg }]}>
+                  <Text style={{ color: COLORS.primary, fontWeight: '800' }}>GH₵</Text>
+                  <TextInput
+                    style={[s.counterAmountInput, { color: T.text }]}
+                    placeholder="0.00"
+                    placeholderTextColor={T.subText}
+                    keyboardType="decimal-pad"
+                    value={counterAmount}
+                    onChangeText={setCounterAmount}
+                    autoFocus
+                  />
+                </View>
+                <TouchableOpacity style={s.sendBtn} activeOpacity={0.8} onPress={sendCounterOffer}>
+                  <Ionicons name="send" size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={s.counterOfferLink} onPress={() => setCounterMode(true)} activeOpacity={0.7}>
+                <Text style={{ color: COLORS.primary, fontWeight: '700', fontSize: 12 }}>Send Counter-offer</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         <View style={[s.inputBar, { backgroundColor: T.card, borderColor: T.border }]}>
           <TouchableOpacity style={s.attachBtn} activeOpacity={0.75} onPress={() => Alert.alert('Attach', 'File picker coming soon.')}>
             <Ionicons name="attach-outline" size={22} color={T.subText} />
@@ -374,4 +514,22 @@ const s = StyleSheet.create({
   input: { flex: 1, borderRadius: 22, paddingHorizontal: 14, paddingVertical: 9, fontSize: 14, maxHeight: 110, lineHeight: 20 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
   sendBtnDisabled: { backgroundColor: COLORS.primary + '50' },
+
+  /* Negotiation bar */
+  negotiationBar: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6, borderTopWidth: 1, gap: 8 },
+  negotiationActionsRow: { flexDirection: 'row', gap: 10 },
+  acceptOfferBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    height: 46, borderRadius: 12, backgroundColor: COLORS.primary,
+  },
+  acceptOfferBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  cancelReqBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    height: 46, borderRadius: 12, borderWidth: 1.5,
+  },
+  cancelReqBtnText: { fontSize: 13, fontWeight: '700' },
+  counterOfferLink: { alignItems: 'center', paddingVertical: 4 },
+  counterInputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  counterAmountBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 12, paddingHorizontal: 12, height: 44 },
+  counterAmountInput: { flex: 1, fontSize: 14, padding: 0 },
 });

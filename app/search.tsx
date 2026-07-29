@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   FlatList,
+  Modal,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -134,6 +135,11 @@ export default function SearchScreen() {
   const [search, setSearch] = useState(q ?? '');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [sortMode, setSortMode] = useState<SortMode>('none');
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(15);
+  const [minRating, setMinRating] = useState<number | null>(null);
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
   const T = useThemeColors();
 
   // Chip press handlers
@@ -166,9 +172,12 @@ export default function SearchScreen() {
       w.skill.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 2. Filter/sort by active chip
+  // 2. Filter/sort by active chip + modal filters
   const filtered = [...searched]
     .filter(w => sortMode === 'available' ? w.available : true)
+    .filter(w => (minRating != null ? w.rating >= minRating : true))
+    .filter(w => (priceMin.trim() ? w.price >= parseFloat(priceMin) : true))
+    .filter(w => (priceMax.trim() ? w.price <= parseFloat(priceMax) : true))
     .sort((a, b) => {
       if (sortMode === 'rating') return b.rating - a.rating;
       if (sortMode === 'price_desc') return b.price - a.price;
@@ -316,11 +325,95 @@ export default function SearchScreen() {
           <Text style={[styles.bottomBtnText, { color: T.text }]}>Sort</Text>
         </TouchableOpacity>
         <View style={[styles.bottomDivider, { backgroundColor: T.border }]} />
-        <TouchableOpacity style={styles.bottomBtn} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.bottomBtn} activeOpacity={0.8} onPress={() => setFilterVisible(true)}>
           <MaterialCommunityIcons name="tune-variant" size={18} color={T.text} />
           <Text style={[styles.bottomBtnText, { color: T.text }]}>Filter</Text>
         </TouchableOpacity>
       </View>
+
+      {/* ── FILTER & SORT MODAL ── */}
+      <Modal visible={filterVisible} animationType="slide" transparent onRequestClose={() => setFilterVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { backgroundColor: T.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: T.text }]}>Filter & Sort</Text>
+              <TouchableOpacity onPress={() => setFilterVisible(false)} hitSlop={10}>
+                <Ionicons name="close" size={22} color={T.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalRow}>
+                <Text style={[styles.modalLabel, { color: T.text }]}>Distance Radius</Text>
+                <View style={[styles.radiusPill, { backgroundColor: T.inputBg }]}>
+                  <Text style={[styles.radiusPillText, { color: T.text }]}>{radiusKm} km</Text>
+                </View>
+              </View>
+              <View style={styles.radiusChipsRow}>
+                {[5, 10, 15, 25, 50].map((km) => (
+                  <TouchableOpacity
+                    key={km}
+                    style={[
+                      styles.radiusChip,
+                      { borderColor: T.border },
+                      radiusKm === km && { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+                    ]}
+                    onPress={() => setRadiusKm(km)}
+                  >
+                    <Text style={[styles.radiusChipText, { color: T.text }, radiusKm === km && { color: '#fff' }]}>{km}km</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.modalLabel, { color: T.text, marginTop: 24 }]}>Minimum Rating</Text>
+              <View style={styles.ratingRow}>
+                {[3.0, 4.0, 4.5].map((r) => {
+                  const active = minRating === r;
+                  return (
+                    <TouchableOpacity
+                      key={r}
+                      style={[
+                        styles.ratingCard,
+                        { borderColor: T.border },
+                        active && { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' },
+                      ]}
+                      onPress={() => setMinRating(active ? null : r)}
+                    >
+                      <Ionicons name="star" size={16} color={COLORS.accent} />
+                      <Text style={[styles.ratingCardText, { color: T.text }]}>{r.toFixed(1)}+</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.modalLabel, { color: T.text, marginTop: 24 }]}>Price Range (GH₵)</Text>
+              <View style={styles.priceRow}>
+                <TextInput
+                  style={[styles.priceInput, { backgroundColor: T.inputBg, color: T.text }]}
+                  placeholder="Min"
+                  placeholderTextColor={T.subText}
+                  keyboardType="numeric"
+                  value={priceMin}
+                  onChangeText={setPriceMin}
+                />
+                <Text style={{ color: T.subText }}>—</Text>
+                <TextInput
+                  style={[styles.priceInput, { backgroundColor: T.inputBg, color: T.text }]}
+                  placeholder="Max"
+                  placeholderTextColor={T.subText}
+                  keyboardType="numeric"
+                  value={priceMax}
+                  onChangeText={setPriceMax}
+                />
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity style={styles.applyBtn} activeOpacity={0.85} onPress={() => setFilterVisible(false)}>
+              <Text style={styles.applyBtnText}>Apply Filters</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -454,4 +547,24 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#E8E8E8',
   },
+
+  /* Filter modal */
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '800' },
+  modalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalLabel: { fontSize: 15, fontWeight: '700' },
+  radiusPill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  radiusPillText: { fontSize: 13, fontWeight: '700' },
+  radiusChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  radiusChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
+  radiusChipText: { fontSize: 13, fontWeight: '600' },
+  ratingRow: { flexDirection: 'row', gap: 10 },
+  ratingCard: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 14, alignItems: 'center', gap: 6 },
+  ratingCardText: { fontSize: 14, fontWeight: '700' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  priceInput: { flex: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14 },
+  applyBtn: { height: 54, borderRadius: 14, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginTop: 20 },
+  applyBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

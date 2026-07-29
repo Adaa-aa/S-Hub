@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 export default function SignInScreen() {
   const T = useThemeColors();
@@ -21,14 +22,29 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
+  const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    // TODO: wire up to your auth API
+  const handleLogin = async () => {
+    setError('');
+    if (!identifier.trim() || !password) {
+      setError('Enter your email/phone and password.');
+      return;
+    }
+
     setStatus('loading');
-    setTimeout(() => {
-      setStatus('idle');
-      router.replace('/home' as any);
-    }, 900);
+    const isEmail = identifier.includes('@');
+    const { error: signInError } = await supabase.auth.signInWithPassword(
+      isEmail
+        ? { email: identifier.trim(), password }
+        : { phone: identifier.trim(), password }
+    );
+    setStatus('idle');
+
+    if (signInError) {
+      setError(signInError.message);
+      return;
+    }
+    router.replace('/home' as any);
   };
 
   return (
@@ -82,6 +98,8 @@ export default function SignInScreen() {
           </View>
         </View>
 
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+
         <TouchableOpacity style={styles.forgotRow} onPress={() => router.push('/reset-password' as any)}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
@@ -124,6 +142,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 16, padding: 0 },
   forgotRow: { alignItems: 'flex-end' },
   forgotText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+  errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center' },
   submitButton: {
     minHeight: 56,
     borderRadius: 16,
