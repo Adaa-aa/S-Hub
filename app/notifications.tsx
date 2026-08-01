@@ -193,6 +193,7 @@ const s = StyleSheet.create({
   chipBadge: { backgroundColor: COLORS.danger, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   chipBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff' },
   list: { paddingBottom: 40 },
+  sectionLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, marginTop: 4, paddingHorizontal: 16 },
   divider: { height: 1 },
   row: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 16, paddingVertical: 14, gap: 12, position: 'relative' },
   unreadDot: { position: 'absolute', left: 6, top: 20, width: 7, height: 7, borderRadius: 4, backgroundColor: COLORS.primary },

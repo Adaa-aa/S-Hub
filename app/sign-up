@@ -61,7 +61,7 @@ export default function SignUpScreen() {
     setSubmitting(true);
 
     if (email.trim()) {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: { data: { full_name: fullName.trim(), role } },
@@ -71,12 +71,6 @@ export default function SignUpScreen() {
         setError(signUpError.message);
         return;
       }
-      // If session exists, email confirmations are disabled — user is already logged in
-      if (data.session) {
-        router.replace({ pathname: '/home', params: { role } } as any);
-        return;
-      }
-      // No session means confirmation is required — go to OTP verification
       router.push({
         pathname: '/otp-verification',
         params: { identifier: email.trim(), mode: 'email', role },
@@ -84,7 +78,7 @@ export default function SignUpScreen() {
     } else {
       const digitsOnly = phone.replace(/\D/g, '').replace(/^0/, '');
       const fullPhone = `+233${digitsOnly}`;
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         phone: fullPhone,
         password,
         options: { data: { full_name: fullName.trim(), role } },
@@ -94,12 +88,6 @@ export default function SignUpScreen() {
         setError(signUpError.message);
         return;
       }
-      // If session exists, phone confirmations are disabled — user is already logged in
-      if (data.session) {
-        router.replace({ pathname: '/home', params: { role } } as any);
-        return;
-      }
-      // No session means confirmation is required — go to OTP verification
       router.push({
         pathname: '/otp-verification',
         params: { identifier: fullPhone, mode: 'phone', role },
@@ -297,28 +285,26 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: s(20), paddingVertical: vs(12) },
   logo: { fontSize: ms(22), fontWeight: '900', color: COLORS.primary },
-  scrollContent: { paddingHorizontal: s(20), paddingBottom: vs(40), gap: vs(20), alignItems: 'center' },
-  hero: { width: '100%', maxWidth: s(544), marginBottom: vs(4), alignItems: 'center' },
+  scrollContent: { paddingHorizontal: s(20), paddingBottom: vs(40), gap: vs(20) },
+  hero: { marginBottom: vs(4) },
   heroTitle: { fontSize: ms(26), fontWeight: '800', marginBottom: vs(6) },
-  heroSubtitle: { fontSize: ms(14), lineHeight: ms(20), textAlign: 'center' },
-  roleToggleRow: { width: '100%', maxWidth: s(544), flexDirection: 'row', borderRadius: s(24), padding: s(4), marginBottom: vs(8) },
+  heroSubtitle: { fontSize: ms(14), lineHeight: ms(20) },
+  roleToggleRow: { flexDirection: 'row', borderRadius: s(24), padding: s(4), marginBottom: vs(8) },
   roleToggleButton: { flex: 1, flexDirection: 'row', paddingVertical: vs(10), borderRadius: s(20), alignItems: 'center', justifyContent: 'center', gap: s(6) },
   roleToggleButtonActive: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
   roleToggleText: { fontSize: ms(15), fontWeight: '700' },
-  field: { width: '100%', maxWidth: s(544), gap: vs(6) },
+  field: { gap: vs(6) },
   label: { fontSize: ms(12), fontWeight: '600', marginLeft: s(4), textTransform: 'uppercase' },
   inputBox: { flexDirection: 'row', alignItems: 'center', borderRadius: s(16), borderWidth: s(1), height: vs(56), paddingHorizontal: s(14), gap: s(10) },
   countryPrefix: { flexDirection: 'row', alignItems: 'center', gap: s(6), paddingRight: s(10), borderRightWidth: s(1), height: vs(32) },
   flagChip: { width: s(20), height: s(14), borderRadius: s(2), backgroundColor: COLORS.primary },
   prefixText: { fontSize: ms(14), fontWeight: '600' },
   input: { flex: 1, fontSize: ms(16), padding: 0 },
-  termsRow: { width: '100%', maxWidth: s(544), flexDirection: 'row', alignItems: 'flex-start', gap: s(10), paddingVertical: vs(6) },
+  termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: s(10), paddingVertical: vs(6) },
   termsText: { fontSize: ms(12), flex: 1, lineHeight: ms(18) },
   termsLink: { color: COLORS.primary, fontWeight: '700' },
   errorText: { color: '#DC2626', fontSize: ms(13), textAlign: 'center' },
   submitButton: {
-    width: '100%',
-    maxWidth: s(544),
     height: vs(56),
     borderRadius: s(16),
     backgroundColor: COLORS.primary,
@@ -345,8 +331,8 @@ const styles = StyleSheet.create({
     borderWidth: s(1),
   },
   oauthText: { fontSize: ms(15), fontWeight: '600' },
-  oauthSection: { width: '100%', maxWidth: s(544), gap: vs(16), marginTop: vs(8) },
-  footer: { alignItems: 'center', width: '100%', maxWidth: s(544), marginTop: vs(12) },
+  oauthSection: { gap: vs(16), marginTop: vs(8) },
+  footer: { alignItems: 'center', marginTop: vs(12) },
   footerText: { fontSize: ms(14) },
   footerLink: { color: COLORS.primary, fontWeight: '700', textDecorationLine: 'underline' },
 });

@@ -3,7 +3,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   NativeSyntheticEvent,
+  Platform,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -15,6 +18,7 @@ import {
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
+import { s, vs, ms } from '@/lib/scaling';
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 59;
@@ -30,7 +34,7 @@ export default function OtpVerificationScreen() {
 
   useEffect(() => {
     if (timeLeft <= 0) return;
-    const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
+    const t = setTimeout(() => setTimeLeft((sec) => sec - 1), 1000);
     return () => clearTimeout(t);
   }, [timeLeft]);
 
@@ -68,39 +72,58 @@ export default function OtpVerificationScreen() {
     }
     setError('');
     setVerifying(true);
-    const { error: verifyError } = await supabase.auth.verifyOtp(
+    const { data, error: verifyError } = await supabase.auth.verifyOtp(
       mode === 'phone'
         ? { phone: identifier, token, type: 'sms' }
         : { email: identifier, token, type: 'signup' }
     );
     setVerifying(false);
     if (verifyError) {
-      setError(verifyError.message);
+      // Provide more helpful error messages
+      let msg = verifyError.message;
+      if (msg.includes('expired') || msg.includes('invalid')) {
+        msg = 'This code is invalid or expired. Try resending a new code.';
+      } else if (msg.includes('not found') || msg.includes('no user')) {
+        msg = 'No account found. Go back and sign up again.';
+      }
+      setError(msg);
       return;
     }
+    if (data.session) {
+      router.replace('/home' as any);
+    } else {
+      setError('Verification succeeded but no session was created. Try signing in.');
+    }
+  };
+
+  // Development bypass: skip OTP and go straight to home
+  const handleSkip = () => {
     router.replace('/home' as any);
   };
 
   const formattedTime = `(00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft})`;
 
   return (
-    <View style={[styles.container, { backgroundColor: T.bg }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: T.bg }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <StatusBar barStyle={T.statusBar} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+          <Ionicons name="arrow-back" size={ms(24)} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.logo}>Waker</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: s(24) }} />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.intro}>
-          <Text style={[styles.title, { color: T.text }]}>Verify Phone Number</Text>
-          <Text style={[styles.subtitle, { color: T.subText }]}>
-            We&apos;ve sent a 6-digit verification code to{' '}
-            <Text style={[styles.bold, { color: T.text }]}>{identifier ?? 'your phone/email'}</Text>. Please enter it below.
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.hero}>
+          <Text style={[styles.heroTitle, { color: T.text }]}>Verify Your Account</Text>
+          <Text style={[styles.heroSubtitle, { color: T.subText }]}>
+            We've sent a 6-digit code to{' '}
+            <Text style={[styles.bold, { color: T.text }]}>{identifier ?? 'your phone/email'}</Text>. Enter it below to continue.
           </Text>
         </View>
 
@@ -108,8 +131,10 @@ export default function OtpVerificationScreen() {
           {digits.map((d, i) => (
             <TextInput
               key={i}
-              ref={(ref) => (inputRefs.current[i] = ref)}
-              style={[styles.otpInput, { backgroundColor: T.inputBg, borderBottomColor: T.border, color: T.text }]}
+              ref={(ref: TextInput | null) => {
+                inputRefs.current[i] = ref;
+              }}
+              style={[styles.otpInput, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]}
               value={d}
               onChangeText={(t) => handleChange(t, i)}
               onKeyPress={(e) => handleKeyPress(e, i)}
@@ -121,7 +146,7 @@ export default function OtpVerificationScreen() {
         </View>
 
         <View style={styles.resendBlock}>
-          <Text style={[styles.resendLabel, { color: T.subText }]}>Didn&apos;t receive the code?</Text>
+          <Text style={[styles.resendLabel, { color: T.subText }]}>Didn't receive the code?</Text>
           <TouchableOpacity onPress={handleResend} disabled={timeLeft > 0}>
             <Text style={[styles.resendButton, timeLeft > 0 && { color: T.subText }]}>
               Resend Code {timeLeft > 0 ? formattedTime : ''}
@@ -140,43 +165,66 @@ export default function OtpVerificationScreen() {
           {verifying ? <ActivityIndicator color="#fff" /> : <Text style={styles.verifyText}>Verify</Text>}
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.7}>
+          <Text style={styles.skipText}>Skip for now</Text>
+        </TouchableOpacity>
+
         <View style={[styles.securityNote, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.primary} />
+          <Ionicons name="shield-checkmark-outline" size={ms(20)} color={COLORS.primary} />
           <Text style={[styles.securityText, { color: T.subText }]}>
             Your security is our priority. Waker uses bank-grade encryption to protect your data.
           </Text>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
-  logo: { fontSize: 22, fontWeight: '900', color: COLORS.primary },
-  content: { flex: 1, paddingHorizontal: 20, paddingVertical: 24 },
-  intro: { alignItems: 'center', marginBottom: 28 },
-  title: { fontSize: 24, fontWeight: '800', marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: s(20), paddingVertical: vs(12) },
+  logo: { fontSize: ms(22), fontWeight: '900', color: COLORS.primary },
+  scrollContent: { paddingHorizontal: s(20), paddingBottom: vs(40), gap: vs(20), alignItems: 'center' },
+  hero: { width: '100%', maxWidth: s(544), marginBottom: vs(4), alignItems: 'center' },
+  heroTitle: { fontSize: ms(26), fontWeight: '800', marginBottom: vs(6) },
+  heroSubtitle: { fontSize: ms(14), lineHeight: ms(20), textAlign: 'center' },
   bold: { fontWeight: '700' },
-  otpRow: { flexDirection: 'row', gap: 8, marginBottom: 28 },
+  otpRow: { flexDirection: 'row', gap: s(8), marginBottom: vs(8), justifyContent: 'center' },
   otpInput: {
-    flex: 1,
-    aspectRatio: 1,
+    width: s(62),
+    height: s(62),
     textAlign: 'center',
-    fontSize: 22,
+    fontSize: ms(22),
     fontWeight: '800',
-    borderBottomWidth: 2,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderRadius: s(14),
+    borderWidth: s(1),
   },
-  resendBlock: { alignItems: 'center', gap: 6, marginBottom: 28 },
-  resendLabel: { fontSize: 13 },
-  resendButton: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
-  errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center', marginBottom: 12 },
-  verifyButton: { minHeight: 56, borderRadius: 16, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  verifyText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  securityNote: { marginTop: 28, padding: 16, borderRadius: 16, borderWidth: 1, alignItems: 'center', gap: 8 },
-  securityText: { fontSize: 12, textAlign: 'center', lineHeight: 17 },
+  resendBlock: { width: '100%', maxWidth: s(544), alignItems: 'center', gap: vs(6), marginBottom: vs(8) },
+  resendLabel: { fontSize: ms(13) },
+  resendButton: { fontSize: ms(13), fontWeight: '700', color: COLORS.primary },
+  errorText: { color: '#DC2626', fontSize: ms(13), textAlign: 'center' },
+  verifyButton: {
+    width: '100%',
+    maxWidth: s(544),
+    height: vs(56),
+    borderRadius: s(16),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: vs(4),
+  },
+  verifyText: { fontSize: ms(16), fontWeight: '700', color: '#fff' },
+  skipButton: { paddingVertical: vs(12), marginTop: vs(4) },
+  skipText: { fontSize: ms(14), fontWeight: '600', color: COLORS.primary },
+  securityNote: {
+    width: '100%',
+    maxWidth: s(544),
+    marginTop: vs(8),
+    padding: s(16),
+    borderRadius: s(16),
+    borderWidth: s(1),
+    alignItems: 'center',
+    gap: s(8),
+  },
+  securityText: { fontSize: ms(12), textAlign: 'center', lineHeight: ms(17) },
 });
