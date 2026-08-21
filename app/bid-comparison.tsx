@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import CustomerNav from '@/components/CustomerNav';
 
 type Badge = 'best_value' | 'expiring_soon' | null;
 type BidStatus = 'pending' | 'accepting' | 'accepted';
@@ -47,7 +48,7 @@ export default function BidComparisonScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.logo}>Waker</Text>
+        <Text style={styles.logo}>AdwumaGo</Text>
         <View style={[styles.avatarSmall, { backgroundColor: T.inputBg }]} />
       </View>
 
@@ -135,27 +136,7 @@ export default function BidComparisonScreen() {
         </View>
       </ScrollView>
 
-      {/* ── BOTTOM NAV ── */}
-      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
-        {[
-          { icon: 'home-outline', iconFocused: 'home', label: 'Home', route: '/home', active: false },
-          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: true },
-          { icon: 'add', iconFocused: 'add', label: '', route: '/post-a-job', center: true },
-          { icon: 'chatbubble-outline', iconFocused: 'chatbubble', label: 'Messages', route: '/messages', active: false },
-          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
-        ].map((tab) =>
-          (tab as any).center ? (
-            <TouchableOpacity key="center" style={styles.centerBtn} activeOpacity={0.85} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name="add" size={28} color="#fff" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity key={tab.label} style={styles.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name={(tab.active ? tab.iconFocused : tab.icon) as any} size={22} color={tab.active ? COLORS.primary : T.subText} />
-              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          )
-        )}
-      </View>
+      <CustomerNav active="jobs" />
     </View>
   );
 }
@@ -195,18 +176,4 @@ const styles = StyleSheet.create({
   messageButtonText: { fontSize: 15, fontWeight: '700' },
   counterOfferRow: { alignItems: 'center', marginTop: 8 },
   counterOfferText: { fontSize: 13, textDecorationLine: 'underline' },
-  bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    borderTopWidth: 1, flexDirection: 'row', alignItems: 'center',
-    paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
-  },
-  navTab: { flex: 1, alignItems: 'center', gap: 3 },
-  navLabel: { fontSize: 10, fontWeight: '500' },
-  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
-  centerBtn: {
-    width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
-    shadowColor: COLORS.primary, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8,
-  },
 });

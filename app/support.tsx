@@ -17,11 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const FAQS = [
   { q: 'How do I post a job?', a: 'Tap the + button at the bottom of the home screen, fill in the service details, describe the job, add photos, set your location and tap Next to schedule.' },
-  { q: 'How are workers verified?', a: 'All workers on Vaker go through an identity verification process. Look for the blue verified badge on worker profiles.' },
+  { q: 'How are workers verified?', a: 'All workers on AdwumaGo go through an identity verification process. Look for the blue verified badge on worker profiles.' },
   { q: 'What if I\'m not satisfied with the work?', a: 'You can report an issue within 24 hours of job completion. Our support team will review the case and facilitate a resolution.' },
   { q: 'How do I pay a worker?', a: 'Payments are made through the app using Mobile Money (MTN, Vodafone, AirtelTigo) or card. Funds are held securely until you confirm the job is complete.' },
   { q: 'Can I cancel a job?', a: 'You can cancel a job up to 2 hours before the scheduled time without a penalty. Late cancellations may incur a small fee.' },
-  { q: 'How do I become a worker on Vaker?', a: 'Go to Profile → Worker Profile to start the worker onboarding process. You\'ll need a valid Ghana ID and a skills assessment.' },
+  { q: 'How do I become a worker on AdwumaGo?', a: 'Go to Profile → Worker Profile to start the worker onboarding process. You\'ll need a valid Ghana ID and a skills assessment.' },
 ];
 
 export default function SupportScreen() {
@@ -47,7 +47,7 @@ export default function SupportScreen() {
           {[
             { icon: 'chatbubble-ellipses-outline', label: 'Live Chat', detail: 'Usually replies in 5 mins', color: COLORS.primary, onPress: () => Alert.alert('Live Chat', 'Connecting you to a support agent...') },
             { icon: 'call-outline', label: 'Call Support', detail: '+233 302 000 000', color: '#1D6FBA', onPress: () => Linking.openURL('tel:+233302000000') },
-            { icon: 'mail-outline', label: 'Email Us', detail: 'support@vaker.com.gh', color: '#D97706', onPress: () => Linking.openURL('mailto:support@vaker.com.gh') },
+            { icon: 'mail-outline', label: 'Email Us', detail: 'support@AdwumaGo.com.gh', color: '#D97706', onPress: () => Linking.openURL('mailto:support@AdwumaGo.com.gh') },
           ].map((item, i) => (
             <View key={item.label}>
               {i > 0 && <View style={[s.divider, { backgroundColor: T.divider }]} />}
@@ -59,7 +59,7 @@ export default function SupportScreen() {
                   <Text style={[s.contactLabel, { color: T.text }]}>{item.label}</Text>
                   <Text style={[s.contactDetail, { color: T.subText }]}>{item.detail}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#BBB" />
+                <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
               </TouchableOpacity>
             </View>
           ))}

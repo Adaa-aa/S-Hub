@@ -27,9 +27,9 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useSystemColorScheme() ?? 'light';
-  // Default to 'light' — only change when user explicitly toggles
-  const [preference, setPreferenceState] = useState<ColorScheme>('light');
+  const systemScheme = useSystemColorScheme() ?? 'dark';
+  // Default to 'dark' — AdwumaGo's brand theme is dark-first; only change when user explicitly toggles
+  const [preference, setPreferenceState] = useState<ColorScheme>('dark');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load persisted preference on mount
@@ -51,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Only resolve after storage is loaded to avoid a flash
   const colorScheme: 'light' | 'dark' = !isLoaded
-    ? 'light'
+    ? 'dark'
     : preference === 'system'
       ? systemScheme
       : preference;
@@ -77,17 +77,17 @@ export function useAppTheme() {
 export function useThemeColors() {
   const { isDark } = useAppTheme();
   return {
-    bg:          isDark ? '#121212' : '#F5F5F0',
-    card:        isDark ? '#1E1E1E' : '#FFFFFF',
-    header:      isDark ? '#1A1A1A' : '#FFFFFF',
-    text:        isDark ? '#ECEDEE' : '#1A1A1A',
-    subText:     isDark ? '#9BA1A6' : '#6B6B6B',
-    border:      isDark ? '#2C2C2C' : '#F0F0F0',
-    icon:        isDark ? '#9BA1A6' : '#444444',
-    inputBg:     isDark ? '#2A2A2A' : '#F2F2F2',
-    navBg:       isDark ? '#1A1A1A' : '#FFFFFF',
-    navBorder:   isDark ? '#2C2C2C' : '#ECECEC',
-    divider:     isDark ? '#2A2A2A' : '#F5F5F5',
+    bg:          isDark ? '#120C09' : '#F5F5F0',
+    card:        isDark ? '#1C130D' : '#FFFFFF',
+    header:      isDark ? '#1C130D' : '#FFFFFF',
+    text:        isDark ? '#F5F1EA' : '#1A1A1A',
+    subText:     isDark ? '#A99C8E' : '#6B6B6B',
+    border:      isDark ? '#2A2019' : '#F0F0F0',
+    icon:        isDark ? '#A99C8E' : '#444444',
+    inputBg:     isDark ? '#231A12' : '#F2F2F2',
+    navBg:       isDark ? '#1C130D' : '#FFFFFF',
+    navBorder:   isDark ? '#2A2019' : '#ECECEC',
+    divider:     isDark ? '#241B14' : '#F5F5F5',
     statusBar:   (isDark ? 'light-content' : 'dark-content') as 'light-content' | 'dark-content',
   };
 }

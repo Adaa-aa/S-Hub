@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { ws, wvs, wms } from '@/lib/scaling';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -15,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
 
 /* ─── Mock worker state ─── */
 export const MY_PROFILE = {
@@ -58,7 +60,7 @@ function SectionCard({ title, onEdit, children, T }: {
         <Text style={[sc.title, { color: T.text }]}>{title}</Text>
         {onEdit && (
           <TouchableOpacity style={sc.editBtn} onPress={onEdit} activeOpacity={0.7}>
-            <Ionicons name="pencil-outline" size={14} color={COLORS.primary} />
+            <Ionicons name="pencil-outline" size={wms(14)} color={COLORS.primary} />
             <Text style={sc.editText}>Edit</Text>
           </TouchableOpacity>
         )}
@@ -69,12 +71,12 @@ function SectionCard({ title, onEdit, children, T }: {
   );
 }
 const sc = StyleSheet.create({
-  wrap: { borderRadius: 16, borderWidth: 1, marginBottom: 16, overflow: 'hidden' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
-  title: { fontSize: 14, fontWeight: '800' },
-  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.primary + '14', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
-  editText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
-  divider: { height: 1 },
+  wrap: { borderRadius: ws(16), borderWidth: ws(1), marginBottom: wvs(16), overflow: 'hidden' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: ws(16), paddingVertical: wvs(14) },
+  title: { fontSize: wms(14), fontWeight: '800' },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: ws(4), backgroundColor: COLORS.primary + '14', borderRadius: ws(8), paddingHorizontal: ws(10), paddingVertical: wvs(5) },
+  editText: { fontSize: wms(12), fontWeight: '700', color: COLORS.primary },
+  divider: { height: wvs(1) },
 });
 
 /* ─── Info row inside a card ─── */
@@ -82,7 +84,7 @@ function InfoRow({ icon, label, value, T }: { icon: string; label: string; value
   return (
     <View style={ir.row}>
       <View style={[ir.icon, { backgroundColor: COLORS.primaryLight }]}>
-        <Ionicons name={icon as any} size={15} color={COLORS.primary} />
+        <Ionicons name={icon as any} size={wms(15)} color={COLORS.primary} />
       </View>
       <Text style={[ir.label, { color: T.subText }]}>{label}</Text>
       <Text style={[ir.value, { color: T.text }]}>{value}</Text>
@@ -90,15 +92,15 @@ function InfoRow({ icon, label, value, T }: { icon: string; label: string; value
   );
 }
 const ir = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  icon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  label: { flex: 1, fontSize: 13, fontWeight: '500' },
-  value: { fontSize: 13, fontWeight: '700' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: ws(12), paddingHorizontal: ws(16), paddingVertical: wvs(12) },
+  icon: { width: ws(30), height: ws(30), borderRadius: ws(8), alignItems: 'center', justifyContent: 'center' },
+  label: { flex: 1, fontSize: wms(13), fontWeight: '500' },
+  value: { fontSize: wms(13), fontWeight: '700' },
 });
 
 /* ─── Divider ─── */
 function CardDivider({ T }: { T: any }) {
-  return <View style={{ height: 1, backgroundColor: T.divider, marginHorizontal: 16 }} />;
+  return <View style={{ height: wvs(1), backgroundColor: T.divider, marginHorizontal: ws(16) }} />;
 }
 
 /* ─── Main screen ─── */
@@ -158,37 +160,39 @@ export default function WorkerSetupScreen() {
       message: `Hire me on S-Hub! ⭐ ${p.rating} · ${p.jobs} jobs · GH₵ ${p.price} starting.\nhttps://s-hub.com.gh`,
     });
 
-  const statusColor = (st: string) => st === 'completed' ? '#22C55E' : st === 'pending' ? '#F59E0B' : '#CE1126';
+  const statusColor = (st: string) => st === 'completed' ? '#22C55E' : st === 'pending' ? '#F59E0B' : COLORS.danger;
   const statusLabel = (st: string) => st.charAt(0).toUpperCase() + st.slice(1);
 
   return (
+    <RequireVerifiedWorker>
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
       {/* ── HEADER ── */}
       <View style={[s.header, { backgroundColor: COLORS.primary }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+          <Ionicons name="arrow-back" size={wms(22)} color="#fff" />
         </TouchableOpacity>
         <Text style={s.headerTitle}>My Worker Profile</Text>
         <TouchableOpacity style={s.backBtn} onPress={handleShare} activeOpacity={0.8}>
-          <Ionicons name="share-social-outline" size={20} color="#fff" />
+          <Ionicons name="share-social-outline" size={wms(20)} color="#fff" />
         </TouchableOpacity>
       </View>
 
+      <View style={s.pageInner}>
       {/* ══ MODE SWITCHER ══ */}
       <View style={[s.modeStrip, { backgroundColor: T.card, borderColor: T.border }]}>
         <View style={s.modeLeft}>
-          <Ionicons name="hammer-outline" size={14} color={COLORS.primary} />
+          <Ionicons name="hammer-outline" size={wms(14)} color={COLORS.primary} />
           <Text style={[s.modeText, { color: T.text }]}>Working as a Worker</Text>
         </View>
         <TouchableOpacity
           style={s.switchBtn}
-          onPress={() => router.replace('/(tabs)/home' as any)}
+          onPress={() => router.replace('/home' as any)}
           activeOpacity={0.8}
         >
           <Text style={s.switchBtnText}>Switch to Customer View</Text>
-          <Ionicons name="swap-horizontal" size={14} color={COLORS.primary} />
+          <Ionicons name="swap-horizontal" size={wms(14)} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -217,7 +221,7 @@ export default function WorkerSetupScreen() {
             </View>
 
             <View style={s.requestLocRow}>
-              <Ionicons name="location-outline" size={13} color={T.subText} />
+              <Ionicons name="location-outline" size={wms(13)} color={T.subText} />
               <Text style={[s.requestLocText, { color: T.subText }]}>{incomingRequest.location}</Text>
             </View>
             <Text style={[s.requestNote, { color: T.subText }]}>{incomingRequest.note}</Text>
@@ -254,15 +258,15 @@ export default function WorkerSetupScreen() {
             <View style={s.heroInfo}>
               <View style={s.nameRow}>
                 <Text style={s.heroName}>{p.name}</Text>
-                {p.verified && <Ionicons name="checkmark-circle" size={18} color="#fff" />}
+                {p.verified && <Ionicons name="checkmark-circle" size={wms(18)} color="#fff" />}
               </View>
               <Text style={s.heroService}>{p.service}</Text>
               <View style={s.heroMeta}>
-                <Ionicons name="star" size={12} color="#F59E0B" />
+                <Ionicons name="star" size={wms(12)} color="#F59E0B" />
                 <Text style={s.heroMetaText}>{p.rating}  ·  {p.jobs} jobs</Text>
               </View>
               <View style={s.heroMeta}>
-                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.8)" />
+                <Ionicons name="location-outline" size={wms(12)} color="rgba(255,255,255,0.8)" />
                 <Text style={s.heroMetaText}>{p.location}</Text>
               </View>
             </View>
@@ -292,7 +296,7 @@ export default function WorkerSetupScreen() {
             { value: p.experience, label: 'Experience', icon: 'calendar-outline' },
           ].map((stat, i, arr) => (
             <View key={stat.label} style={[s.stat, i < arr.length - 1 && [s.statBorder, { borderColor: T.border }]]}>
-              <Ionicons name={stat.icon as any} size={14} color={COLORS.primary} style={{ marginBottom: 4 }} />
+              <Ionicons name={stat.icon as any} size={wms(14)} color={COLORS.primary} style={{ marginBottom: wvs(4) }} />
               <Text style={[s.statValue, { color: COLORS.primary }]}>{stat.value}</Text>
               <Text style={[s.statLabel, { color: T.subText }]}>{stat.label}</Text>
             </View>
@@ -317,9 +321,9 @@ export default function WorkerSetupScreen() {
               activeOpacity={0.8}
               onPress={() => Alert.alert('Complete Profile', 'Add a profile photo and bank details to reach 100%.')}
             >
-              <Ionicons name="alert-circle-outline" size={14} color={COLORS.accent} />
+              <Ionicons name="alert-circle-outline" size={wms(14)} color={COLORS.accent} />
               <Text style={s.completenessHintText}>Add profile photo & bank details to reach 100%</Text>
-              <Ionicons name="chevron-forward" size={14} color={COLORS.accent} />
+              <Ionicons name="chevron-forward" size={wms(14)} color={COLORS.accent} />
             </TouchableOpacity>
           )}
         </View>
@@ -341,7 +345,7 @@ export default function WorkerSetupScreen() {
               onPress={() => Alert.alert('Add Skill', 'Skill editor coming soon.')}
               activeOpacity={0.8}
             >
-              <Ionicons name="add" size={14} color={COLORS.primary} />
+              <Ionicons name="add" size={wms(14)} color={COLORS.primary} />
               <Text style={[s.skillAddText, { color: COLORS.primary }]}>Add</Text>
             </TouchableOpacity>
           </View>
@@ -362,7 +366,7 @@ export default function WorkerSetupScreen() {
                   : { backgroundColor: T.inputBg, borderColor: T.border },
               ]}>
                 <Text style={[s.availDay, { color: day.on ? '#fff' : T.subText }]}>{day.day}</Text>
-                <Ionicons name={day.on ? 'checkmark' : 'close'} size={10} color={day.on ? '#fff' : T.subText} />
+                <Ionicons name={day.on ? 'checkmark' : 'close'} size={wms(10)} color={day.on ? '#fff' : T.subText} />
               </View>
             ))}
           </View>
@@ -430,12 +434,12 @@ export default function WorkerSetupScreen() {
         {/* ══ NOTIFICATIONS PREF ══ */}
         <SectionCard title="Notifications" T={T}>
           <View style={s.prefRow}>
-            <Ionicons name="notifications-outline" size={18} color={COLORS.primary} />
+            <Ionicons name="notifications-outline" size={wms(18)} color={COLORS.primary} />
             <Text style={[s.prefLabel, { color: T.text }]}>Job alerts & messages</Text>
             <Switch
               value={notifs}
               onValueChange={setNotifs}
-              trackColor={{ false: '#E0E0E0', true: COLORS.primary }}
+              trackColor={{ false: T.border, true: COLORS.primary }}
               thumbColor="#fff"
             />
           </View>
@@ -451,20 +455,21 @@ export default function WorkerSetupScreen() {
             [{ text: 'Cancel', style: 'cancel' }, { text: 'Deactivate', style: 'destructive' }]
           )}
         >
-          <Ionicons name="power-outline" size={16} color={COLORS.danger} />
+          <Ionicons name="power-outline" size={wms(16)} color={COLORS.danger} />
           <Text style={s.deactivateText}>Deactivate Worker Account</Text>
         </TouchableOpacity>
 
         <Text style={[s.version, { color: T.subText }]}>S-Hub Worker v1.0.0 · Made in Ghana 🇬🇭</Text>
       </ScrollView>
+      </View>
 
       {/* ── BOTTOM NAV ── */}
       <View style={[s.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
         {[
-          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/worker-setup', active: true },
-          { icon: 'person-outline', iconActive: 'person', label: 'Profile', route: '/profile', active: false },
-          { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'My Jobs', route: '/bookings', active: false },
-          { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: false },
+          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/worker-dashboard', active: false },
+          { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
+          { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/worker-messages', active: false },
+          { icon: 'person', iconActive: 'person', label: 'Profile', route: '/worker-setup', active: true },
         ].map(tab => (
           <TouchableOpacity
             key={tab.label}
@@ -474,7 +479,7 @@ export default function WorkerSetupScreen() {
           >
             <Ionicons
               name={(tab.active ? tab.iconActive : tab.icon) as any}
-              size={22}
+              size={wms(22)}
               color={tab.active ? COLORS.primary : T.subText}
             />
             <Text style={[s.navLabel, { color: T.subText }, tab.active && s.navLabelActive]}>{tab.label}</Text>
@@ -482,124 +487,126 @@ export default function WorkerSetupScreen() {
         ))}
       </View>
     </SafeAreaView>
+    </RequireVerifiedWorker>
   );
 }
 
 /* ─── Styles ─── */
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingBottom: 110 },
+  pageInner: { flex: 1, width: '100%', maxWidth: ws(544), alignSelf: 'center' },
+  scroll: { paddingBottom: wvs(110) },
 
   /* Header */
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
-  backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: ws(14), paddingVertical: wvs(12) },
+  backBtn: { width: ws(38), height: ws(38), alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: wms(16), fontWeight: '700', color: '#fff' },
 
   /* Mode switcher */
-  modeStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
-  modeLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  modeText: { fontSize: 12, fontWeight: '600' },
-  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: COLORS.primary + '14', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
-  switchBtnText: { fontSize: 11, fontWeight: '700', color: COLORS.primary },
+  modeStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: ws(16), paddingVertical: wvs(10), borderBottomWidth: ws(1) },
+  modeLeft: { flexDirection: 'row', alignItems: 'center', gap: ws(6) },
+  modeText: { fontSize: wms(12), fontWeight: '600' },
+  switchBtn: { flexDirection: 'row', alignItems: 'center', gap: ws(5), backgroundColor: COLORS.primary + '14', borderRadius: ws(8), paddingHorizontal: ws(10), paddingVertical: wvs(6) },
+  switchBtnText: { fontSize: wms(11), fontWeight: '700', color: COLORS.primary },
 
   /* Incoming job request */
-  requestCard: { borderRadius: 16, borderWidth: 1.5, marginHorizontal: 16, marginTop: 14, marginBottom: 4, padding: 14 },
-  requestBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  requestBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  requestDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#22C55E' },
-  requestBadgeText: { fontSize: 11, fontWeight: '800', color: '#22C55E', letterSpacing: 0.5 },
-  requestDistance: { fontSize: 11, fontWeight: '600' },
-  requestRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  requestAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  requestAvatarText: { fontSize: 15, fontWeight: '800' },
-  requestClient: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
-  requestService: { fontSize: 12, fontWeight: '500' },
-  requestPrice: { fontSize: 16, fontWeight: '900' },
-  requestLocRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-  requestLocText: { fontSize: 12 },
-  requestNote: { fontSize: 12, lineHeight: 17, marginBottom: 14 },
-  requestActions: { flexDirection: 'row', gap: 10 },
-  declineBtn: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1.5 },
-  declineText: { fontSize: 13, fontWeight: '700' },
-  acceptBtn: { flex: 1.4, alignItems: 'center', paddingVertical: 12, borderRadius: 12 },
-  acceptText: { fontSize: 13, fontWeight: '800', color: '#fff' },
+  requestCard: { borderRadius: ws(16), borderWidth: ws(1.5), marginHorizontal: ws(16), marginTop: wvs(14), marginBottom: wvs(4), padding: ws(14) },
+  requestBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: wvs(12) },
+  requestBadge: { flexDirection: 'row', alignItems: 'center', gap: ws(6) },
+  requestDot: { width: ws(7), height: ws(7), borderRadius: ws(4), backgroundColor: '#22C55E' },
+  requestBadgeText: { fontSize: wms(11), fontWeight: '800', color: '#22C55E', letterSpacing: wms(0.5) },
+  requestDistance: { fontSize: wms(11), fontWeight: '600' },
+  requestRow: { flexDirection: 'row', alignItems: 'center', gap: ws(12), marginBottom: wvs(10) },
+  requestAvatar: { width: ws(42), height: ws(42), borderRadius: ws(21), alignItems: 'center', justifyContent: 'center' },
+  requestAvatarText: { fontSize: wms(15), fontWeight: '800' },
+  requestClient: { fontSize: wms(14), fontWeight: '800', marginBottom: wvs(2) },
+  requestService: { fontSize: wms(12), fontWeight: '500' },
+  requestPrice: { fontSize: wms(16), fontWeight: '900' },
+  requestLocRow: { flexDirection: 'row', alignItems: 'center', gap: ws(5), marginBottom: wvs(6) },
+  requestLocText: { fontSize: wms(12) },
+  requestNote: { fontSize: wms(12), lineHeight: wms(17), marginBottom: wvs(14) },
+  requestActions: { flexDirection: 'row', gap: ws(10) },
+  declineBtn: { flex: 1, alignItems: 'center', paddingVertical: wvs(12), borderRadius: ws(12), borderWidth: ws(1.5) },
+  declineText: { fontSize: wms(13), fontWeight: '700' },
+  acceptBtn: { flex: 1.4, alignItems: 'center', paddingVertical: wvs(12), borderRadius: ws(12) },
+  acceptText: { fontSize: wms(13), fontWeight: '800', color: '#fff' },
 
   /* Hero card */
-  heroCard: { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingBottom: 20 },
-  heroRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+  heroCard: { backgroundColor: COLORS.primary, paddingHorizontal: ws(16), paddingBottom: wvs(20) },
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: ws(14), marginBottom: wvs(16) },
   avatarWrap: { position: 'relative' },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.5)' },
-  avatarInitials: { fontSize: 28, fontWeight: '900', color: '#fff' },
-  onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 16, height: 16, borderRadius: 8, borderWidth: 2.5, borderColor: '#fff' },
+  avatar: { width: ws(80), height: ws(80), borderRadius: ws(40), backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', borderWidth: ws(2.5), borderColor: 'rgba(255,255,255,0.5)' },
+  avatarInitials: { fontSize: wms(28), fontWeight: '900', color: '#fff' },
+  onlineDot: { position: 'absolute', bottom: wvs(2), right: ws(2), width: ws(16), height: ws(16), borderRadius: ws(8), borderWidth: ws(2.5), borderColor: '#fff' },
   heroInfo: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
-  heroName: { fontSize: 19, fontWeight: '800', color: '#fff' },
-  heroService: { fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: '500', marginBottom: 5 },
-  heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
-  heroMetaText: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
-  onlineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
-  onlineLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  onlineIndicator: { width: 9, height: 9, borderRadius: 5 },
-  onlineLabel: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: ws(6), marginBottom: wvs(3) },
+  heroName: { fontSize: wms(19), fontWeight: '800', color: '#fff' },
+  heroService: { fontSize: wms(13), color: 'rgba(255,255,255,0.85)', fontWeight: '500', marginBottom: wvs(5) },
+  heroMeta: { flexDirection: 'row', alignItems: 'center', gap: ws(5), marginBottom: wvs(2) },
+  heroMetaText: { fontSize: wms(12), color: 'rgba(255,255,255,0.8)' },
+  onlineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: ws(12), paddingHorizontal: ws(14), paddingVertical: wvs(10) },
+  onlineLeft: { flexDirection: 'row', alignItems: 'center', gap: ws(8) },
+  onlineIndicator: { width: ws(9), height: ws(9), borderRadius: ws(5) },
+  onlineLabel: { fontSize: wms(13), fontWeight: '600', color: '#fff' },
 
   /* Stats strip */
-  statsStrip: { flexDirection: 'row', borderBottomWidth: 1, marginBottom: 16 },
-  stat: { flex: 1, alignItems: 'center', paddingVertical: 14 },
-  statBorder: { borderRightWidth: 1 },
-  statValue: { fontSize: 16, fontWeight: '800', marginBottom: 1 },
-  statLabel: { fontSize: 10, fontWeight: '500' },
+  statsStrip: { flexDirection: 'row', borderBottomWidth: ws(1), marginBottom: wvs(16) },
+  stat: { flex: 1, alignItems: 'center', paddingVertical: wvs(14) },
+  statBorder: { borderRightWidth: ws(1) },
+  statValue: { fontSize: wms(16), fontWeight: '800', marginBottom: wvs(1) },
+  statLabel: { fontSize: wms(10), fontWeight: '500' },
 
   /* Profile completeness */
-  completenessCard: { borderRadius: 16, borderWidth: 1, padding: 16, marginHorizontal: 16, marginBottom: 16 },
-  completenessTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
-  completenessTitle: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
-  completenessSub: { fontSize: 11 },
-  completenessPct: { fontSize: 22, fontWeight: '900' },
-  completenessTrack: { height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
-  completenessFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
-  completenessHint: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.accent + '18', borderRadius: 8, padding: 10 },
-  completenessHintText: { flex: 1, fontSize: 11, color: COLORS.accent, fontWeight: '500' },
+  completenessCard: { borderRadius: ws(16), borderWidth: ws(1), padding: ws(16), marginHorizontal: ws(16), marginBottom: wvs(16) },
+  completenessTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: wvs(10) },
+  completenessTitle: { fontSize: wms(14), fontWeight: '800', marginBottom: wvs(2) },
+  completenessSub: { fontSize: wms(11) },
+  completenessPct: { fontSize: wms(22), fontWeight: '900' },
+  completenessTrack: { height: wvs(8), borderRadius: ws(4), overflow: 'hidden', marginBottom: wvs(8) },
+  completenessFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: ws(4) },
+  completenessHint: { flexDirection: 'row', alignItems: 'center', gap: ws(6), backgroundColor: COLORS.accent + '18', borderRadius: ws(8), padding: ws(10) },
+  completenessHintText: { flex: 1, fontSize: wms(11), color: COLORS.accent, fontWeight: '500' },
 
   /* Section heading */
-  sectionHeading: { fontSize: 14, fontWeight: '800', paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
+  sectionHeading: { fontSize: wms(14), fontWeight: '800', paddingHorizontal: ws(16), marginBottom: wvs(10), marginTop: wvs(4) },
 
   /* Skills */
-  skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 14 },
-  skillChip: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 7 },
-  skillText: { fontSize: 12, fontWeight: '700' },
-  skillChipAdd: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 10, borderWidth: 1.5, borderStyle: 'dashed', paddingHorizontal: 12, paddingVertical: 7 },
-  skillAddText: { fontSize: 12, fontWeight: '700' },
+  skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: ws(8), padding: ws(14) },
+  skillChip: { borderRadius: ws(10), borderWidth: ws(1), paddingHorizontal: ws(12), paddingVertical: wvs(7) },
+  skillText: { fontSize: wms(12), fontWeight: '700' },
+  skillChipAdd: { flexDirection: 'row', alignItems: 'center', gap: ws(4), borderRadius: ws(10), borderWidth: ws(1.5), borderStyle: 'dashed', paddingHorizontal: ws(12), paddingVertical: wvs(7) },
+  skillAddText: { fontSize: wms(12), fontWeight: '700' },
 
   /* Availability */
-  availGrid: { flexDirection: 'row', gap: 6, padding: 14, justifyContent: 'space-between' },
-  availCell: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, gap: 3 },
-  availDay: { fontSize: 10, fontWeight: '700' },
+  availGrid: { flexDirection: 'row', gap: ws(6), padding: ws(14), justifyContent: 'space-between' },
+  availCell: { flex: 1, alignItems: 'center', paddingVertical: wvs(8), borderRadius: ws(10), borderWidth: ws(1.5), gap: ws(3) },
+  availDay: { fontSize: wms(10), fontWeight: '700' },
 
   /* Recent jobs */
-  recentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 10, marginTop: 4 },
-  seeAll: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
-  jobCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginBottom: 10, borderRadius: 14, borderWidth: 1, padding: 14 },
-  jobAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  jobInitials: { fontSize: 14, fontWeight: '800' },
+  recentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: ws(16), marginBottom: wvs(10), marginTop: wvs(4) },
+  seeAll: { fontSize: wms(13), fontWeight: '700', color: COLORS.primary },
+  jobCard: { flexDirection: 'row', alignItems: 'center', gap: ws(12), marginHorizontal: ws(16), marginBottom: wvs(10), borderRadius: ws(14), borderWidth: ws(1), padding: ws(14) },
+  jobAvatar: { width: ws(40), height: ws(40), borderRadius: ws(20), alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  jobInitials: { fontSize: wms(14), fontWeight: '800' },
   jobInfo: { flex: 1 },
-  jobClient: { fontSize: 13, fontWeight: '700', marginBottom: 2 },
-  jobService: { fontSize: 12 },
-  jobRight: { alignItems: 'flex-end', gap: 4 },
-  jobAmount: { fontSize: 13, fontWeight: '800' },
-  jobStatusBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  jobStatusText: { fontSize: 10, fontWeight: '700' },
-  jobDate: { fontSize: 10 },
+  jobClient: { fontSize: wms(13), fontWeight: '700', marginBottom: wvs(2) },
+  jobService: { fontSize: wms(12) },
+  jobRight: { alignItems: 'flex-end', gap: ws(4) },
+  jobAmount: { fontSize: wms(13), fontWeight: '800' },
+  jobStatusBadge: { borderRadius: ws(6), paddingHorizontal: ws(8), paddingVertical: wvs(3) },
+  jobStatusText: { fontSize: wms(10), fontWeight: '700' },
+  jobDate: { fontSize: wms(10) },
 
   /* Notifications pref */
-  prefRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  prefLabel: { flex: 1, fontSize: 13, fontWeight: '600' },
+  prefRow: { flexDirection: 'row', alignItems: 'center', gap: ws(12), paddingHorizontal: ws(16), paddingVertical: wvs(14) },
+  prefLabel: { flex: 1, fontSize: wms(13), fontWeight: '600' },
 
   /* Danger */
-  deactivateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 16, marginTop: 8, borderRadius: 12, borderWidth: 1, paddingVertical: 13 },
-  deactivateText: { fontSize: 13, fontWeight: '700', color: COLORS.danger },
+  deactivateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ws(8), marginHorizontal: ws(16), marginTop: wvs(8), borderRadius: ws(12), borderWidth: ws(1), paddingVertical: wvs(13) },
+  deactivateText: { fontSize: wms(13), fontWeight: '700', color: COLORS.danger },
 
   /* Version */
-  version: { fontSize: 11, textAlign: 'center', marginTop: 16, marginBottom: 4 },
+  version: { fontSize: wms(11), textAlign: 'center', marginTop: wvs(16), marginBottom: wvs(4) },
 
   /* Bottom nav */
   bottomNav: {
@@ -607,18 +614,18 @@ const s = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopWidth: 1,
+    borderTopWidth: ws(1),
     flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 22,
-    paddingTop: 10,
-    paddingHorizontal: 10,
+    paddingBottom: wvs(22),
+    paddingTop: wvs(10),
+    paddingHorizontal: ws(10),
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 10,
   },
-  navTab: { flex: 1, alignItems: 'center', gap: 3 },
-  navLabel: { fontSize: 10, fontWeight: '500' },
+  navTab: { flex: 1, alignItems: 'center', gap: ws(3) },
+  navLabel: { fontSize: wms(10), fontWeight: '500' },
   navLabelActive: { color: COLORS.primary, fontWeight: '700' },
 });

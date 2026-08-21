@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { s } from '@/lib/scaling';
+import CustomerNav from '@/components/CustomerNav';
 
 type Status = 'ongoing' | 'upcoming' | 'completed' | 'cancelled';
 type Filter = 'all' | 'upcoming' | 'completed';
@@ -53,115 +55,102 @@ export default function BookingsScreen() {
       <StatusBar barStyle={T.statusBar} />
 
       <View style={styles.header}>
-        <Text style={styles.logo}>Waker</Text>
-        <View style={[styles.avatarSmall, { backgroundColor: T.inputBg }]} />
+        <View style={styles.headerInner}>
+          <Text style={styles.logo}>AdwumaGo</Text>
+          <View style={[styles.avatarSmall, { backgroundColor: T.inputBg }]} />
+        </View>
       </View>
 
+      {/* Content capped and centered the same way as sign-up.tsx / sign-in.tsx */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.titleBlock}>
-          <Text style={[styles.title, { color: T.text }]}>My Bookings</Text>
-          <Text style={[styles.subtitle, { color: T.subText }]}>Manage your scheduled services</Text>
-        </View>
+        <View style={styles.content}>
+          <View style={styles.titleBlock}>
+            <Text style={[styles.title, { color: T.text }]}>My Bookings</Text>
+            <Text style={[styles.subtitle, { color: T.subText }]}>Manage your scheduled services</Text>
+          </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-          {(['all', 'upcoming', 'completed'] as Filter[]).map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.chip, { backgroundColor: T.inputBg }, filter === f && { backgroundColor: COLORS.primary }]}
-              onPress={() => setFilter(f)}
-            >
-              <Text style={[styles.chipText, { color: T.subText }, filter === f && { color: '#fff' }]}>
-                {f === 'all' ? 'All' : f === 'upcoming' ? 'Upcoming' : 'Completed'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={{ gap: 12 }}>
-          {filteredBookings.map((booking) => {
-            const s = statusStyle(booking.status);
-            return (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {(['all', 'upcoming', 'completed'] as Filter[]).map((f) => (
               <TouchableOpacity
-                key={booking.id}
-                style={[styles.card, { backgroundColor: T.card, borderColor: T.border }, booking.status === 'cancelled' && { opacity: 0.7 }]}
-                activeOpacity={0.85}
+                key={f}
+                style={[styles.chip, { backgroundColor: T.inputBg }, filter === f && { backgroundColor: COLORS.primary }]}
+                onPress={() => setFilter(f)}
               >
-                <View style={styles.cardTopRow}>
-                  <View style={styles.cardLeft}>
-                    <View style={[styles.iconWrap, { backgroundColor: T.inputBg }]}>
-                      <Ionicons name={booking.icon as any} size={22} color={COLORS.primary} />
-                    </View>
-                    <View>
-                      <Text style={[styles.serviceName, { color: T.text }]}>{booking.service}</Text>
-                      <Text style={[styles.workerName, { color: T.subText }]}>{booking.worker}</Text>
-                    </View>
-                  </View>
-                  <View style={[styles.statusPill, { backgroundColor: s.bg }]}>
-                    <Text style={[styles.statusPillText, { color: s.fg }]}>{s.label}</Text>
-                  </View>
-                </View>
-                <View style={[styles.cardBottomRow, { borderTopColor: T.border }]}>
-                  <View>
-                    <Text style={[styles.metaLabel, { color: T.subText }]}>Date</Text>
-                    <Text style={[styles.metaValue, { color: T.text }]}>{booking.date}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[styles.metaLabel, { color: T.subText }]}>Price</Text>
-                    <Text
-                      style={[
-                        styles.metaValuePrice,
-                        booking.status === 'cancelled' && { textDecorationLine: 'line-through', color: T.subText },
-                      ]}
-                    >
-                      {booking.price}
-                    </Text>
-                  </View>
-                </View>
+                <Text style={[styles.chipText, { color: T.subText }, filter === f && { color: '#fff' }]}>
+                  {f === 'all' ? 'All' : f === 'upcoming' ? 'Upcoming' : 'Completed'}
+                </Text>
               </TouchableOpacity>
-            );
-          })}
+            ))}
+          </ScrollView>
 
-          <View style={styles.promoCard}>
-            <Text style={styles.promoTitle}>Need more help?</Text>
-            <Text style={styles.promoBody}>Book a trusted professional for your next home project in minutes.</Text>
-            <TouchableOpacity style={styles.promoButton} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
-              <Text style={styles.promoButtonText}>Post a Job</Text>
-            </TouchableOpacity>
+          <View style={{ gap: 12 }}>
+            {filteredBookings.map((booking) => {
+              const statusInfo = statusStyle(booking.status);
+              return (
+                <TouchableOpacity
+                  key={booking.id}
+                  style={[styles.card, { backgroundColor: T.card, borderColor: T.border }, booking.status === 'cancelled' && { opacity: 0.7 }]}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.cardTopRow}>
+                    <View style={styles.cardLeft}>
+                      <View style={[styles.iconWrap, { backgroundColor: T.inputBg }]}>
+                        <Ionicons name={booking.icon as any} size={22} color={COLORS.primary} />
+                      </View>
+                      <View>
+                        <Text style={[styles.serviceName, { color: T.text }]}>{booking.service}</Text>
+                        <Text style={[styles.workerName, { color: T.subText }]}>{booking.worker}</Text>
+                      </View>
+                    </View>
+                    <View style={[styles.statusPill, { backgroundColor: statusInfo.bg }]}>
+                      <Text style={[styles.statusPillText, { color: statusInfo.fg }]}>{statusInfo.label}</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.cardBottomRow, { borderTopColor: T.border }]}>
+                    <View>
+                      <Text style={[styles.metaLabel, { color: T.subText }]}>Date</Text>
+                      <Text style={[styles.metaValue, { color: T.text }]}>{booking.date}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={[styles.metaLabel, { color: T.subText }]}>Price</Text>
+                      <Text
+                        style={[
+                          styles.metaValuePrice,
+                          booking.status === 'cancelled' && { textDecorationLine: 'line-through', color: T.subText },
+                        ]}
+                      >
+                        {booking.price}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+
+            <View style={styles.promoCard}>
+              <Text style={styles.promoTitle}>Need more help?</Text>
+              <Text style={styles.promoBody}>Book a trusted professional for your next home project in minutes.</Text>
+              <TouchableOpacity style={styles.promoButton} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
+                <Text style={styles.promoButtonText}>Post a Job</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* ── BOTTOM NAV ── */}
-      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
-        {[
-          { icon: 'home-outline', iconFocused: 'home', label: 'Home', route: '/home', active: false },
-          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: true },
-          { icon: 'add', iconFocused: 'add', label: '', route: '/post-a-job', center: true },
-          { icon: 'chatbubble-outline', iconFocused: 'chatbubble', label: 'Messages', route: '/messages', active: false },
-          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
-        ].map((tab) =>
-          (tab as any).center ? (
-            <TouchableOpacity key="center" style={styles.centerBtn} activeOpacity={0.85} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name="add" size={28} color="#fff" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity key={tab.label} style={styles.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name={(tab.active ? tab.iconFocused : tab.icon) as any} size={22} color={tab.active ? COLORS.primary : T.subText} />
-              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          )
-        )}
-      </View>
+      <CustomerNav active="jobs" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
+  header: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
+  headerInner: { width: '100%', maxWidth: s(544), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   logo: { fontSize: 20, fontWeight: '900', color: COLORS.primary },
   avatarSmall: { width: 40, height: 40, borderRadius: 20 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 120, alignItems: 'center' },
+  content: { width: '100%', maxWidth: s(544) },
   titleBlock: { marginTop: 4, marginBottom: 16 },
   title: { fontSize: 26, fontWeight: '800' },
   subtitle: { fontSize: 14 },
@@ -185,18 +174,4 @@ const styles = StyleSheet.create({
   promoBody: { fontSize: 14, color: '#fff', maxWidth: '80%' },
   promoButton: { backgroundColor: '#fff', alignSelf: 'flex-start', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, marginTop: 12 },
   promoButtonText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
-  bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    borderTopWidth: 1, flexDirection: 'row', alignItems: 'center',
-    paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
-  },
-  navTab: { flex: 1, alignItems: 'center', gap: 3 },
-  navLabel: { fontSize: 10, fontWeight: '500' },
-  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
-  centerBtn: {
-    width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
-    shadowColor: COLORS.primary, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8,
-  },
 });

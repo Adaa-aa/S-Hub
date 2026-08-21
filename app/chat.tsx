@@ -330,7 +330,7 @@ export default function ChatScreen() {
           <View style={[s.headerAvatar, { backgroundColor: convo.workerColor + '20' }]}>
             <Text style={[s.headerInitials, { color: convo.workerColor }]}>{convo.workerInitials}</Text>
           </View>
-          {convo.online && <View style={s.headerOnlineDot} />}
+          {convo.online && <View style={[s.headerOnlineDot, { borderColor: T.header }]} />}
         </View>
 
         <View style={s.headerInfo}>
@@ -485,7 +485,7 @@ const s = StyleSheet.create({
   headerAvatarWrap: { position: 'relative' },
   headerAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   headerInitials: { fontSize: 15, fontWeight: '800' },
-  headerOnlineDot: { position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#fff' },
+  headerOnlineDot: { position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: COLORS.card },
   headerInfo: { flex: 1 },
   headerName: { fontSize: 15, fontWeight: '700' },
   headerStatus: { fontSize: 11, marginTop: 1 },

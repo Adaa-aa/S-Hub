@@ -1,8 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { s } from '@/lib/scaling';
+import CustomerNav from '@/components/CustomerNav';
+import AppMap, { AppMapMarker } from '@/components/AppMap';
+import { WORKERS } from './search';
 
 const CATEGORIES: { key: string; label: string; icon: string }[] = [
   { key: 'cleaning', label: 'Cleaning', icon: 'sparkles-outline' },
@@ -17,11 +22,33 @@ const CATEGORIES: { key: string; label: string; icon: string }[] = [
   { key: 'moving', label: 'Moving', icon: 'car-sport-outline' },
 ];
 
+// Map preview center — placeholder until real device geolocation is wired
+// up (Phase 4). Markers are derived from the same WORKERS list search.tsx
+// uses, jittered around the center so the preview isn't empty.
+const MAP_CENTER = { latitude: 6.6885, longitude: -1.6244 };
+const NEARBY_MARKERS: AppMapMarker[] = WORKERS.map((w, i) => {
+  const angle = (i / WORKERS.length) * Math.PI * 2;
+  const radius = 0.012 + (i % 3) * 0.006;
+  return {
+    latitude: MAP_CENTER.latitude + Math.sin(angle) * radius,
+    longitude: MAP_CENTER.longitude + Math.cos(angle) * radius,
+    color: w.color,
+    title: w.name,
+    subtitle: w.skill,
+    price: `GH₵ ${w.price}`,
+  };
+});
+
 export default function HomeScreen() {
   const T = useThemeColors();
+  const [query, setQuery] = useState('');
 
   const handleSelectCategory = (categoryKey: string) => {
     router.push({ pathname: '/post-a-job', params: { category: categoryKey } } as any);
+  };
+
+  const handleSearch = () => {
+    router.push({ pathname: '/search', params: query.trim() ? { q: query.trim() } : {} } as any);
   };
 
   return (
@@ -29,99 +56,179 @@ export default function HomeScreen() {
       <StatusBar barStyle={T.statusBar} />
 
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: T.text }]}>All Categories</Text>
-        <TouchableOpacity hitSlop={8}>
-          <Ionicons name="search-outline" size={22} color={T.subText} />
-        </TouchableOpacity>
+        <View style={styles.headerInner}>
+          <View>
+            <Text style={[styles.greeting, { color: T.subText }]}>Find a worker near</Text>
+            <TouchableOpacity style={styles.locationRow} onPress={() => router.push('/saved-locations' as any)} activeOpacity={0.7}>
+              <Ionicons name="location" size={15} color={COLORS.primary} />
+              <Text style={[styles.locationText, { color: T.text }]}>Kumasi, Ashanti</Text>
+              <Ionicons name="chevron-down" size={14} color={T.subText} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={[styles.bellBtn, { backgroundColor: T.inputBg }]} onPress={() => router.push('/notifications' as any)} hitSlop={8}>
+            <Ionicons name="notifications-outline" size={20} color={T.text} />
+            <View style={styles.bellDot} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.hero, { backgroundColor: COLORS.primaryLight }]}>
-          <Text style={styles.heroTitle}>Pro Services</Text>
-          <Text style={[styles.heroSubtitle, { color: T.subText }]}>
-            Connecting you to Ghana&apos;s most trusted professionals.
-          </Text>
-        </View>
-
-        <View style={styles.grid}>
-          {CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat.key}
-              style={[styles.categoryCard, { backgroundColor: T.card, borderColor: T.border }]}
-              onPress={() => handleSelectCategory(cat.key)}
-              activeOpacity={0.85}
-            >
-              <View style={[styles.categoryIconWrap, { backgroundColor: COLORS.primaryLight }]}>
-                <Ionicons name={cat.icon as any} size={26} color={COLORS.primary} />
-              </View>
-              <Text style={[styles.categoryLabel, { color: T.text }]}>{cat.label}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* ── Search bar ── */}
+          <View style={[styles.searchWrap, { backgroundColor: T.inputBg }]}>
+            <Ionicons name="search-outline" size={18} color={T.subText} />
+            <TextInput
+              style={[styles.searchInput, { color: T.text }]}
+              placeholder="What do you need done today?"
+              placeholderTextColor={T.subText}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+              onSubmitEditing={handleSearch}
+            />
+            <TouchableOpacity style={styles.searchGo} onPress={handleSearch} activeOpacity={0.85}>
+              <Ionicons name="arrow-forward" size={16} color="#fff" />
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
 
-        <View style={[styles.trustBanner, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-          <Ionicons name="shield-checkmark-outline" size={22} color={COLORS.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.trustTitle, { color: T.text }]}>Vetted Professionals</Text>
-            <Text style={[styles.trustBody, { color: T.subText }]}>
-              All service providers undergo a rigorous background check and identity verification.
-            </Text>
+          {/* ── Map preview ── */}
+          <TouchableOpacity style={styles.mapCard} onPress={() => router.push('/search' as any)} activeOpacity={0.9}>
+            <AppMap
+              latitude={MAP_CENTER.latitude}
+              longitude={MAP_CENTER.longitude}
+              zoom={0.045}
+              markers={NEARBY_MARKERS}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              style={styles.map}
+            />
+            <View style={styles.mapOverlay} pointerEvents="none">
+              <View style={[styles.mapPill, { backgroundColor: T.card }]}>
+                <View style={styles.mapPillDot} />
+                <Text style={[styles.mapPillText, { color: T.text }]}>{WORKERS.length} workers nearby</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* ── Categories ── */}
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: T.text }]}>Browse by category</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+            {CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.key}
+                style={[styles.categoryChip, { backgroundColor: T.card, borderColor: T.border }]}
+                onPress={() => handleSelectCategory(cat.key)}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.categoryIconWrap, { backgroundColor: COLORS.primaryLight }]}>
+                  <Ionicons name={cat.icon as any} size={22} color={COLORS.primary} />
+                </View>
+                <Text style={[styles.categoryLabel, { color: T.text }]}>{cat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* ── Nearby workers ── */}
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: T.text }]}>Workers near you</Text>
+            <TouchableOpacity onPress={() => router.push('/search' as any)}>
+              <Text style={styles.seeAll}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.workerRow}>
+            {WORKERS.map((w) => (
+              <TouchableOpacity
+                key={w.id}
+                style={[styles.workerCard, { backgroundColor: T.card, borderColor: T.border }]}
+                onPress={() => router.push(`/worker-profile?id=${w.id}` as any)}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.workerAvatar, { backgroundColor: w.color + '20' }]}>
+                  <Text style={[styles.workerInitials, { color: w.color }]}>{w.initials}</Text>
+                  {w.available && <View style={styles.onlineDot} />}
+                </View>
+                <Text style={[styles.workerName, { color: T.text }]} numberOfLines={1}>{w.name}</Text>
+                <Text style={[styles.workerSkill, { color: T.subText }]} numberOfLines={1}>{w.skill}</Text>
+                <View style={styles.workerMetaRow}>
+                  <Ionicons name="star" size={11} color={COLORS.accent} />
+                  <Text style={[styles.workerRating, { color: T.text }]}>{w.rating}</Text>
+                  <Text style={[styles.workerDist, { color: T.subText }]}> · {w.distance}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* ── Trust banner ── */}
+          <View style={[styles.trustBanner, { backgroundColor: T.inputBg, borderColor: T.border }]}>
+            <Ionicons name="shield-checkmark-outline" size={22} color={COLORS.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.trustTitle, { color: T.text }]}>Vetted Professionals</Text>
+              <Text style={[styles.trustBody, { color: T.subText }]}>
+                All service providers undergo a rigorous background check and identity verification.
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* ── BOTTOM NAV ── */}
-      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
-        {[
-          { icon: 'home-outline', iconFocused: 'home', label: 'Home', route: '/home', active: true },
-          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
-          { icon: 'add', iconFocused: 'add', label: '', route: '/post-a-job', center: true },
-          { icon: 'chatbubble-outline', iconFocused: 'chatbubble', label: 'Messages', route: '/messages', active: false },
-          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
-        ].map((tab) =>
-          (tab as any).center ? (
-            <TouchableOpacity key="center" style={styles.centerBtn} activeOpacity={0.85} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name="add" size={28} color="#fff" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity key={tab.label} style={styles.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name={(tab.active ? tab.iconFocused : tab.icon) as any} size={22} color={tab.active ? COLORS.primary : T.subText} />
-              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          )
-        )}
-      </View>
+      <CustomerNav active="home" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
-  headerTitle: { fontSize: 20, fontWeight: '800' },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 120 },
-  hero: { borderRadius: 20, padding: 20, marginBottom: 20, height: 110, justifyContent: 'center' },
-  heroTitle: { fontSize: 22, fontWeight: '800', color: COLORS.primary, marginBottom: 4 },
-  heroSubtitle: { fontSize: 14, maxWidth: 260 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-  categoryCard: { width: '31%', aspectRatio: 1, borderWidth: 1, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 12, gap: 8 },
-  categoryIconWrap: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  categoryLabel: { fontSize: 13, fontWeight: '600' },
-  trustBanner: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 16, marginTop: 20, borderRadius: 20, borderWidth: 1 },
+  header: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingVertical: 12 },
+  headerInner: { width: '100%', maxWidth: s(544), flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  greeting: { fontSize: 11.5, fontWeight: '500', marginBottom: 2 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  locationText: { fontSize: 17, fontWeight: '800' },
+  bellBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  bellDot: { position: 'absolute', top: 9, right: 10, width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.danger },
+
+  scrollContent: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 120, alignItems: 'center' },
+  content: { width: '100%', maxWidth: s(544) },
+
+  /* Search */
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 6, marginBottom: 16 },
+  searchInput: { flex: 1, fontSize: 14, paddingVertical: 10 },
+  searchGo: { width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
+
+  /* Map preview */
+  mapCard: { height: 160, borderRadius: 20, overflow: 'hidden', marginBottom: 20, position: 'relative' },
+  map: { flex: 1 },
+  mapOverlay: { position: 'absolute', left: 12, bottom: 12 },
+  mapPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, elevation: 3 },
+  mapPillDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#22C55E' },
+  mapPillText: { fontSize: 12, fontWeight: '700' },
+
+  /* Sections */
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '800' },
+  seeAll: { fontSize: 12.5, fontWeight: '600', color: COLORS.primary },
+
+  /* Categories */
+  categoryRow: { gap: 12, paddingBottom: 4, paddingRight: 4 },
+  categoryChip: { width: 84, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 18, paddingVertical: 14, gap: 8 },
+  categoryIconWrap: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  categoryLabel: { fontSize: 11.5, fontWeight: '600', textAlign: 'center' },
+
+  /* Nearby workers */
+  workerRow: { gap: 12, paddingBottom: 4, paddingRight: 4 },
+  workerCard: { width: 140, borderWidth: 1, borderRadius: 18, padding: 14, gap: 4 },
+  workerAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 6, position: 'relative' },
+  workerInitials: { fontSize: 15, fontWeight: '800' },
+  onlineDot: { position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22C55E', borderWidth: 1.5, borderColor: '#fff' },
+  workerName: { fontSize: 13.5, fontWeight: '700' },
+  workerSkill: { fontSize: 11.5 },
+  workerMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
+  workerRating: { fontSize: 11.5, fontWeight: '700' },
+  workerDist: { fontSize: 11 },
+
+  /* Trust */
+  trustBanner: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 16, marginTop: 4, borderRadius: 20, borderWidth: 1 },
   trustTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
   trustBody: { fontSize: 13, lineHeight: 18 },
-  bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    borderTopWidth: 1, flexDirection: 'row', alignItems: 'center',
-    paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
-  },
-  navTab: { flex: 1, alignItems: 'center', gap: 3 },
-  navLabel: { fontSize: 10, fontWeight: '500' },
-  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
-  centerBtn: {
-    width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
-    shadowColor: COLORS.primary, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8,
-  },
 });

@@ -6,15 +6,25 @@ import { supabase } from './supabase';
 WebBrowser.maybeCompleteAuthSession();
 
 /**
- * Build the OAuth redirect URL for the current platform.
+ * Build a redirect URL for the current platform pointing at the given
+ * in-app path.
  *
  * - Native: uses the app scheme (e.g. "shub://") via expo-linking.
- * - Web: falls back to the current window origin + "/auth/callback".
+ *   In Expo Go this produces exp://IP:PORT/--/<path>
+ * - Web: falls back to the current window origin + "/<path>".
+ *
+ * Must be added to the Supabase project's redirect URL allow-list
+ * (auth.additional_redirect_urls) or Supabase will silently fall back to
+ * the project's default Site URL instead of honoring this.
  */
-export const redirectTo =
-  Platform.OS === 'web'
-    ? `${window.location.origin}/auth/callback`
-    : Linking.createURL('/auth/callback');
+export function buildRedirectUrl(path: string): string {
+  return Platform.OS === 'web'
+    ? `${window.location.origin}/${path}`
+    : Linking.createURL(path);
+}
+
+/** OAuth redirect URL — see buildRedirectUrl. */
+export const redirectTo = buildRedirectUrl('auth/callback');
 
 /**
  * Sign in with an OAuth provider (Google or Apple).
@@ -76,5 +86,76 @@ export async function signInWithOAuthProvider(
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message ?? 'Something went wrong during authentication.' };
+  }
+}
+
+/**
+ * Create an account with email + password, tagging the new user's
+ * metadata with `full_name` and `role` so the `handle_new_user` DB
+ * trigger creates the matching `profiles` row with the right role.
+ */
+export async function signUpWithPassword({
+  fullName,
+  email,
+  password,
+  role,
+}: {
+  fullName: string;
+  email: string;
+  password: string;
+  role: 'customer' | 'worker';
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName, role },
+      },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message ?? 'Something went wrong creating your account.' };
+  }
+}
+
+/** Sign in with email + password. */
+export async function signInWithPassword({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message ?? 'Something went wrong signing in.' };
+  }
+}
+
+/** Sign out the current user. */
+export async function signOut(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message ?? 'Something went wrong signing out.' };
   }
 }

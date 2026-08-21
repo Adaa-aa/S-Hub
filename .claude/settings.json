@@ -1,4 +1,42 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx eslint *)",
+      "Bash(cd \"c:\\\\Users\\\\maranatha\\\\Desktop\\\\S-Hub\" && git diff -- app/become-worker.tsx > /tmp/d1.diff 2>&1; wc -l /tmp/d1.diff; git diff --stat 2>&1 | tail -40)",
+      "Read(//tmp/**)",
+      "Bash(git ls-files *)",
+      "Bash(git status *)",
+      "Bash(cp app/index.tsx /tmp/index-original-backup.tsx)",
+      "Bash(cp \"app/index.tsx\" \"C:/Users/MARANA~1/AppData/Local/Temp/claude/c--Users-maranatha-Desktop-S-Hub/d7014176-ee6b-41cf-b509-a2092efd07a8/scratchpad/index-original-backup.tsx\")",
+      "Bash(tee /c/Users/maranatha/AppData/Local/Temp/tsc-check.txt)",
+      "Bash(grep -E \"verified\\\\.tsx|otp-verification\\\\.tsx|verification-pending\\\\.tsx|reset-password\\\\.tsx\" /c/Users/maranatha/AppData/Local/Temp/tsc-check.txt)",
+      "Read(//c/Users/maranatha/AppData/Local/Temp/**)",
+      "Bash(rm -f /c/Users/maranatha/AppData/Local/Temp/tsc-check.txt)",
+      "Bash(tee /c/Users/maranatha/Desktop/S-Hub/tsc-check-out.txt)",
+      "Bash(Select-String -Pattern \"withdraw.tsx|promotions.tsx|emergency.tsx|finding-worker.tsx\")",
+      "Bash(npx tsc *)",
+      "Bash(cd \"c:/Users/maranatha/Desktop/S-Hub\" && cat /tmp/tscheck.txt)",
+      "Bash(cat /tmp/tsc_full.txt)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(tee tsc-full-out.txt)",
+      "Bash(tee eslint-full-out.txt)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(Object.keys\\(p.dependencies\\).sort\\(\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npx expo *)",
+      "Bash(tee /tmp/expo-web.log)",
+      "Bash(echo \"started in background, pid: $!\")",
+      "Bash(npx supabase *)",
+      "Bash(node \"C:\\\\Users\\\\MARANA~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-maranatha-Desktop-S-Hub\\\\cffbbea9-d7ff-4af8-a7ca-3d52103e3498\\\\scratchpad\\\\test-signup.mjs\")",
+      "Bash(curl -sv \"https://ldyqkrrhnkkfmevpnyes.supabase.co/auth/v1/health\")",
+      "Read(//c/Users/maranatha/.config/**)",
+      "Read(//c/Users/maranatha/AppData/Local/**)",
+      "Bash(env)",
+      "Bash(node .tmp-test-signup.mjs)",
+      "Bash(node .tmp-test-signin.mjs \"phase1-smoketest-1786660792553@example.com\")",
+      "Bash(rm -f .tmp-test-signup.mjs .tmp-test-signin.mjs)",
+      "Bash(node .tmp-test-gate.mjs)"
+    ]
+  },
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   }

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
+  LayoutChangeEvent,
   ListRenderItemInfo,
   StatusBar,
   StyleSheet,
@@ -13,8 +14,10 @@ import {
 } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { s } from '@/lib/scaling';
 
-const { width } = Dimensions.get('window');
+const { width: WINDOW_WIDTH } = Dimensions.get('window');
+const MAX_CONTENT_WIDTH = s(544);
 
 type Slide = {
   key: string;
@@ -40,7 +43,7 @@ const SLIDES: Slide[] = [
     key: 'verify',
     icon: 'shield-check',
     title: 'Book with confidence — verified & reliable',
-    body: 'Every worker on Waker is thoroughly vetted and rated by your neighbors to ensure quality service.',
+    body: 'Every worker on AdwumaGo is thoroughly vetted and rated by your neighbors to ensure quality service.',
   },
 ];
 
@@ -48,6 +51,15 @@ export default function OnboardingScreen() {
   const T = useThemeColors();
   const listRef = useRef<FlatList<Slide>>(null);
   const [index, setIndex] = useState(0);
+  // Actual rendered width of the (possibly capped) content container.
+  // Slides size themselves off this instead of the raw window width so
+  // paging still works correctly once the container is capped on wide screens.
+  const [contentWidth, setContentWidth] = useState(Math.min(WINDOW_WIDTH, MAX_CONTENT_WIDTH));
+
+  const onContentLayout = (e: LayoutChangeEvent) => {
+    const { width } = e.nativeEvent.layout;
+    if (width && width !== contentWidth) setContentWidth(width);
+  };
 
   const goToSlide = (i: number) => {
     listRef.current?.scrollToIndex({ index: i, animated: true });
@@ -58,11 +70,11 @@ export default function OnboardingScreen() {
   const handleGetStarted = () => router.replace('/sign-up' as any);
 
   const onMomentumScrollEnd = (e: any) => {
-    setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
+    setIndex(Math.round(e.nativeEvent.contentOffset.x / contentWidth));
   };
 
   const renderItem = ({ item, index: i }: ListRenderItemInfo<Slide>) => (
-    <View style={[styles.slide, { width }]}>
+    <View style={[styles.slide, { width: contentWidth }]}>
       <View style={[styles.card, { backgroundColor: T.card, borderColor: T.border }]}>
         <View style={[styles.iconWrap, { backgroundColor: COLORS.primaryLight }]}>
           <MaterialCommunityIcons name={item.icon} size={56} color={COLORS.primary} />
@@ -84,36 +96,40 @@ export default function OnboardingScreen() {
       <StatusBar barStyle={T.statusBar} />
 
       <View style={styles.header}>
-        <Text style={styles.logo}>Waker</Text>
+        <Text style={styles.logo}>AdwumaGo</Text>
         <TouchableOpacity onPress={handleSkip} hitSlop={8}>
           <Text style={[styles.skipText, { color: T.subText }]}>Skip</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        ref={listRef}
-        data={SLIDES}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        style={{ flexGrow: 0 }}
-      />
+      {/* Everything below the header lives in a single capped-width, centered container —
+          same treatment as sign-up.tsx / sign-in.tsx */}
+      <View style={styles.content} onLayout={onContentLayout}>
+        <FlatList
+          ref={listRef}
+          data={SLIDES}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          style={{ flexGrow: 0 }}
+        />
 
-      <View style={styles.dotsRow}>
-        {SLIDES.map((s, i) => (
-          <TouchableOpacity key={s.key} onPress={() => goToSlide(i)}>
-            <View
-              style={[
-                styles.dot,
-                { backgroundColor: i === index ? COLORS.primary : T.border },
-                i === index && styles.dotActive,
-              ]}
-            />
-          </TouchableOpacity>
-        ))}
+        <View style={styles.dotsRow}>
+          {SLIDES.map((slide, i) => (
+            <TouchableOpacity key={slide.key} onPress={() => goToSlide(i)}>
+              <View
+                style={[
+                  styles.dot,
+                  { backgroundColor: i === index ? COLORS.primary : T.border },
+                  i === index && styles.dotActive,
+                ]}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -131,6 +147,7 @@ const styles = StyleSheet.create({
   },
   logo: { fontSize: 22, fontWeight: '900', color: COLORS.primary },
   skipText: { fontSize: 14, fontWeight: '600' },
+  content: { flex: 1, width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' },
   slide: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   card: {
     borderWidth: 1,

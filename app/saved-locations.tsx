@@ -15,9 +15,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const INITIAL = [
-  { id: 1, label: 'Home',   address: 'Speedsaf Ayeduase, Kumasi', icon: 'home-outline',   pinned: true  },
-  { id: 2, label: 'Work',   address: 'Tech Hub, Accra Central',   icon: 'briefcase-outline', pinned: true  },
-  { id: 3, label: 'Gym',    address: 'Fit Nation, Osu, Accra',    icon: 'fitness-outline', pinned: false },
+  { id: 1, label: 'Home', address: 'Speedaf Ayeduase, Kumasi', icon: 'home-outline', pinned: true },
+  { id: 2, label: 'Work', address: 'Tech Hub, Accra Central', icon: 'briefcase-outline', pinned: true },
+  { id: 3, label: 'Gym', address: 'Fit Nation, Osu, Accra', icon: 'fitness-outline', pinned: false },
 ];
 
 export default function SavedLocationsScreen() {
@@ -85,7 +85,7 @@ export default function SavedLocationsScreen() {
               <TouchableOpacity style={s.recentRow} activeOpacity={0.7}>
                 <Ionicons name="time-outline" size={18} color={T.subText} style={{ width: 22 }} />
                 <Text style={[s.recentText, { color: T.text }]}>{place}</Text>
-                <Ionicons name="chevron-forward" size={16} color="#BBB" />
+                <Ionicons name="chevron-forward" size={16} color={T.subText} />
               </TouchableOpacity>
             </View>
           ))}

@@ -60,7 +60,7 @@ export default function SafetyScreen() {
               <Text style={[s.rowLabel, { color: T.text }]}>Share Location During Jobs</Text>
               <Text style={[s.rowSub, { color: T.subText }]}>Workers can see your general area</Text>
             </View>
-            <Switch value={shareLocation} onValueChange={setShareLocation} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
+            <Switch value={shareLocation} onValueChange={setShareLocation} trackColor={{ false: COLORS.border, true: COLORS.primary }} thumbColor="#fff" />
           </View>
           <View style={[s.divider, { backgroundColor: T.divider }]} />
           <View style={s.toggleRow}>
@@ -69,7 +69,7 @@ export default function SafetyScreen() {
               <Text style={[s.rowLabel, { color: T.text }]}>Two-Factor Authentication</Text>
               <Text style={[s.rowSub, { color: T.subText }]}>Extra security on login</Text>
             </View>
-            <Switch value={twoFactor} onValueChange={setTwoFactor} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
+            <Switch value={twoFactor} onValueChange={setTwoFactor} trackColor={{ false: COLORS.border, true: COLORS.primary }} thumbColor="#fff" />
           </View>
           <View style={[s.divider, { backgroundColor: T.divider }]} />
           <View style={s.toggleRow}>
@@ -78,13 +78,13 @@ export default function SafetyScreen() {
               <Text style={[s.rowLabel, { color: T.text }]}>Biometric Login</Text>
               <Text style={[s.rowSub, { color: T.subText }]}>Use fingerprint or face ID</Text>
             </View>
-            <Switch value={biometric} onValueChange={setBiometric} trackColor={{ false: '#E0E0E0', true: COLORS.primary }} thumbColor="#fff" />
+            <Switch value={biometric} onValueChange={setBiometric} trackColor={{ false: COLORS.border, true: COLORS.primary }} thumbColor="#fff" />
           </View>
           <View style={[s.divider, { backgroundColor: T.divider }]} />
           <TouchableOpacity style={s.actionRow} activeOpacity={0.7} onPress={() => Alert.alert('Change Password', 'A password reset link will be sent to your email.')}>
             <Ionicons name="lock-closed-outline" size={20} color={T.text} style={s.rowIcon} />
             <Text style={[s.rowLabel, { color: T.text }]}>Change Password</Text>
-            <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
           </TouchableOpacity>
         </View>
 

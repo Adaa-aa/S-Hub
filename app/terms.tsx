@@ -16,11 +16,11 @@ const SECTIONS = [
   {
     title: 'Terms of Service',
     content: [
-      { heading: '1. Acceptance', body: 'By using Vaker, you agree to be bound by these Terms of Service and all applicable laws and regulations of Ghana.' },
-      { heading: '2. Use of Service', body: 'Vaker is a marketplace platform connecting customers with skilled service providers. We do not directly employ workers listed on the platform.' },
+      { heading: '1. Acceptance', body: 'By using AdwumaGo, you agree to be bound by these Terms of Service and all applicable laws and regulations of Ghana.' },
+      { heading: '2. Use of Service', body: 'AdwumaGo is a marketplace platform connecting customers with skilled service providers. We do not directly employ workers listed on the platform.' },
       { heading: '3. User Accounts', body: 'You are responsible for safeguarding your account credentials. You agree not to share your account with any other person.' },
-      { heading: '4. Payments', body: 'All transactions are processed securely through our approved payment partners. Vaker charges a platform fee on each successful job.' },
-      { heading: '5. Disputes', body: 'In the event of a dispute between a customer and worker, Vaker will mediate but bears no financial liability for outcomes.' },
+      { heading: '4. Payments', body: 'All transactions are processed securely through our approved payment partners. AdwumaGo charges a platform fee on each successful job.' },
+      { heading: '5. Disputes', body: 'In the event of a dispute between a customer and worker, AdwumaGo will mediate but bears no financial liability for outcomes.' },
       { heading: '6. Termination', body: 'We reserve the right to suspend or terminate accounts that violate these terms without prior notice.' },
     ],
   },
@@ -32,7 +32,7 @@ const SECTIONS = [
       { heading: '3. Data Sharing', body: 'We do not sell your personal data. We may share limited data with trusted partners for service delivery (e.g., payment processors).' },
       { heading: '4. Location Data', body: 'Location data is used to show nearby workers and for job routing. You may disable location access in your phone settings.' },
       { heading: '5. Data Security', body: 'We use industry-standard encryption to protect your data. However, no system is 100% secure.' },
-      { heading: '6. Your Rights', body: 'You have the right to access, correct, or delete your personal data at any time by contacting support@vaker.com.gh.' },
+      { heading: '6. Your Rights', body: 'You have the right to access, correct, or delete your personal data at any time by contacting support@AdwumaGo.com.gh.' },
     ],
   },
 ];
@@ -67,7 +67,7 @@ export default function TermsScreen() {
           <Ionicons name="mail-outline" size={18} color={COLORS.primary} />
           <Text style={[s.contactText, { color: T.text }]}>
             Questions? Contact us at{' '}
-            <Text style={s.contactLink}>legal@vaker.com.gh</Text>
+            <Text style={s.contactLink}>legal@AdwumaGo.com.gh</Text>
           </Text>
         </View>
       </ScrollView>

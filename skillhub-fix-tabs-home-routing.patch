@@ -1,0 +1,234 @@
+diff --git a/app/(tabs)/_layout.tsx b/app/(tabs)/_layout.tsx
+deleted file mode 100644
+index f75314f..0000000
+--- a/app/(tabs)/_layout.tsx
++++ /dev/null
+@@ -1,35 +0,0 @@
+-import { Tabs } from 'expo-router';
+-import React from 'react';
+-
+-import { HapticTab } from '@/components/haptic-tab';
+-import { IconSymbol } from '@/components/ui/icon-symbol';
+-import { Colors } from '@/constants/theme';
+-import { useAppTheme } from '@/context/ThemeContext';
+-
+-export default function TabLayout() {
+-  const { colorScheme } = useAppTheme();
+-
+-  return (
+-    <Tabs
+-      screenOptions={{
+-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+-        headerShown: false,
+-        tabBarButton: HapticTab,
+-      }}>
+-      <Tabs.Screen
+-        name="home"
+-        options={{
+-          title: 'Home',
+-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+-        }}
+-      />
+-      <Tabs.Screen
+-        name="explore"
+-        options={{
+-          title: 'Explore',
+-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+-        }}
+-      />
+-    </Tabs>
+-  );
+-}
+diff --git a/app/(tabs)/explore.tsx b/app/(tabs)/explore.tsx
+deleted file mode 100644
+index 71518f9..0000000
+--- a/app/(tabs)/explore.tsx
++++ /dev/null
+@@ -1,112 +0,0 @@
+-import { Image } from 'expo-image';
+-import { Platform, StyleSheet } from 'react-native';
+-
+-import { Collapsible } from '@/components/ui/collapsible';
+-import { ExternalLink } from '@/components/external-link';
+-import ParallaxScrollView from '@/components/parallax-scroll-view';
+-import { ThemedText } from '@/components/themed-text';
+-import { ThemedView } from '@/components/themed-view';
+-import { IconSymbol } from '@/components/ui/icon-symbol';
+-import { Fonts } from '@/constants/theme';
+-
+-export default function TabTwoScreen() {
+-  return (
+-    <ParallaxScrollView
+-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
+-      headerImage={
+-        <IconSymbol
+-          size={310}
+-          color="#808080"
+-          name="chevron.left.forwardslash.chevron.right"
+-          style={styles.headerImage}
+-        />
+-      }>
+-      <ThemedView style={styles.titleContainer}>
+-        <ThemedText
+-          type="title"
+-          style={{
+-            fontFamily: Fonts.rounded,
+-          }}>
+-          Explore
+-        </ThemedText>
+-      </ThemedView>
+-      <ThemedText>This app includes example code to help you get started.</ThemedText>
+-      <Collapsible title="File-based routing">
+-        <ThemedText>
+-          This app has two screens:{' '}
+-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
+-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+-        </ThemedText>
+-        <ThemedText>
+-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
+-          sets up the tab navigator.
+-        </ThemedText>
+-        <ExternalLink href="https://docs.expo.dev/router/introduction">
+-          <ThemedText type="link">Learn more</ThemedText>
+-        </ExternalLink>
+-      </Collapsible>
+-      <Collapsible title="Android, iOS, and web support">
+-        <ThemedText>
+-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
+-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
+-        </ThemedText>
+-      </Collapsible>
+-      <Collapsible title="Images">
+-        <ThemedText>
+-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
+-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
+-          different screen densities
+-        </ThemedText>
+-        <Image
+-          source={require('@/assets/images/react-logo.png')}
+-          style={{ width: 100, height: 100, alignSelf: 'center' }}
+-        />
+-        <ExternalLink href="https://reactnative.dev/docs/images">
+-          <ThemedText type="link">Learn more</ThemedText>
+-        </ExternalLink>
+-      </Collapsible>
+-      <Collapsible title="Light and dark mode components">
+-        <ThemedText>
+-          This template has light and dark mode support. The{' '}
+-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
+-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
+-        </ThemedText>
+-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
+-          <ThemedText type="link">Learn more</ThemedText>
+-        </ExternalLink>
+-      </Collapsible>
+-      <Collapsible title="Animations">
+-        <ThemedText>
+-          This template includes an example of an animated component. The{' '}
+-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
+-          the powerful{' '}
+-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
+-            react-native-reanimated
+-          </ThemedText>{' '}
+-          library to create a waving hand animation.
+-        </ThemedText>
+-        {Platform.select({
+-          ios: (
+-            <ThemedText>
+-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
+-              component provides a parallax effect for the header image.
+-            </ThemedText>
+-          ),
+-        })}
+-      </Collapsible>
+-    </ParallaxScrollView>
+-  );
+-}
+-
+-const styles = StyleSheet.create({
+-  headerImage: {
+-    color: '#808080',
+-    bottom: -90,
+-    left: -35,
+-    position: 'absolute',
+-  },
+-  titleContainer: {
+-    flexDirection: 'row',
+-    gap: 8,
+-  },
+-});
+diff --git a/app/_layout.tsx b/app/_layout.tsx
+index 6e2a04c..ac500af 100644
+--- a/app/_layout.tsx
++++ b/app/_layout.tsx
+@@ -6,7 +6,7 @@ import 'react-native-reanimated';
+ import { ThemeProvider, useAppTheme } from '@/context/ThemeContext';
+ 
+ export const unstable_settings = {
+-  anchor: '(tabs)',
++  anchor: 'index',
+ };
+ 
+ function AppNavigator() {
+@@ -16,8 +16,7 @@ function AppNavigator() {
+     <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+       <Stack>
+         <Stack.Screen name="index" options={{ headerShown: false }} />
+-        <Stack.Screen name="login" options={{ headerShown: false }} />
+-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
++        <Stack.Screen name="home" options={{ headerShown: false }} />
+         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+         <Stack.Screen name="settings" options={{ headerShown: false }} />
+       </Stack>
+diff --git a/app/become-worker.tsx b/app/become-worker.tsx
+index b9c3b77..2640ea5 100644
+--- a/app/become-worker.tsx
++++ b/app/become-worker.tsx
+@@ -222,7 +222,7 @@ export default function WorkerSetupScreen() {
+           <TouchableOpacity
+             style={[s.successSecondaryBtn, { borderColor: T.border }]}
+             activeOpacity={0.75}
+-            onPress={() => router.replace('/(tabs)/home' as any)}
++            onPress={() => router.replace('/home' as any)}
+           >
+             <Text style={[s.successSecondaryBtnText, { color: T.subText }]}>Back to Home</Text>
+           </TouchableOpacity>
+diff --git a/app/messages.tsx b/app/messages.tsx
+index 62eacf6..9efe99e 100644
+--- a/app/messages.tsx
++++ b/app/messages.tsx
+@@ -142,7 +142,7 @@ export default function MessagesScreen() {
+ 
+       <View style={[s.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
+         {[
+-          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
++          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/home', active: false },
+           { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
+           { icon: 'add', iconActive: 'add', label: '', route: '/post-a-job', center: true },
+           { icon: 'chatbubble', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: true },
+diff --git a/app/profile.tsx b/app/profile.tsx
+index cf6c5a4..695d153 100644
+--- a/app/profile.tsx
++++ b/app/profile.tsx
+@@ -276,7 +276,7 @@ export default function ProfileScreen() {
+       {/* ── BOTTOM NAV ── */}
+       <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
+         {[
+-          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/(tabs)/home', active: false },
++          { icon: 'home-outline', iconActive: 'home', label: 'Home', route: '/home', active: false },
+           { icon: 'briefcase-outline', iconActive: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
+           { icon: 'add', iconActive: 'add', label: '', route: '/post-a-job', center: true },
+           { icon: 'chatbubble-outline', iconActive: 'chatbubble', label: 'Messages', route: '/messages', active: false },
+diff --git a/app/worker-setup.tsx b/app/worker-setup.tsx
+index 33dc057..9c6260a 100644
+--- a/app/worker-setup.tsx
++++ b/app/worker-setup.tsx
+@@ -184,7 +184,7 @@ export default function WorkerSetupScreen() {
+         </View>
+         <TouchableOpacity
+           style={s.switchBtn}
+-          onPress={() => router.replace('/(tabs)/home' as any)}
++          onPress={() => router.replace('/home' as any)}
+           activeOpacity={0.8}
+         >
+           <Text style={s.switchBtnText}>Switch to Customer View</Text>

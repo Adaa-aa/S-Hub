@@ -23,7 +23,7 @@ export const WORKERS = [
   {
     id: 1, name: 'Kofi Mensah', skill: 'Plumber',
     rating: 4.8, reviews: 120, distance: '2.1 km',
-    price: 450, initials: 'KM', color: '#006B3F', available: true,
+    price: 450, initials: 'KM', color: COLORS.accent, available: true,
   },
   {
     id: 2, name: 'Kwame Adjei', skill: 'Electrician',
@@ -85,9 +85,9 @@ const wc = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     borderBottomWidth: 1,
-    borderColor: '#F2F2F2',
+    borderColor: COLORS.border,
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 14,
@@ -111,18 +111,18 @@ const wc = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#22C55E',
     borderWidth: 1.5,
-    borderColor: '#fff',
+    borderColor: COLORS.card,
   },
   info: { flex: 1 },
-  name: { fontSize: 14, fontWeight: '700', color: '#1A1A1A', marginBottom: 1 },
-  skill: { fontSize: 12, color: '#6B6B6B', marginBottom: 4 },
+  name: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 1 },
+  skill: { fontSize: 12, color: COLORS.muted, marginBottom: 4 },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  rating: { fontSize: 12, fontWeight: '700', color: '#1A1A1A' },
-  reviews: { fontSize: 11, color: '#6B6B6B' },
+  rating: { fontSize: 12, fontWeight: '700', color: COLORS.text },
+  reviews: { fontSize: 11, color: COLORS.muted },
   distRow: { flexDirection: 'row', alignItems: 'center' },
-  dist: { fontSize: 11, color: '#6B6B6B' },
+  dist: { fontSize: 11, color: COLORS.muted },
   priceCol: { alignItems: 'flex-end' },
-  fromLabel: { fontSize: 10, color: '#6B6B6B', fontWeight: '500', marginBottom: 2 },
+  fromLabel: { fontSize: 10, color: COLORS.muted, fontWeight: '500', marginBottom: 2 },
   price: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
 });
 
@@ -447,8 +447,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#fff',
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.card,
   },
   chipActive: {
     borderColor: COLORS.primary,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 12,
-    color: '#6B6B6B',
+    color: COLORS.muted,
     fontWeight: '500',
   },
   chipTextActive: {
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 18,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.border,
     borderRadius: 10,
     overflow: 'hidden',
   },
@@ -480,18 +480,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
   },
   toggleBtnActive: {
     borderWidth: 1.5,
     borderColor: COLORS.primary,
     borderRadius: 9,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
   },
   toggleText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B6B6B',
+    color: COLORS.muted,
   },
   toggleTextActive: {
     color: COLORS.primary,
@@ -505,8 +505,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptyEmoji: { fontSize: 44, marginBottom: 14 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A1A', marginBottom: 6 },
-  emptySub: { fontSize: 13, color: '#6B6B6B', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text, marginBottom: 6 },
+  emptySub: { fontSize: 13, color: COLORS.muted, textAlign: 'center', lineHeight: 20 },
 
   /* Map placeholder */
   mapPlaceholder: {
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  mapText: { fontSize: 15, color: '#6B6B6B', fontWeight: '500' },
+  mapText: { fontSize: 15, color: COLORS.muted, fontWeight: '500' },
 
   /* Bottom bar */
   bottomBar: {
@@ -524,9 +524,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.card,
     borderTopWidth: 1,
-    borderColor: '#ECECEC',
+    borderColor: COLORS.border,
     paddingBottom: 24,
     paddingTop: 12,
   },
@@ -540,12 +540,12 @@ const styles = StyleSheet.create({
   bottomBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: COLORS.text,
   },
   bottomDivider: {
     width: 1,
     height: '100%',
-    backgroundColor: '#E8E8E8',
+    backgroundColor: COLORS.border,
   },
 
   /* Filter modal */

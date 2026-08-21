@@ -30,6 +30,8 @@ export default function OtpVerificationScreen() {
   const [timeLeft, setTimeLeft] = useState(RESEND_SECONDS);
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
   useEffect(() => {
@@ -53,15 +55,34 @@ export default function OtpVerificationScreen() {
   };
 
   const handleResend = async () => {
-    if (timeLeft > 0 || !identifier) return;
-    setTimeLeft(RESEND_SECONDS);
+    if (timeLeft > 0 || !identifier || resending) return;
     setError('');
-    const { error: resendError } = await supabase.auth.resend(
-      mode === 'phone'
-        ? { type: 'sms', phone: identifier }
-        : { type: 'signup', email: identifier }
-    );
-    if (resendError) setError(resendError.message);
+    setResending(true);
+    setResent(false);
+    try {
+      const { error: resendError } = await supabase.auth.resend(
+        mode === 'phone'
+          ? { type: 'sms', phone: identifier }
+          : { type: 'signup', email: identifier }
+      );
+      if (resendError) {
+        let msg = resendError.message;
+        if (msg.includes('rate limit') || msg.includes('too many')) {
+          msg = 'Too many attempts. Please wait a minute before resending.';
+        } else if (msg.includes('not found') || msg.includes('no user')) {
+          msg = 'No account found. Go back and sign up again.';
+        }
+        setError(msg);
+      } else {
+        setResent(true);
+        setTimeLeft(RESEND_SECONDS);
+        setTimeout(() => setResent(false), 3000);
+      }
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to resend code. Please try again.');
+    } finally {
+      setResending(false);
+    }
   };
 
   const handleVerify = async () => {
@@ -90,7 +111,8 @@ export default function OtpVerificationScreen() {
       return;
     }
     if (data.session) {
-      router.replace('/home' as any);
+      const role = data.user?.user_metadata?.role;
+      router.replace((role === 'worker' ? '/become-worker' : '/home') as any);
     } else {
       setError('Verification succeeded but no session was created. Try signing in.');
     }
@@ -114,7 +136,7 @@ export default function OtpVerificationScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="arrow-back" size={ms(24)} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.logo}>Waker</Text>
+        <Text style={styles.logo}>AdwumaGo</Text>
         <View style={{ width: s(24) }} />
       </View>
 
@@ -147,11 +169,22 @@ export default function OtpVerificationScreen() {
 
         <View style={styles.resendBlock}>
           <Text style={[styles.resendLabel, { color: T.subText }]}>Didn't receive the code?</Text>
-          <TouchableOpacity onPress={handleResend} disabled={timeLeft > 0}>
-            <Text style={[styles.resendButton, timeLeft > 0 && { color: T.subText }]}>
-              Resend Code {timeLeft > 0 ? formattedTime : ''}
-            </Text>
-          </TouchableOpacity>
+          {resent ? (
+            <View style={styles.resentRow}>
+              <Ionicons name="checkmark-circle" size={ms(14)} color="#22C55E" />
+              <Text style={styles.resentText}>Code sent! Check your {mode === 'phone' ? 'phone' : 'email'}.</Text>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={handleResend} disabled={timeLeft > 0 || resending}>
+              {resending ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Text style={[styles.resendButton, timeLeft > 0 && { color: T.subText }]}>
+                  Resend Code {timeLeft > 0 ? formattedTime : ''}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
 
         {!!error && <Text style={styles.errorText}>{error}</Text>}
@@ -172,7 +205,7 @@ export default function OtpVerificationScreen() {
         <View style={[styles.securityNote, { backgroundColor: T.inputBg, borderColor: T.border }]}>
           <Ionicons name="shield-checkmark-outline" size={ms(20)} color={COLORS.primary} />
           <Text style={[styles.securityText, { color: T.subText }]}>
-            Your security is our priority. Waker uses bank-grade encryption to protect your data.
+            Your security is our priority. AdwumaGo uses bank-grade encryption to protect your data.
           </Text>
         </View>
       </ScrollView>
@@ -202,6 +235,8 @@ const styles = StyleSheet.create({
   resendBlock: { width: '100%', maxWidth: s(544), alignItems: 'center', gap: vs(6), marginBottom: vs(8) },
   resendLabel: { fontSize: ms(13) },
   resendButton: { fontSize: ms(13), fontWeight: '700', color: COLORS.primary },
+  resentRow: { flexDirection: 'row', alignItems: 'center', gap: s(4) },
+  resentText: { fontSize: ms(12), fontWeight: '600', color: '#22C55E' },
   errorText: { color: '#DC2626', fontSize: ms(13), textAlign: 'center' },
   verifyButton: {
     width: '100%',

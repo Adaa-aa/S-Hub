@@ -1,4 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -13,26 +14,42 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { COLORS } from '@/constants/theme';
-import { useThemeColors } from '@/context/ThemeContext';
-import { signInWithOAuthProvider } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
+import { COLORS } from '../constants/theme';
+import { useThemeColors } from '../context/ThemeContext';
+import ScreenContent from '@/components/ScreenContent';
+import { signUpWithPassword, signInWithOAuthProvider } from '@/lib/auth';
 import { s, vs, ms } from '@/lib/scaling';
 
-type Role = 'user' | 'customer';
+const PRIMARY = COLORS.primary;
+const MUTED = COLORS.muted;
+const BORDER = COLORS.border;
+const BG = COLORS.bgGrey;
 
 export default function SignUpScreen() {
-  const T = useThemeColors();
-  const [role, setRole] = useState<Role>('user');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'customer' | 'worker'>('customer');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [error, setError] = useState('');
+  const T = useThemeColors();
+
+  const handleSignUp = async () => {
+    if (!name || !email || !password) return;
+    setError('');
+    setLoading(true);
+    const result = await signUpWithPassword({ fullName: name, email, password, role });
+    setLoading(false);
+    if (!result.success) {
+      setError(result.error ?? 'Something went wrong creating your account.');
+      return;
+    }
+    // Email confirmation is disabled project-wide, so signUp already returns
+    // an active session — no verification code is sent, go straight in.
+    router.replace((role === 'worker' ? '/become-worker' : '/home') as any);
+  };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
     setError('');
@@ -43,310 +60,268 @@ export default function SignUpScreen() {
       setError(result.error ?? 'Authentication failed.');
       return;
     }
-    router.replace({ pathname: '/home', params: { role } } as any);
+    // OAuth accounts always land as customers (no role form is shown mid-flow);
+    // they can switch to worker mode afterward via "Start Earning" in profile.
+    router.replace('/home' as any);
   };
 
-  const handleSubmit = async () => {
-    setError('');
-
-    if (!fullName.trim() || !password) {
-      setError('Please fill in your name and password.');
-      return;
-    }
-    if (!email.trim() && !phone.trim()) {
-      setError('Please enter your email address or phone number.');
-      return;
-    }
-
-    setSubmitting(true);
-
-    if (email.trim()) {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: { data: { full_name: fullName.trim(), role } },
-      });
-      setSubmitting(false);
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-      // If session exists, email confirmations are disabled — user is already logged in
-      if (data.session) {
-        router.replace({ pathname: '/home', params: { role } } as any);
-        return;
-      }
-      // No session means confirmation is required — go to OTP verification
-      router.push({
-        pathname: '/otp-verification',
-        params: { identifier: email.trim(), mode: 'email', role },
-      } as any);
-    } else {
-      const digitsOnly = phone.replace(/\D/g, '').replace(/^0/, '');
-      const fullPhone = `+233${digitsOnly}`;
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        phone: fullPhone,
-        password,
-        options: { data: { full_name: fullName.trim(), role } },
-      });
-      setSubmitting(false);
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-      // If session exists, phone confirmations are disabled — user is already logged in
-      if (data.session) {
-        router.replace({ pathname: '/home', params: { role } } as any);
-        return;
-      }
-      // No session means confirmation is required — go to OTP verification
-      router.push({
-        pathname: '/otp-verification',
-        params: { identifier: fullPhone, mode: 'phone', role },
-      } as any);
-    }
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/onboarding' as any);
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: T.bg }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <StatusBar barStyle={T.statusBar} />
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: T.card }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
 
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={ms(24)} color={COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.logo}>Waker</Text>
-        <View style={{ width: s(24) }} />
-      </View>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: T.card }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.hero}>
-          <Text style={[styles.heroTitle, { color: T.text }]}>Join the Community</Text>
-          <Text style={[styles.heroSubtitle, { color: T.subText }]}>
-            Find reliable help or start earning as a trusted worker.
-          </Text>
-        </View>
-
-        <View style={[styles.roleToggleRow, { backgroundColor: T.inputBg }]}>
-          <TouchableOpacity
-            style={[styles.roleToggleButton, role === 'user' && [styles.roleToggleButtonActive, { backgroundColor: T.card }]]}
-            onPress={() => setRole('user')}
-          >
-            <Ionicons name="person-outline" size={ms(16)} color={role === 'user' ? COLORS.primary : T.subText} />
-            <Text style={[styles.roleToggleText, { color: T.subText }, role === 'user' && { color: COLORS.primary }]}>User</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleToggleButton, role === 'customer' && [styles.roleToggleButtonActive, { backgroundColor: T.card }]]}
-            onPress={() => setRole('customer')}
-          >
-            <Ionicons name="briefcase-outline" size={ms(16)} color={role === 'customer' ? COLORS.primary : T.subText} />
-            <Text style={[styles.roleToggleText, { color: T.subText }, role === 'customer' && { color: COLORS.primary }]}>Customer</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: T.subText }]}>Phone Number</Text>
-          <View style={[styles.inputBox, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-            <View style={[styles.countryPrefix, { borderRightColor: T.border }]}>
-              <View style={styles.flagChip} />
-              <Text style={[styles.prefixText, { color: T.text }]}>+233</Text>
-            </View>
-            <TextInput
-              style={[styles.input, { color: T.text }]}
-              placeholder="50 000 0000"
-              placeholderTextColor={T.subText}
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-            />
+        {/* ══ GREEN GRADIENT HEADER ══ */}
+        <LinearGradient
+          colors={[COLORS.primaryDark, PRIMARY]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          <View style={styles.headerInner}>
+            <TouchableOpacity style={styles.backBtn} onPress={handleBack} activeOpacity={0.7}>
+              <Ionicons name="arrow-back" size={19} color="#1A1A1A" />
+            </TouchableOpacity>
+            <Text style={styles.heading}>Sign Up</Text>
+            <Text style={styles.subheading}>Create an account to get started.</Text>
           </View>
-        </View>
+        </LinearGradient>
 
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: T.subText }]}>Email Address</Text>
-          <View style={[styles.inputBox, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-            <Ionicons name="mail-outline" size={ms(20)} color={T.subText} />
-            <TextInput
-              style={[styles.input, { color: T.text }]}
-              placeholder="kofi@example.com"
-              placeholderTextColor={T.subText}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
-        </View>
+        <ScreenContent style={styles.container}>
 
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: T.subText }]}>Full Name</Text>
-          <View style={[styles.inputBox, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-            <Ionicons name="person-outline" size={ms(20)} color={T.subText} />
-            <TextInput
-              style={[styles.input, { color: T.text }]}
-              placeholder="Kofi Mensah"
-              placeholderTextColor={T.subText}
-              value={fullName}
-              onChangeText={setFullName}
-            />
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: T.subText }]}>Password</Text>
-          <View style={[styles.inputBox, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-            <Ionicons name="lock-closed-outline" size={ms(20)} color={T.subText} />
-            <TextInput
-              style={[styles.input, { color: T.text }]}
-              placeholder="••••••••"
-              placeholderTextColor={T.subText}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
-              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={ms(20)} color={T.subText} />
+          <View style={styles.roleRow}>
+            <TouchableOpacity style={[styles.roleCard, { backgroundColor: T.inputBg, borderColor: T.border }, role === 'customer' && styles.roleCardActive]} onPress={() => setRole('customer')}>
+              <Text style={styles.roleEmoji}>🔍</Text>
+              <Text style={[styles.roleLabel, { color: T.text }]}>Find Workers</Text>
+              <Text style={[styles.roleSub, { color: T.subText }]}>I need a service</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.roleCard, { backgroundColor: T.inputBg, borderColor: T.border }, role === 'worker' && styles.roleCardActive]} onPress={() => setRole('worker')}>
+              <Text style={styles.roleEmoji}>💼</Text>
+              <Text style={[styles.roleLabel, { color: T.text }]}>Offer Services</Text>
+              <Text style={[styles.roleSub, { color: T.subText }]}>I am a worker</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
+          <View style={styles.inputBox}>
+            <Text style={[styles.inputLabel, { color: T.subText }]}>Full Name</Text>
+            <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="Enter your Full Name" placeholderTextColor={T.subText} value={name} onChangeText={setName} />
+          </View>
 
-        <TouchableOpacity style={styles.termsRow} onPress={() => setAgreed((v) => !v)}>
-          <Ionicons
-            name={agreed ? 'checkbox' : 'square-outline'}
-            size={ms(18)}
-            color={agreed ? COLORS.primary : T.subText}
-          />
+          <View style={styles.inputBox}>
+            <Text style={[styles.inputLabel, { color: T.subText }]}>Email or Phone</Text>
+            <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="Enter your Phone Number or Email" placeholderTextColor={T.subText} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+          </View>
+
+          <View style={styles.inputBox}>
+            <Text style={[styles.inputLabel, { color: T.subText }]}>Password</Text>
+            <View style={[styles.passwordRow, { backgroundColor: T.inputBg, borderColor: T.border }]}>
+              <TextInput style={[styles.passwordInput, { color: T.text }]} placeholder="Enter your Password" placeholderTextColor={T.subText} secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+          <TouchableOpacity
+            onPress={handleSignUp}
+            disabled={!name || !email || !password || loading}
+            activeOpacity={0.85}
+            style={styles.btnWrap}
+          >
+            <LinearGradient
+              colors={(!name || !email || !password || loading) ? [COLORS.muted, COLORS.muted] : [PRIMARY, COLORS.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.btn}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" style={{ flex: 1 }} />
+              ) : (
+                <>
+                  <View style={styles.btnCircle}>
+                    <Ionicons name="arrow-forward" size={16} color={PRIMARY} />
+                  </View>
+                  <Text style={styles.btnText}>Create Account</Text>
+                  <View style={styles.btnChevrons}>
+                    <Ionicons name="chevron-forward" size={15} color="rgba(255,255,255,0.6)" style={{ marginRight: -8 }} />
+                    <Ionicons name="chevron-forward" size={15} color="#fff" />
+                  </View>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
           <Text style={[styles.termsText, { color: T.subText }]}>
-            By signing up, I agree to the <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-            <Text style={styles.termsLink}>Privacy Policy</Text>.
+            By registering you agree to our{' '}
+            <Text style={{ color: PRIMARY }}>Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={{ color: PRIMARY }}>Privacy Policy</Text>
           </Text>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.submitButton, !agreed && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={!agreed || submitting}
-          activeOpacity={0.85}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Text style={styles.submitText}>Sign Up</Text>
-              <Ionicons name="arrow-forward" size={ms(20)} color="#fff" />
-            </>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.oauthSection}>
           <View style={styles.dividerRow}>
             <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
-            <Text style={[styles.dividerText, { color: T.subText }]}>or sign up with</Text>
+            <Text style={[styles.dividerText, { color: T.subText }]}>or continue with</Text>
             <View style={[styles.dividerLine, { backgroundColor: T.border }]} />
           </View>
 
-          <View style={styles.oauthRow}>
+          <View style={styles.socialRow}>
             <TouchableOpacity
-              style={[styles.oauthButton, { backgroundColor: T.inputBg, borderColor: T.border }]}
+              style={[styles.socialBtn, { backgroundColor: T.card, borderColor: T.border }]}
               onPress={() => handleOAuth('google')}
               disabled={oauthLoading !== null}
-              activeOpacity={0.85}
+              activeOpacity={0.8}
             >
               {oauthLoading === 'google' ? (
                 <ActivityIndicator size="small" color={T.text} />
               ) : (
-                <Ionicons name="logo-google" size={ms(22)} color={T.text} />
+                <>
+                  <AntDesign name="google" size={18} color="#EA4335" />
+                  <Text style={[styles.socialBtnText, { color: T.text }]}>Continue with Google</Text>
+                </>
               )}
-              <Text style={[styles.oauthText, { color: T.text }]}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.oauthButton, { backgroundColor: T.inputBg, borderColor: T.border }]}
-              onPress={() => handleOAuth('apple')}
-              disabled={oauthLoading !== null}
-              activeOpacity={0.85}
-            >
-              {oauthLoading === 'apple' ? (
-                <ActivityIndicator size="small" color={T.text} />
-              ) : (
-                <Ionicons name="logo-apple" size={ms(22)} color={T.text} />
-              )}
-              <Text style={[styles.oauthText, { color: T.text }]}>Apple</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: T.subText }]}>
-            Already have an account?{' '}
-            <Text style={styles.footerLink} onPress={() => router.replace('/sign-in' as any)}>
-              Log In
-            </Text>
-          </Text>
-        </View>
+          <View style={styles.loginRow}>
+            <Text style={[styles.loginText, { color: T.subText }]}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.replace('/sign-in' as any)}>
+              <Text style={styles.loginLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </ScreenContent>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: s(20), paddingVertical: vs(12) },
-  logo: { fontSize: ms(22), fontWeight: '900', color: COLORS.primary },
-  scrollContent: { paddingHorizontal: s(20), paddingBottom: vs(40), gap: vs(20), alignItems: 'center' },
-  hero: { width: '100%', maxWidth: s(544), marginBottom: vs(4), alignItems: 'center' },
-  heroTitle: { fontSize: ms(26), fontWeight: '800', marginBottom: vs(6) },
-  heroSubtitle: { fontSize: ms(14), lineHeight: ms(20), textAlign: 'center' },
-  roleToggleRow: { width: '100%', maxWidth: s(544), flexDirection: 'row', borderRadius: s(24), padding: s(4), marginBottom: vs(8) },
-  roleToggleButton: { flex: 1, flexDirection: 'row', paddingVertical: vs(10), borderRadius: s(20), alignItems: 'center', justifyContent: 'center', gap: s(6) },
-  roleToggleButtonActive: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
-  roleToggleText: { fontSize: ms(15), fontWeight: '700' },
-  field: { width: '100%', maxWidth: s(544), gap: vs(6) },
-  label: { fontSize: ms(12), fontWeight: '600', marginLeft: s(4), textTransform: 'uppercase' },
-  inputBox: { flexDirection: 'row', alignItems: 'center', borderRadius: s(16), borderWidth: s(1), height: vs(56), paddingHorizontal: s(14), gap: s(10) },
-  countryPrefix: { flexDirection: 'row', alignItems: 'center', gap: s(6), paddingRight: s(10), borderRightWidth: s(1), height: vs(32) },
-  flagChip: { width: s(20), height: s(14), borderRadius: s(2), backgroundColor: COLORS.primary },
-  prefixText: { fontSize: ms(14), fontWeight: '600' },
-  input: { flex: 1, fontSize: ms(16), padding: 0 },
-  termsRow: { width: '100%', maxWidth: s(544), flexDirection: 'row', alignItems: 'flex-start', gap: s(10), paddingVertical: vs(6) },
-  termsText: { fontSize: ms(12), flex: 1, lineHeight: ms(18) },
-  termsLink: { color: COLORS.primary, fontWeight: '700' },
-  errorText: { color: '#DC2626', fontSize: ms(13), textAlign: 'center' },
-  submitButton: {
+  container: {
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 40,
+  },
+
+  /* Gradient header */
+  gradientHeader: {
+    paddingHorizontal: s(24),
+    paddingTop: vs(28),
+    paddingBottom: vs(16),
+    borderBottomLeftRadius: s(24),
+    borderBottomRightRadius: s(24),
+    alignItems: 'center',
+  },
+  headerInner: {
     width: '100%',
     maxWidth: s(544),
-    height: vs(56),
-    borderRadius: s(16),
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
+  },
+  backBtn: {
+    width: s(34),
+    height: s(34),
     alignItems: 'center',
     justifyContent: 'center',
-    gap: s(8),
-    marginTop: vs(4),
+    marginBottom: vs(12),
+    marginLeft: -s(4),
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: s(17),
   },
-  submitButtonDisabled: { opacity: 0.5 },
-  submitText: { fontSize: ms(16), fontWeight: '700', color: '#fff' },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: s(12) },
-  dividerLine: { flex: 1, height: s(1) },
-  dividerText: { fontSize: ms(12), fontWeight: '600' },
-  oauthRow: { flexDirection: 'row', gap: s(12) },
-  oauthButton: {
-    flex: 1,
+
+  heading: { fontSize: ms(20), fontWeight: '800', color: '#1A1A1A', marginBottom: vs(3) },
+  subheading: { fontSize: ms(12), color: 'rgba(26,26,26,0.65)' },
+
+  roleRow: { flexDirection: 'row', gap: 12, marginTop: 4, marginBottom: 24 },
+  roleCard: {
+    flex: 1, borderWidth: 1.5, borderColor: BORDER,
+    borderRadius: 14, padding: 14, alignItems: 'center',
+    backgroundColor: BG,
+  },
+  roleCardActive: { borderColor: PRIMARY, backgroundColor: PRIMARY + '0D' },
+  roleEmoji: { fontSize: 24, marginBottom: 6 },
+  roleLabel: { fontSize: 13, fontWeight: '700', color: COLORS.text },
+  roleSub: { fontSize: 11, color: MUTED, marginTop: 2 },
+
+  inputBox: { marginBottom: 20 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: COLORS.muted, marginBottom: 8 },
+  input: {
+    borderWidth: 1, borderColor: BORDER,
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 15, color: COLORS.text, backgroundColor: BG,
+  },
+
+  passwordRow: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderColor: BORDER,
+    borderRadius: 14, backgroundColor: BG,
+    paddingHorizontal: 16,
+  },
+  passwordInput: { flex: 1, paddingVertical: 14, fontSize: 15, color: COLORS.text },
+  eyeBtn: { padding: 4 },
+  eyeText: { fontSize: 18 },
+
+  btnWrap: {
+    borderRadius: 30,
+    marginBottom: 16,
+    shadowColor: PRIMARY,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: s(8),
-    height: vs(52),
-    borderRadius: s(16),
-    borderWidth: s(1),
+    justifyContent: 'space-between',
+    borderRadius: 30,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
   },
-  oauthText: { fontSize: ms(15), fontWeight: '600' },
-  oauthSection: { width: '100%', maxWidth: s(544), gap: vs(16), marginTop: vs(8) },
-  footer: { alignItems: 'center', width: '100%', maxWidth: s(544), marginTop: vs(12) },
-  footerText: { fontSize: ms(14) },
-  footerLink: { color: COLORS.primary, fontWeight: '700', textDecorationLine: 'underline' },
+  btnCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnChevrons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 10,
+  },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  errorText: {
+    fontSize: 13, color: COLORS.danger,
+    textAlign: 'center', marginBottom: 16,
+  },
+
+  termsText: {
+    fontSize: 12, color: MUTED,
+    textAlign: 'center', marginBottom: 20, lineHeight: 18,
+  },
+
+  dividerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20,
+  },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 12, fontWeight: '500' },
+
+  socialRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  socialBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, borderWidth: 1.5, borderRadius: 12, paddingVertical: 13,
+  },
+  socialBtnText: { fontSize: 14, fontWeight: '600' },
+
+  loginRow: {
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
+  },
+  loginText: { fontSize: 14, color: MUTED },
+  loginLink: { fontSize: 14, color: PRIMARY, fontWeight: '700' },
 });

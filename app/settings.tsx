@@ -25,13 +25,13 @@ export default function SettingsScreen() {
 
   const LANGUAGES = ['English', 'Twi', 'Ga', 'Ewe', 'Hausa'];
 
-  const bg = isDark ? '#121212' : '#F5F5F0';
-  const cardBg = isDark ? '#1E1E1E' : '#fff';
-  const headerBg = isDark ? '#1A1A1A' : '#fff';
-  const textColor = isDark ? '#ECEDEE' : '#1A1A1A';
-  const subColor = isDark ? '#9BA1A6' : COLORS.muted;
-  const borderColor = isDark ? '#2C2C2C' : '#F0F0F0';
-  const iconColor = isDark ? '#9BA1A6' : '#444';
+  const bg = isDark ? COLORS.background : '#F5F5F0';
+  const cardBg = isDark ? COLORS.card : '#fff';
+  const headerBg = isDark ? COLORS.card : '#fff';
+  const textColor = isDark ? COLORS.text : '#1A1A1A';
+  const subColor = isDark ? COLORS.muted : COLORS.muted;
+  const borderColor = isDark ? COLORS.border : '#F0F0F0';
+  const iconColor = isDark ? COLORS.muted : '#444';
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={['top', 'bottom']}>
@@ -79,7 +79,7 @@ export default function SettingsScreen() {
             </View>
             <Text style={[s.rowLabel, { color: textColor }]}>Language</Text>
             <Text style={[s.rowValue, { color: subColor }]}>{language}</Text>
-            <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
           </TouchableOpacity>
           <View style={[s.divider, { backgroundColor: borderColor }]} />
           <TouchableOpacity
@@ -92,7 +92,7 @@ export default function SettingsScreen() {
             </View>
             <Text style={[s.rowLabel, { color: textColor }]}>Currency</Text>
             <Text style={[s.rowValue, { color: subColor }]}>{currency}</Text>
-            <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
           </TouchableOpacity>
           <View style={[s.divider, { backgroundColor: borderColor }]} />
           <View style={s.row}>
@@ -152,7 +152,7 @@ export default function SettingsScreen() {
               <Ionicons name="trash-outline" size={18} color={iconColor} />
             </View>
             <Text style={[s.rowLabel, { color: textColor }]}>Clear App Cache</Text>
-            <Ionicons name="chevron-forward" size={18} color="#BBB" />
+            <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
           </TouchableOpacity>
         </View>
 
@@ -190,7 +190,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={s.version}>Vaker v1.0.0 · Made in Ghana 🇬🇭</Text>
+        <Text style={s.version}>AdwumaGo v1.0.0 · Made in Ghana 🇬🇭</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -198,12 +198,12 @@ export default function SettingsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F0F0F0' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: COLORS.card, borderBottomWidth: 1, borderColor: COLORS.border },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: '#1A1A1A' },
+  title: { fontSize: 17, fontWeight: '700', color: COLORS.text },
   scroll: { padding: 16, paddingBottom: 40 },
   sectionLabel: { fontSize: 12, fontWeight: '700', color: COLORS.muted, marginBottom: 8, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.8 },
-  card: { backgroundColor: '#fff', borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#F0F0F0', overflow: 'hidden' },
+  card: { backgroundColor: COLORS.card, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
   profileCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 24,
@@ -211,15 +211,15 @@ const s = StyleSheet.create({
   profileAvatar: { width: 52, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   profileName: { fontSize: 17, fontWeight: '800' },
   profileMeta: { fontSize: 13, fontWeight: '600', marginTop: 2 },
-  divider: { height: 1, backgroundColor: '#F5F5F5', marginLeft: 56 },
+  divider: { height: 1, backgroundColor: COLORS.border, marginLeft: 56 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13, gap: 12 },
   icon: { width: 24 },
   iconChip: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   rowInfo: { flex: 1 },
-  rowLabel: { fontSize: 14, fontWeight: '500', color: '#1A1A1A', flex: 1 },
+  rowLabel: { fontSize: 14, fontWeight: '500', color: COLORS.text, flex: 1 },
   rowValue: { fontSize: 13, color: COLORS.muted, marginRight: 6 },
   rowSub: { fontSize: 11, color: COLORS.muted, marginTop: 2 },
-  version: { textAlign: 'center', fontSize: 12, color: '#BBBBBB', marginTop: 4 },
+  version: { textAlign: 'center', fontSize: 12, color: COLORS.muted, marginTop: 4 },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     height: 52, borderRadius: 14, backgroundColor: COLORS.dangerLight,

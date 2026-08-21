@@ -26,12 +26,12 @@ const EMERGENCY_SERVICES = [
   { id: 'locksmith', label: 'Locked Out', icon: '🔐', color: '#7C3AED', desc: 'Door, car, or safe lockout' },
   { id: 'generator', label: 'Generator Fault', icon: '🔋', color: '#92400E', desc: 'Generator won\'t start or tripped' },
   { id: 'roofing', label: 'Roof Leak', icon: '🏚️', color: '#DC2626', desc: 'Storm damage, active water leak' },
-  { id: 'gas', label: 'Gas Leak', icon: '🔴', color: '#CE1126', desc: 'Smell gas? Evacuate & call now' },
+  { id: 'gas', label: 'Gas Leak', icon: '🔴', color: COLORS.danger, desc: 'Smell gas? Evacuate & call now' },
 ];
 
 /* ─── Nearby on-call workers ─── */
 const ON_CALL_WORKERS = [
-  { id: 'w1', name: 'Kofi Mensah', initials: 'KM', color: '#006B3F', rating: 4.9, jobs: 143, eta: '8 min', distance: '1.2 km', price: 600, verified: true },
+  { id: 'w1', name: 'Kofi Mensah', initials: 'KM', color: COLORS.accent, rating: 4.9, jobs: 143, eta: '8 min', distance: '1.2 km', price: 600, verified: true },
   { id: 'w2', name: 'Kwame Adjei', initials: 'KA', color: '#1D6FBA', rating: 4.7, jobs: 98, eta: '12 min', distance: '2.0 km', price: 550, verified: true },
   { id: 'w3', name: 'Yaw Boateng', initials: 'YB', color: '#92400E', rating: 4.8, jobs: 210, eta: '15 min', distance: '3.4 km', price: 500, verified: false },
 ];
@@ -129,9 +129,9 @@ function ServiceChip({
 }
 
 const sc = StyleSheet.create({
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#E0E0E0', backgroundColor: '#fff', marginRight: 8, marginBottom: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.card, marginRight: 8, marginBottom: 8 },
   icon: { fontSize: 16 },
-  label: { fontSize: 12, fontWeight: '700', color: '#444' },
+  label: { fontSize: 12, fontWeight: '700', color: COLORS.text },
 });
 
 /* ─── On-call worker card ─── */
@@ -189,23 +189,23 @@ function WorkerCard({
 }
 
 const wc = StyleSheet.create({
-  card: { flexDirection: 'row', borderRadius: 16, padding: 14, backgroundColor: '#fff', borderWidth: 1, borderColor: '#F0F0F0', gap: 10, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  card: { flexDirection: 'row', borderRadius: 16, padding: 14, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, gap: 10, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
   avatarWrap: { position: 'relative', flexShrink: 0 },
   avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   initials: { fontSize: 16, fontWeight: '800' },
-  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#fff' },
+  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: COLORS.card },
   info: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  name: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#E6F4EE', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 },
+  name: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: COLORS.primaryLight, borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 },
   badgeText: { fontSize: 10, color: COLORS.primary, fontWeight: '700' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rating: { fontSize: 12, fontWeight: '700', color: '#1A1A1A' },
+  rating: { fontSize: 12, fontWeight: '700', color: COLORS.text },
   dot: { fontSize: 12, color: COLORS.muted },
   jobs: { fontSize: 11, color: COLORS.muted },
   dist: { fontSize: 11, color: COLORS.muted },
   right: { alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0, gap: 4 },
-  etaChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FDECEA', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  etaChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: COLORS.dangerLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   etaText: { fontSize: 10, color: COLORS.danger, fontWeight: '800' },
   price: { fontSize: 13, fontWeight: '800', color: COLORS.primary },
   hireBtn: { backgroundColor: COLORS.danger, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10 },
@@ -271,7 +271,7 @@ export default function EmergencyScreen() {
           </View>
 
           {/* ── URGENCY NOTICE ── */}
-          <View style={[s.urgencyBanner, { backgroundColor: '#FDECEA' }]}>
+          <View style={[s.urgencyBanner, { backgroundColor: COLORS.dangerLight }]}>
             <Ionicons name="warning" size={16} color={COLORS.danger} />
             <Text style={s.urgencyText}>
               Emergency workers charge a premium rate. Standard jobs are available via{' '}
@@ -412,7 +412,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: '#F5C6C6',
+    borderColor: COLORS.border,
   },
   urgencyText: { flex: 1, fontSize: 12, color: COLORS.danger, lineHeight: 18, fontWeight: '500' },
   urgencyLink: { fontWeight: '700', textDecorationLine: 'underline' },
@@ -466,15 +466,15 @@ const s = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  locationIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#FDECEA', alignItems: 'center', justifyContent: 'center' },
+  locationIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.dangerLight, alignItems: 'center', justifyContent: 'center' },
   locationPrimary: { fontSize: 14, fontWeight: '600' },
   locationSub: { fontSize: 11, marginTop: 2 },
-  gpsChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#E6F4EE', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  gpsChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: COLORS.primaryLight, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
   gpsText: { fontSize: 10, color: COLORS.primary, fontWeight: '700' },
 
   /* Worker list header */
   workerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  liveChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FEECEC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
+  liveChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: COLORS.dangerLight, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLORS.danger },
   liveText: { fontSize: 11, color: COLORS.danger, fontWeight: '800' },
   workerSub: { fontSize: 12, lineHeight: 17, marginBottom: 14 },
@@ -484,7 +484,7 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: '#E6F4EE',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 12,
     padding: 14,
     marginBottom: 20,

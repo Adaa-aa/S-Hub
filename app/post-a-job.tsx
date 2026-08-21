@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { s } from '@/lib/scaling';
+import CustomerNav from '@/components/CustomerNav';
 
 type CategoryKey = 'plumbing' | 'electrical' | 'painting' | 'cleaning';
 type Urgency = 'now' | 'schedule';
@@ -53,139 +55,125 @@ export default function PostAJobScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.logo}>Waker</Text>
+        <Text style={styles.logo}>AdwumaGo</Text>
         <View style={{ width: 24 }} />
       </View>
 
+      {/* Content capped and centered the same way as sign-up.tsx / sign-in.tsx */}
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.titleBlock}>
-          <Text style={[styles.title, { color: T.text }]}>New Request</Text>
-          <Text style={[styles.subtitle, { color: T.subText }]}>Find a reliable professional in your community.</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: T.subText }]}>SERVICE CATEGORY</Text>
-          <View style={styles.categoryGrid}>
-            {CATEGORIES.map((c) => {
-              const active = c.key === category;
-              return (
-                <TouchableOpacity
-                  key={c.key}
-                  style={[
-                    styles.categoryCard,
-                    { backgroundColor: T.inputBg },
-                    active && { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary, borderWidth: 2 },
-                  ]}
-                  onPress={() => setCategory(c.key)}
-                >
-                  <Ionicons name={c.icon as any} size={26} color={active ? COLORS.primary : T.subText} />
-                  <Text style={[styles.categoryLabel, { color: T.subText }, active && { color: T.text, fontWeight: '700' }]}>
-                    {c.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+        <View style={styles.content}>
+          <View style={styles.titleBlock}>
+            <Text style={[styles.title, { color: T.text }]}>New Request</Text>
+            <Text style={[styles.subtitle, { color: T.subText }]}>Find a reliable professional in your community.</Text>
           </View>
-        </View>
 
-        <View style={[styles.section, styles.card, { backgroundColor: T.card, borderColor: T.border }]}>
-          <Text style={[styles.sectionLabel, { color: T.subText }]}>DESCRIPTION</Text>
-          <TextInput
-            style={[styles.textArea, { backgroundColor: T.inputBg, borderBottomColor: T.border, color: T.text }]}
-            multiline
-            placeholder="Describe the issue... e.g. My kitchen sink is leaking and needs urgent repair."
-            placeholderTextColor={T.subText}
-            value={description}
-            onChangeText={setDescription}
-          />
-
-          <Text style={[styles.sectionLabel, { color: T.subText, marginTop: 4 }]}>PHOTOS (OPTIONAL)</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity style={[styles.addPhotoButton, { borderColor: T.border }]} onPress={handleAddPhoto}>
-              <Ionicons name="camera-outline" size={22} color={T.subText} />
-              <Text style={[styles.addPhotoText, { color: T.subText }]}>ADD PHOTO</Text>
-            </TouchableOpacity>
-            {photos.map((uri) => (
-              <View key={uri} style={styles.photoThumbWrap}>
-                <Image source={{ uri }} style={styles.photoThumb} />
-                <TouchableOpacity style={styles.photoRemoveBtn} onPress={() => handleRemovePhoto(uri)}>
-                  <Ionicons name="close" size={14} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: T.subText }]}>URGENCY</Text>
-          <View style={[styles.urgencyRow, { backgroundColor: T.inputBg }]}>
-            <TouchableOpacity
-              style={[styles.urgencyTab, urgency === 'now' && { backgroundColor: COLORS.primary }]}
-              onPress={() => setUrgency('now')}
-            >
-              <Text style={[styles.urgencyText, { color: T.subText }, urgency === 'now' && { color: '#fff' }]}>Now</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.urgencyTab, urgency === 'schedule' && { backgroundColor: COLORS.primary }]}
-              onPress={() => setUrgency('schedule')}
-            >
-              <Text style={[styles.urgencyText, { color: T.subText }, urgency === 'schedule' && { color: '#fff' }]}>Schedule</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={[styles.section, styles.locationCard, { backgroundColor: T.card, borderColor: T.border }]}>
-          <View style={styles.locationRow}>
-            <View style={styles.locationLeft}>
-              <Ionicons name="location-outline" size={20} color={COLORS.primary} />
-              <Text style={[styles.locationText, { color: T.text }]}>Cantonments, Accra</Text>
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: T.subText }]}>SERVICE CATEGORY</Text>
+            <View style={styles.categoryGrid}>
+              {CATEGORIES.map((c) => {
+                const active = c.key === category;
+                return (
+                  <TouchableOpacity
+                    key={c.key}
+                    style={[
+                      styles.categoryCard,
+                      { backgroundColor: T.inputBg },
+                      active && { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary, borderWidth: 2 },
+                    ]}
+                    onPress={() => setCategory(c.key)}
+                  >
+                    <Ionicons name={c.icon as any} size={26} color={active ? COLORS.primary : T.subText} />
+                    <Text style={[styles.categoryLabel, { color: T.subText }, active && { color: T.text, fontWeight: '700' }]}>
+                      {c.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-            <TouchableOpacity>
-              <Text style={styles.changeText}>Change</Text>
-            </TouchableOpacity>
           </View>
-          <View style={[styles.mapPlaceholder, { backgroundColor: T.inputBg }]}>
-            <Ionicons name="map-outline" size={32} color={T.subText} />
-          </View>
-        </View>
 
-        <View style={[styles.priceBox, { backgroundColor: COLORS.primaryLight, borderLeftColor: COLORS.primary }]}>
-          <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.priceLabel}>Suggested Price Range</Text>
-            <Text style={[styles.priceValue, { color: T.text }]}>
-              Similar jobs in your area: <Text style={{ fontWeight: 'bold' }}>GH₵150–GH₵250</Text>
-            </Text>
+          <View style={[styles.section, styles.card, { backgroundColor: T.card, borderColor: T.border }]}>
+            <Text style={[styles.sectionLabel, { color: T.subText }]}>DESCRIPTION</Text>
+            <TextInput
+              style={[styles.textArea, { backgroundColor: T.inputBg, borderBottomColor: T.border, color: T.text }]}
+              multiline
+              placeholder="Describe the issue... e.g. My kitchen sink is leaking and needs urgent repair."
+              placeholderTextColor={T.subText}
+              value={description}
+              onChangeText={setDescription}
+            />
+
+            <Text style={[styles.sectionLabel, { color: T.subText, marginTop: 4 }]}>PHOTOS (OPTIONAL)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity style={[styles.addPhotoButton, { borderColor: T.border }]} onPress={handleAddPhoto}>
+                <Ionicons name="camera-outline" size={22} color={T.subText} />
+                <Text style={[styles.addPhotoText, { color: T.subText }]}>ADD PHOTO</Text>
+              </TouchableOpacity>
+              {photos.map((uri) => (
+                <View key={uri} style={styles.photoThumbWrap}>
+                  <Image source={{ uri }} style={styles.photoThumb} />
+                  <TouchableOpacity style={styles.photoRemoveBtn} onPress={() => handleRemovePhoto(uri)}>
+                    <Ionicons name="close" size={14} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: T.subText }]}>URGENCY</Text>
+            <View style={[styles.urgencyRow, { backgroundColor: T.inputBg }]}>
+              <TouchableOpacity
+                style={[styles.urgencyTab, urgency === 'now' && { backgroundColor: COLORS.primary }]}
+                onPress={() => setUrgency('now')}
+              >
+                <Text style={[styles.urgencyText, { color: T.subText }, urgency === 'now' && { color: '#fff' }]}>Now</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.urgencyTab, urgency === 'schedule' && { backgroundColor: COLORS.primary }]}
+                onPress={() => setUrgency('schedule')}
+              >
+                <Text style={[styles.urgencyText, { color: T.subText }, urgency === 'schedule' && { color: '#fff' }]}>Schedule</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={[styles.section, styles.locationCard, { backgroundColor: T.card, borderColor: T.border }]}>
+            <View style={styles.locationRow}>
+              <View style={styles.locationLeft}>
+                <Ionicons name="location-outline" size={20} color={COLORS.primary} />
+                <Text style={[styles.locationText, { color: T.text }]}>Cantonments, Accra</Text>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.changeText}>Change</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.mapPlaceholder, { backgroundColor: T.inputBg }]}>
+              <Ionicons name="map-outline" size={32} color={T.subText} />
+            </View>
+          </View>
+
+          <View style={[styles.priceBox, { backgroundColor: COLORS.primaryLight, borderLeftColor: COLORS.primary }]}>
+            <Ionicons name="information-circle-outline" size={20} color={COLORS.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.priceLabel}>Suggested Price Range</Text>
+              <Text style={[styles.priceValue, { color: T.text }]}>
+                Similar jobs in your area: <Text style={{ fontWeight: 'bold' }}>GH₵150–GH₵250</Text>
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.postButton} onPress={handlePostJob} activeOpacity={0.85}>
-        <Text style={styles.postButtonText}>Post Job</Text>
-        <Ionicons name="send" size={20} color="#fff" />
-      </TouchableOpacity>
-
-      {/* ── BOTTOM NAV ── */}
-      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
-        {[
-          { icon: 'home-outline', iconFocused: 'home', label: 'Home', route: '/home', active: false },
-          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
-          { icon: 'add', iconFocused: 'add', label: '', route: '/post-a-job', center: true },
-          { icon: 'chatbubble-outline', iconFocused: 'chatbubble', label: 'Messages', route: '/messages', active: false },
-          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
-        ].map((tab) =>
-          (tab as any).center ? (
-            <TouchableOpacity key="center" style={styles.centerBtn} activeOpacity={0.85} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name="add" size={28} color="#fff" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity key={tab.label} style={styles.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
-              <Ionicons name={(tab.active ? tab.iconFocused : tab.icon) as any} size={22} color={tab.active ? COLORS.primary : T.subText} />
-              <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          )
-        )}
+      {/* Post button — full-width bar, but the button itself is capped/centered to match content width */}
+      <View style={styles.postButtonBar} pointerEvents="box-none">
+        <TouchableOpacity style={styles.postButton} onPress={handlePostJob} activeOpacity={0.85}>
+          <Text style={styles.postButtonText}>Post Job</Text>
+          <Ionicons name="send" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
+
+      <CustomerNav />
     </View>
   );
 }
@@ -194,7 +182,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
   logo: { fontSize: 20, fontWeight: '900', color: COLORS.primary },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 200, gap: 20 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 200, alignItems: 'center' },
+  content: { width: '100%', maxWidth: s(544), gap: 20 },
   titleBlock: { gap: 4 },
   title: { fontSize: 24, fontWeight: '800' },
   subtitle: { fontSize: 14 },
@@ -225,23 +214,13 @@ const styles = StyleSheet.create({
   priceBox: { flexDirection: 'row', gap: 12, borderLeftWidth: 4, borderRadius: 16, padding: 16 },
   priceLabel: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
   priceValue: { fontSize: 14 },
+  postButtonBar: {
+    position: 'absolute', bottom: 92, left: 0, right: 0,
+    alignItems: 'center', paddingHorizontal: 20,
+  },
   postButton: {
-    position: 'absolute', bottom: 92, left: 20, right: 20, height: 56, borderRadius: 999,
+    width: '100%', maxWidth: s(544), height: 56, borderRadius: 999,
     backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   postButtonText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    borderTopWidth: 1, flexDirection: 'row', alignItems: 'center',
-    paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
-  },
-  navTab: { flex: 1, alignItems: 'center', gap: 3 },
-  navLabel: { fontSize: 10, fontWeight: '500' },
-  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
-  centerBtn: {
-    width: 54, height: 54, borderRadius: 27, backgroundColor: COLORS.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
-    shadowColor: COLORS.primary, shadowOpacity: 0.45, shadowRadius: 10, elevation: 8,
-  },
 });

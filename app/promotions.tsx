@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PROMOS = [
   { code: 'WELCOME50', discount: 'GH₵ 50 off', description: 'First job posted', expires: 'Dec 31, 2025', used: false },
-  { code: 'VAKER10',   discount: '10% off',     description: 'Any service booking', expires: 'Sep 30, 2025', used: false },
+  { code: 'ADWUMAGO10',   discount: '10% off',     description: 'Any service booking', expires: 'Sep 30, 2025', used: false },
   { code: 'KUMASI20',  discount: 'GH₵ 20 off',  description: 'Kumasi area jobs',    expires: 'Jun 01, 2025', used: true  },
 ];
 

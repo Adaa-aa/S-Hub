@@ -65,7 +65,7 @@ export default function NewMessageScreen() {
         <Ionicons name="search-outline" size={17} color={T.subText} />
         <TextInput
           style={[s.searchInput, { color: T.text }]}
-          placeholder="Search workers by name or skill"
+          placeholder="Search workers by name"
           placeholderTextColor={T.subText}
           value={search}
           onChangeText={setSearch}

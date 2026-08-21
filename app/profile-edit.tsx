@@ -68,7 +68,7 @@ export default function ProfileEditScreen() {
           </View>
 
           <View style={s.verifyBanner}>
-            <Ionicons name="alert-circle-outline" size={18} color="#D97706" />
+            <Ionicons name="alert-circle-outline" size={18} color={COLORS.primary} />
             <Text style={s.verifyText}>Your email address is not verified.</Text>
             <TouchableOpacity onPress={() => Alert.alert('Verify Email', 'Verification link sent to your email.')}>
               <Text style={s.verifyLink}>Verify now</Text>
@@ -113,7 +113,7 @@ const f = StyleSheet.create({
   icon: { width: 22 },
   body: { flex: 1 },
   label: { fontSize: 11, color: COLORS.muted, fontWeight: '500', marginBottom: 2 },
-  input: { fontSize: 15, color: '#1A1A1A', fontWeight: '500' },
+  input: { fontSize: 15, color: COLORS.text, fontWeight: '500' },
 });
 
 const s = StyleSheet.create({
@@ -130,8 +130,8 @@ const s = StyleSheet.create({
   changePhotoText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
   card: { borderTopWidth: 1, borderBottomWidth: 1, marginBottom: 14 },
   divider: { height: 1, marginLeft: 58 },
-  verifyBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF3C7', marginHorizontal: 16, borderRadius: 12, padding: 12, marginBottom: 20 },
-  verifyText: { flex: 1, fontSize: 12, color: '#92400E', fontWeight: '500' },
+  verifyBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primaryLight, marginHorizontal: 16, borderRadius: 12, padding: 12, marginBottom: 20 },
+  verifyText: { flex: 1, fontSize: 12, color: COLORS.text, fontWeight: '500' },
   verifyLink: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
   saveBtn: { marginHorizontal: 16, backgroundColor: COLORS.primary, borderRadius: 14, paddingVertical: 15, alignItems: 'center', shadowColor: COLORS.primary, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },

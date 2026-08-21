@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { ws, wvs, wms } from '@/lib/scaling';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MY_PROFILE } from './worker-setup';
+import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
 
 function Field({ icon, label, value, onChangeText, keyboardType, T }: {
   icon: string; label: string; value: string; onChangeText: (v: string) => void;
@@ -25,7 +27,7 @@ function Field({ icon, label, value, onChangeText, keyboardType, T }: {
     <View style={s.fieldWrap}>
       <Text style={[s.fieldLabel, { color: T.subText }]}>{label}</Text>
       <View style={[s.inputRow, { backgroundColor: T.inputBg, borderColor: T.border }]}>
-        <Ionicons name={icon as any} size={16} color={T.subText} />
+        <Ionicons name={icon as any} size={wms(16)} color={T.subText} />
         <TextInput
           style={[s.input, { color: T.text }]}
           value={value}
@@ -60,17 +62,19 @@ export default function WorkerPersonalInfoScreen() {
   };
 
   return (
+    <RequireVerifiedWorker>
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
       <View style={[s.header, { backgroundColor: COLORS.primary }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+          <Ionicons name="arrow-back" size={wms(22)} color="#fff" />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Personal Information</Text>
         <View style={s.backBtn} />
       </View>
 
+      <View style={s.pageInner}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
           <Field icon="person-outline" label="Full name" value={name} onChangeText={setName} T={T} />
@@ -82,7 +86,7 @@ export default function WorkerPersonalInfoScreen() {
           <Field icon="globe-outline" label="Languages" value={languages} onChangeText={setLanguages} T={T} />
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: wvs(100) }} />
       </ScrollView>
 
       <View style={[s.footer, { backgroundColor: T.card, borderColor: T.border }]}>
@@ -97,26 +101,29 @@ export default function WorkerPersonalInfoScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+      </View>
     </SafeAreaView>
+    </RequireVerifiedWorker>
   );
 }
 
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
-  backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  pageInner: { flex: 1, width: '100%', maxWidth: ws(544), alignSelf: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: ws(14), paddingVertical: wvs(12) },
+  backBtn: { width: ws(38), height: ws(38), alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: wms(16), fontWeight: '700', color: '#fff' },
 
-  scroll: { padding: 16 },
-  card: { borderRadius: 16, borderWidth: 1, padding: 16 },
-  fieldDivider: { height: 1, marginVertical: 16 },
+  scroll: { padding: ws(16) },
+  card: { borderRadius: ws(16), borderWidth: ws(1), padding: ws(16) },
+  fieldDivider: { height: wvs(1), marginVertical: wvs(16) },
 
   fieldWrap: {},
-  fieldLabel: { fontSize: 12, fontWeight: '600', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, gap: 10 },
-  input: { flex: 1, fontSize: 14, paddingVertical: 13 },
+  fieldLabel: { fontSize: wms(12), fontWeight: '600', marginBottom: wvs(8), textTransform: 'uppercase', letterSpacing: wms(0.3) },
+  inputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: ws(12), borderWidth: ws(1), paddingHorizontal: ws(14), gap: ws(10) },
+  input: { flex: 1, fontSize: wms(14), paddingVertical: wvs(13) },
 
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, borderTopWidth: 1, padding: 16, paddingBottom: 28 },
-  saveBtn: { borderRadius: 30, paddingVertical: 15, alignItems: 'center' },
-  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, borderTopWidth: ws(1), padding: ws(16), paddingBottom: wvs(28) },
+  saveBtn: { borderRadius: ws(30), paddingVertical: wvs(15), alignItems: 'center' },
+  saveBtnText: { color: '#fff', fontSize: wms(15), fontWeight: '700' },
 });

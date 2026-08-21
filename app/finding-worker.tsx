@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 /* ─── Sample available workers ─── */
 const WORKERS = [
-  { id: 'w1', name: 'Kofi Mensah',   initials: 'KM', color: '#006B3F', rating: 4.9, jobs: 143, price: 450, distance: '1.2 km', eta: '12 min', skills: ['Plumbing', 'Pipe Repair', 'Drainage'], verified: true,  online: true  },
+  { id: 'w1', name: 'Kofi Mensah',   initials: 'KM', color: COLORS.accent, rating: 4.9, jobs: 143, price: 450, distance: '1.2 km', eta: '12 min', skills: ['Plumbing', 'Pipe Repair', 'Drainage'], verified: true,  online: true  },
   { id: 'w2', name: 'Kwame Adjei',   initials: 'KA', color: '#1D6FBA', rating: 4.7, jobs: 98,  price: 400, distance: '2.0 km', eta: '18 min', skills: ['Plumbing', 'Bathroom Fix'],            verified: true,  online: true  },
   { id: 'w3', name: 'Yaw Boateng',   initials: 'YB', color: '#92400E', rating: 4.8, jobs: 210, price: 500, distance: '3.4 km', eta: '25 min', skills: ['Plumbing', 'Water Heater'],            verified: false, online: true  },
   { id: 'w4', name: 'Ama Owusu',     initials: 'AO', color: '#7C3AED', rating: 4.6, jobs: 62,  price: 380, distance: '4.1 km', eta: '30 min', skills: ['Plumbing', 'Leak Fix'],               verified: true,  online: false },
@@ -179,20 +179,20 @@ const wc = StyleSheet.create({
   avatarWrap: { position: 'relative', flexShrink: 0 },
   avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   initials: { fontSize: 16, fontWeight: '800' },
-  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#fff' },
+  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#22C55E', borderWidth: 2, borderColor: COLORS.card },
   info: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  name: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#E6F4EE', borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 },
+  name: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: COLORS.primaryLight, borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 },
   verifiedText: { fontSize: 10, color: COLORS.primary, fontWeight: '700' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 7 },
-  rating: { fontSize: 12, fontWeight: '700', color: '#1A1A1A' },
+  rating: { fontSize: 12, fontWeight: '700', color: COLORS.text },
   dot: { fontSize: 12, color: COLORS.muted },
   jobs: { fontSize: 11, color: COLORS.muted },
   dist: { fontSize: 11, color: COLORS.muted },
   skillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  skill: { backgroundColor: '#F3F3F3', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
-  skillText: { fontSize: 10, color: '#555', fontWeight: '600' },
+  skill: { backgroundColor: COLORS.bgGrey, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  skillText: { fontSize: 10, color: COLORS.muted, fontWeight: '600' },
   right: { alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0 },
   price: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
   etaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
@@ -308,14 +308,14 @@ const s = StyleSheet.create({
   myJobsBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.primary },
   myJobsBtnText: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
 
-  postedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E6F4EE', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: '#C6E6D4' },
+  postedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primaryLight, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: COLORS.border },
   postedBannerText: { fontSize: 12, color: COLORS.primary, fontWeight: '600', flex: 1 },
 
   scroll: { paddingBottom: 40 },
 
   foundRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
   foundText: { fontSize: 15, fontWeight: '700' },
-  liveChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FEECEC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
+  liveChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: COLORS.dangerLight, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
   liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: COLORS.danger },
   liveText: { fontSize: 11, color: COLORS.danger, fontWeight: '800' },
 

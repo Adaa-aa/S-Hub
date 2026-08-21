@@ -31,11 +31,11 @@ const INITIAL_NOTIFS: Notif[] = [
   { id: 3, type: 'payment', title: 'Payment confirmed', body: 'GH₵ 450 paid successfully to Kofi Mensah for plumbing service via MTN MoMo.', time: '1 hr ago', read: false },
   { id: 4, type: 'promo', title: 'You have a promo! 🎉', body: 'Use code WELCOME50 to get GH₵ 50 off your next job. Expires Dec 31, 2025.', time: '3 hrs ago', read: true },
   { id: 5, type: 'job', title: 'Job completed', body: 'Your carpentry job with Yaw Boateng has been marked complete. How did it go?', time: 'Yesterday', read: true },
-  { id: 6, type: 'system', title: 'Verify your email', body: 'Please verify your email address to unlock all Vaker features. Tap to verify.', time: 'Yesterday', read: true },
+  { id: 6, type: 'system', title: 'Verify your email', body: 'Please verify your email address to unlock all AdwumaGo features. Tap to verify.', time: 'Yesterday', read: true },
   { id: 7, type: 'message', title: 'Kwame Adjei sent a quote', body: 'I can fix the electrical fault for GH₵ 380. Available from Thursday onwards.', time: '2 days ago', read: true },
   { id: 8, type: 'payment', title: 'Refund processed', body: 'A refund of GH₵ 200 has been returned to your MoMo wallet. Allow 24–48 hrs.', time: '3 days ago', read: true },
   { id: 9, type: 'promo', title: 'Weekend special 🔥', body: '20% off all cleaning services this weekend. Limited time — book now!', time: '4 days ago', read: true },
-  { id: 10, type: 'system', title: 'App update available', body: 'Vaker v1.1.0 is available with new features and bug fixes. Update now.', time: '5 days ago', read: true },
+  { id: 10, type: 'system', title: 'App update available', body: 'AdwumaGo v1.1.0 is available with new features and bug fixes. Update now.', time: '5 days ago', read: true },
 ];
 
 const TYPE_META: Record<NotifType, { icon: string; bg: string; color: string }> = {

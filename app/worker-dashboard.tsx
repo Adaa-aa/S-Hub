@@ -5,6 +5,9 @@ import { ScrollView, StatusBar, StyleSheet, Switch, Text, TouchableOpacity, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { ws, wvs, wms } from '@/lib/scaling';
+import WorkerNav from '@/components/WorkerNav';
+import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
 
 type NearbyRequest = {
   id: string;
@@ -12,21 +15,15 @@ type NearbyRequest = {
   distanceKm: number;
   budgetLow: number;
   budgetHigh: number;
-  postedBy: string;
-  tag?: 'verified' | 'urgent' | 'top_client';
+  timeAgo: string;
+  urgent?: boolean;
 };
 
 const REQUESTS: NearbyRequest[] = [
-  { id: '1', title: 'Leaking kitchen tap', distanceKm: 2.5, budgetLow: 150, budgetHigh: 250, postedBy: 'Ama A.', tag: 'verified' },
-  { id: '2', title: 'Fuse box replacement', distanceKm: 4.8, budgetLow: 400, budgetHigh: 600, postedBy: 'Kwame B.', tag: 'urgent' },
-  { id: '3', title: 'Living room painting', distanceKm: 1.2, budgetLow: 800, budgetHigh: 1200, postedBy: 'Yaw O.', tag: 'top_client' },
+  { id: '1', title: 'Leaking kitchen tap', distanceKm: 2.5, budgetLow: 150, budgetHigh: 250, timeAgo: '5 min ago' },
+  { id: '2', title: 'Fuse box replacement', distanceKm: 4.8, budgetLow: 400, budgetHigh: 600, timeAgo: '12 min ago', urgent: true },
+  { id: '3', title: 'Living room painting', distanceKm: 1.2, budgetLow: 800, budgetHigh: 1200, timeAgo: '20 min ago' },
 ];
-
-const TAG_STYLES: Record<NonNullable<NearbyRequest['tag']>, { label: string; icon: string; color: string }> = {
-  verified: { label: 'Verified', icon: 'checkmark-circle', color: COLORS.primary },
-  urgent: { label: 'Urgent', icon: 'time', color: COLORS.danger },
-  top_client: { label: 'Top Client', icon: 'star', color: COLORS.star },
-};
 
 export default function WorkerDashboardScreen() {
   const T = useThemeColors();
@@ -37,158 +34,184 @@ export default function WorkerDashboardScreen() {
   };
 
   return (
+    <RequireVerifiedWorker>
     <SafeAreaView style={[styles.container, { backgroundColor: T.bg }]} edges={['top']}>
       <StatusBar barStyle={T.statusBar} />
 
+      <View style={styles.pageInner}>
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <Ionicons name="menu" size={24} color={T.text} />
-        <Text style={styles.logo}>Waker</Text>
-        <View style={[styles.avatarSmall, { backgroundColor: T.inputBg }]} />
+        <View style={styles.headerLeft}>
+          <View style={[styles.avatarSmall, { backgroundColor: COLORS.primary + '20' }]}>
+            <Text style={styles.avatarInitials}>KM</Text>
+          </View>
+          <View>
+            <Text style={[styles.greeting, { color: T.subText }]}>Good afternoon</Text>
+            <Text style={[styles.userName, { color: T.text }]}>Kofi Mensah</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={[styles.notifBtn, { backgroundColor: T.inputBg }]}>
+          <Ionicons name="notifications-outline" size={wms(19)} color={T.text} />
+          <View style={styles.notifDot} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.statusCard, { backgroundColor: T.card, borderColor: T.border }]}>
-          <View>
-            <Text style={[styles.statusTitle, { color: T.text }]}>Welcome back, Kofi</Text>
-            <View style={styles.statusRow}>
-              <View style={[styles.statusDot, { backgroundColor: online ? COLORS.primary : T.subText }]} />
-              <Text style={[styles.statusText, { color: T.subText }]}>
-                Your Status: {online ? 'Online' : 'Offline'}
-              </Text>
+      {/* ── Online status ── */}
+      <View style={styles.statusRow}>
+        <View style={styles.statusLeft}>
+          <View style={[styles.statusDot, { backgroundColor: online ? '#22C55E' : T.subText }]} />
+          <Text style={[styles.statusText, { color: T.text }]}>
+            {online ? "You're online" : "You're offline"}
+          </Text>
+        </View>
+        <Switch
+          value={online}
+          onValueChange={setOnline}
+          trackColor={{ false: T.border, true: COLORS.primaryLight }}
+          thumbColor={online ? COLORS.primary : '#ccc'}
+        />
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+        {/* ── Quick Stats ── */}
+        <View style={[styles.statsStrip, { backgroundColor: T.card, borderColor: T.border }]}>
+          {[
+            { label: 'Today', value: 'GH₵ 250' },
+            { label: 'Jobs Done', value: '28' },
+            { label: 'Rating', value: '4.9 ★' },
+          ].map((stat, i, arr) => (
+            <View key={stat.label} style={[styles.statCol, i < arr.length - 1 && [styles.statBorder, { borderColor: T.border }]]}>
+              <Text style={[styles.statValue, { color: T.text }]}>{stat.value}</Text>
+              <Text style={[styles.statLabel, { color: T.subText }]}>{stat.label}</Text>
             </View>
-          </View>
-          <Switch
-            value={online}
-            onValueChange={setOnline}
-            trackColor={{ false: T.border, true: COLORS.primaryLight }}
-            thumbColor={online ? COLORS.primary : '#f4f3f4'}
-          />
+          ))}
         </View>
 
-        <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: T.card, borderColor: T.border }]}>
-            <Text style={[styles.statLabel, { color: T.subText }]}>Today&apos;s Earnings</Text>
-            <Text style={[styles.statValue, { color: T.text }]}>GH₵ 250.00</Text>
-            <Text style={styles.statDelta}>+12%</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: T.card, borderColor: T.border }]}>
-            <Text style={[styles.statLabel, { color: T.subText }]}>Jobs Done</Text>
-            <Text style={[styles.statValue, { color: T.text }]}>28</Text>
-            <Text style={[styles.statDelta, { color: T.subText }]}>Total</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: T.card, borderColor: T.border }]}>
-            <Text style={[styles.statLabel, { color: T.subText }]}>Avg Rating</Text>
-            <Text style={[styles.statValue, { color: T.text }]}>4.9</Text>
-            <Text style={[styles.statDelta, { color: COLORS.accentDark }]}>Elite</Text>
-          </View>
-        </View>
-
+        {/* ── Nearby Requests ── */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: T.text }]}>Nearby Requests</Text>
           <TouchableOpacity>
-            <Text style={styles.sectionLink}>View Map</Text>
+            <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={{ gap: 12 }}>
-          {REQUESTS.map((req) => {
-            const tag = req.tag ? TAG_STYLES[req.tag] : null;
-            return (
-              <View key={req.id} style={[styles.reqCard, { backgroundColor: T.card, borderColor: T.border }]}>
-                <View style={styles.reqTopRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.reqTitle, { color: T.text }]}>{req.title}</Text>
-                    <View style={styles.reqMetaRow}>
-                      <Text style={[styles.reqMeta, { color: T.subText }]}>{req.distanceKm} km away</Text>
-                      {tag && (
-                        <View style={styles.reqTagRow}>
-                          <Ionicons name={tag.icon as any} size={12} color={tag.color} />
-                          <Text style={[styles.reqTagText, { color: tag.color }]}>{tag.label}</Text>
-                        </View>
-                      )}
-                    </View>
+        <View style={styles.requestsList}>
+          {REQUESTS.map((req) => (
+            <View key={req.id} style={[styles.reqCard, { backgroundColor: T.card, borderColor: T.border }]}>
+              <View style={styles.reqTop}>
+                <Text style={[styles.reqTitle, { color: T.text }]} numberOfLines={1}>{req.title}</Text>
+                {req.urgent && (
+                  <View style={styles.urgentPill}>
+                    <Text style={styles.urgentText}>Urgent</Text>
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[styles.budgetLabel, { color: T.subText }]}>Budget</Text>
-                    <Text style={styles.budgetValue}>
-                      GH₵{req.budgetLow}-{req.budgetHigh}
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.reqBottomRow, { borderTopColor: T.border }]}>
-                  <Text style={[styles.postedByText, { color: T.subText }]}>Posted by {req.postedBy}</Text>
-                  <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(req.id)} activeOpacity={0.85}>
-                    <Text style={styles.acceptButtonText}>Accept</Text>
-                  </TouchableOpacity>
-                </View>
+                )}
               </View>
-            );
-          })}
+              <Text style={[styles.reqMeta, { color: T.subText }]}>
+                {req.distanceKm} km away · {req.timeAgo}
+              </Text>
+
+              <View style={styles.reqBottom}>
+                <Text style={styles.budgetValue}>GH₵ {req.budgetLow}–{req.budgetHigh}</Text>
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  onPress={() => handleAccept(req.id)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.acceptBtnText}>Place Bid</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
         </View>
       </ScrollView>
-
-      <View style={[styles.bottomNav, { backgroundColor: T.navBg, borderColor: T.navBorder }]}>
-        {[
-          { icon: 'home-outline', iconFocused: 'home', label: 'Home', route: '/worker-dashboard', active: true },
-          { icon: 'briefcase-outline', iconFocused: 'briefcase', label: 'Jobs', route: '/bookings', active: false },
-          { icon: 'wallet-outline', iconFocused: 'wallet', label: 'Wallet', route: '/earnings', active: false },
-          { icon: 'person-outline', iconFocused: 'person', label: 'Profile', route: '/profile', active: false },
-        ].map((tab) => (
-          <TouchableOpacity key={tab.label} style={styles.navTab} activeOpacity={0.7} onPress={() => router.push(tab.route as any)}>
-            <Ionicons name={(tab.active ? tab.iconFocused : tab.icon) as any} size={22} color={tab.active ? COLORS.primary : T.subText} />
-            <Text style={[styles.navLabel, { color: T.subText }, tab.active && styles.navLabelActive]}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
       </View>
+
+      <WorkerNav active="home" />
     </SafeAreaView>
+    </RequireVerifiedWorker>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
-  logo: { fontSize: 20, fontWeight: '900', color: COLORS.primary },
-  avatarSmall: { width: 36, height: 36, borderRadius: 18 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 110, gap: 16 },
-  statusCard: {
+  pageInner: { flex: 1, width: '100%', maxWidth: ws(544), alignSelf: 'center' },
+
+  /* Header */
+  header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderWidth: 1, borderRadius: 20, padding: 16,
+    paddingHorizontal: ws(20), paddingTop: wvs(6), paddingBottom: wvs(10),
   },
-  statusTitle: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 13 },
-  statsRow: { flexDirection: 'row', gap: 10 },
-  statCard: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 12, gap: 4 },
-  statLabel: { fontSize: 11, fontWeight: '600' },
-  statValue: { fontSize: 18, fontWeight: '800' },
-  statDelta: { fontSize: 11, fontWeight: '700', color: COLORS.primary },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: '800' },
-  sectionLink: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
-  reqCard: { borderWidth: 1, borderRadius: 18, padding: 14, gap: 10 },
-  reqTopRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  reqTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  reqMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  reqMeta: { fontSize: 12 },
-  reqTagRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  reqTagText: { fontSize: 11, fontWeight: '700' },
-  budgetLabel: { fontSize: 11 },
-  budgetValue: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
-  reqBottomRow: {
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: ws(12) },
+  avatarSmall: {
+    width: ws(42), height: ws(42), borderRadius: ws(21),
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarInitials: { fontSize: wms(15), fontWeight: '800', color: COLORS.primary },
+  greeting: { fontSize: wms(11.5), fontWeight: '500' },
+  userName: { fontSize: wms(16), fontWeight: '700' },
+  notifBtn: {
+    width: ws(38), height: ws(38), borderRadius: ws(19),
+    alignItems: 'center', justifyContent: 'center',
+    position: 'relative',
+  },
+  notifDot: {
+    position: 'absolute', top: wvs(9), right: ws(10),
+    width: ws(6), height: ws(6), borderRadius: ws(3),
+    backgroundColor: COLORS.danger,
+  },
+
+  /* Status row */
+  statusRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderTopWidth: 1, paddingTop: 10,
+    paddingHorizontal: ws(20), paddingBottom: wvs(12),
   },
-  postedByText: { fontSize: 12 },
-  acceptButton: { backgroundColor: COLORS.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999 },
-  acceptButtonText: { fontSize: 13, fontWeight: '700', color: '#fff' },
-  bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    borderTopWidth: 1, flexDirection: 'row', alignItems: 'center',
-    paddingBottom: 22, paddingTop: 10, paddingHorizontal: 10,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10,
+  statusLeft: { flexDirection: 'row', alignItems: 'center', gap: ws(8) },
+  statusDot: { width: ws(8), height: ws(8), borderRadius: ws(4) },
+  statusText: { fontSize: wms(13.5), fontWeight: '600' },
+
+  /* Scroll */
+  scroll: { paddingHorizontal: ws(20), paddingBottom: wvs(100), gap: wvs(20) },
+
+  /* Stats */
+  statsStrip: {
+    flexDirection: 'row', borderWidth: 1, borderRadius: ws(16),
   },
-  navTab: { flex: 1, alignItems: 'center', gap: 3 },
-  navLabel: { fontSize: 10, fontWeight: '500' },
-  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
+  statCol: { flex: 1, alignItems: 'center', paddingVertical: wvs(14) },
+  statBorder: { borderRightWidth: 1 },
+  statValue: { fontSize: wms(15), fontWeight: '800', marginBottom: wvs(2) },
+  statLabel: { fontSize: wms(10.5), fontWeight: '500' },
+
+  /* Section */
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  },
+  sectionTitle: { fontSize: wms(16), fontWeight: '800' },
+  seeAll: { fontSize: wms(12.5), fontWeight: '600', color: COLORS.primary },
+
+  /* Requests */
+  requestsList: { gap: wvs(10), marginTop: wvs(-8) },
+  reqCard: {
+    borderWidth: 1, borderRadius: ws(16), padding: ws(14), gap: wvs(4),
+  },
+  reqTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ws(8) },
+  reqTitle: { flex: 1, fontSize: wms(14.5), fontWeight: '700' },
+  urgentPill: {
+    backgroundColor: COLORS.dangerLight, borderRadius: ws(20),
+    paddingHorizontal: ws(8), paddingVertical: wvs(3),
+  },
+  urgentText: { fontSize: wms(10), fontWeight: '700', color: COLORS.danger },
+  reqMeta: { fontSize: wms(12) },
+  reqBottom: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: wvs(8),
+  },
+  budgetValue: { fontSize: wms(14.5), fontWeight: '800', color: COLORS.primary },
+  acceptBtn: {
+    backgroundColor: COLORS.primary, borderRadius: ws(10),
+    paddingHorizontal: ws(16), paddingVertical: wvs(9),
+  },
+  acceptBtnText: { fontSize: wms(12.5), fontWeight: '700', color: '#fff' },
 });

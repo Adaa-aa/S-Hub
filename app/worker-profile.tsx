@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import { ws, wvs, wms } from '@/lib/scaling';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -85,7 +86,7 @@ export default function WorkerProfileScreen() {
         return (
             <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
                 <View style={s.notFound}>
-                    <Ionicons name="person-remove-outline" size={40} color={T.subText} />
+                    <Ionicons name="person-remove-outline" size={wms(40)} color={T.subText} />
                     <Text style={[s.notFoundText, { color: T.text }]}>Worker not found</Text>
                     <TouchableOpacity style={s.notFoundBtn} onPress={() => router.back()} activeOpacity={0.8}>
                         <Text style={s.notFoundBtnText}>Go Back</Text>
@@ -128,7 +129,7 @@ export default function WorkerProfileScreen() {
             {/* ── HEADER ── */}
             <View style={[s.header, { backgroundColor: COLORS.primary }]}>
                 <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-                    <Ionicons name="arrow-back" size={22} color="#fff" />
+                    <Ionicons name="arrow-back" size={wms(22)} color="#fff" />
                 </TouchableOpacity>
                 <Text style={s.headerTitle}>Worker Profile</Text>
                 <View style={s.backBtn} />
@@ -145,11 +146,11 @@ export default function WorkerProfileScreen() {
                         <View style={s.heroInfo}>
                             <View style={s.nameRow}>
                                 <Text style={s.heroName}>{worker.name}</Text>
-                                <Ionicons name="checkmark-circle" size={17} color="#fff" />
+                                <Ionicons name="checkmark-circle" size={wms(17)} color="#fff" />
                             </View>
                             <Text style={s.heroService}>{worker.skill}</Text>
                             <View style={s.heroMeta}>
-                                <Ionicons name="star" size={12} color="#F59E0B" />
+                                <Ionicons name="star" size={wms(12)} color="#F59E0B" />
                                 <Text style={s.heroMetaText}>{worker.rating}  ·  {worker.reviews} reviews  ·  {worker.distance}</Text>
                             </View>
                         </View>
@@ -169,7 +170,7 @@ export default function WorkerProfileScreen() {
                         { value: details.experience, label: 'Experience', icon: 'calendar-outline' },
                     ].map((stat, i, arr) => (
                         <View key={stat.label} style={[s.stat, i < arr.length - 1 && [s.statBorder, { borderColor: T.border }]]}>
-                            <Ionicons name={stat.icon as any} size={14} color={COLORS.primary} style={{ marginBottom: 4 }} />
+                            <Ionicons name={stat.icon as any} size={wms(14)} color={COLORS.primary} style={{ marginBottom: wvs(4) }} />
                             <Text style={[s.statValue, { color: COLORS.primary }]}>{stat.value}</Text>
                             <Text style={[s.statLabel, { color: T.subText }]}>{stat.label}</Text>
                         </View>
@@ -213,10 +214,10 @@ export default function WorkerProfileScreen() {
                     <View style={[s.card, { backgroundColor: T.card, borderColor: T.border }]}>
                         <Text style={[s.cardTitle, { color: T.text }]}>Certifications</Text>
                         {details.certifications.map((cert, i) => (
-                            <View key={cert} style={[s.certRow, i > 0 && [s.rowDivider, { borderTopWidth: 1, borderColor: T.divider }]]}>
-                                <Ionicons name="ribbon-outline" size={15} color={COLORS.primary} />
+                            <View key={cert} style={[s.certRow, i > 0 && [s.rowDivider, { borderTopWidth: ws(1), borderColor: T.divider }]]}>
+                                <Ionicons name="ribbon-outline" size={wms(15)} color={COLORS.primary} />
                                 <Text style={[s.certText, { color: T.text }]}>{cert}</Text>
-                                <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
+                                <Ionicons name="checkmark-circle" size={wms(16)} color="#22C55E" />
                             </View>
                         ))}
                     </View>
@@ -227,12 +228,12 @@ export default function WorkerProfileScreen() {
                     <View style={s.reviewsHeaderRow}>
                         <Text style={[s.cardTitle, { color: T.text, marginBottom: 0 }]}>Reviews ({worker.reviews})</Text>
                         <View style={s.recentRow}>
-                            <Ionicons name="filter-outline" size={13} color={COLORS.primary} />
+                            <Ionicons name="filter-outline" size={wms(13)} color={COLORS.primary} />
                             <Text style={[s.recentText, { color: COLORS.primary }]}>Recent</Text>
                         </View>
                     </View>
                     {details.reviews.map((rev, i) => (
-                        <View key={rev.author} style={[s.reviewRow, i > 0 && { borderTopWidth: 1, borderColor: T.divider }]}>
+                        <View key={rev.author} style={[s.reviewRow, i > 0 && { borderTopWidth: ws(1), borderColor: T.divider }]}>
                             <View style={s.reviewTop}>
                                 <View style={[s.reviewAvatar, { backgroundColor: rev.color + '20' }]}>
                                     <Text style={[s.reviewInitials, { color: rev.color }]}>{rev.initials}</Text>
@@ -241,7 +242,7 @@ export default function WorkerProfileScreen() {
                                     <Text style={[s.reviewAuthor, { color: T.text }]}>{rev.author}</Text>
                                     <View style={{ flexDirection: 'row' }}>
                                         {Array.from({ length: 5 }).map((_, idx) => (
-                                            <Ionicons key={idx} name={idx < rev.rating ? 'star' : 'star-outline'} size={11} color="#F59E0B" />
+                                            <Ionicons key={idx} name={idx < rev.rating ? 'star' : 'star-outline'} size={wms(11)} color="#F59E0B" />
                                         ))}
                                     </View>
                                 </View>
@@ -252,13 +253,13 @@ export default function WorkerProfileScreen() {
                     ))}
                 </View>
 
-                <View style={{ height: 100 }} />
+                <View style={{ height: wvs(100) }} />
             </ScrollView>
 
             {/* ── ACTION BAR ── */}
             <View style={[s.actionBar, { backgroundColor: T.card, borderColor: T.border }]}>
                 <TouchableOpacity style={[s.messageBtn, { borderColor: COLORS.primary }]} onPress={handleMessage} activeOpacity={0.8}>
-                    <Ionicons name="chatbubble-outline" size={17} color={COLORS.primary} />
+                    <Ionicons name="chatbubble-outline" size={wms(17)} color={COLORS.primary} />
                     <Text style={[s.messageBtnText, { color: COLORS.primary }]}>Message</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[s.bookBtn, { backgroundColor: COLORS.primary }]} onPress={handleBookNow} activeOpacity={0.8}>
@@ -272,79 +273,79 @@ export default function WorkerProfileScreen() {
 /* ─── Styles ─── */
 const s = StyleSheet.create({
     safe: { flex: 1 },
-    scroll: { paddingBottom: 20 },
+    scroll: { paddingBottom: wvs(20) },
 
     /* Header */
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
-    backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-    headerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: ws(14), paddingVertical: wvs(12) },
+    backBtn: { width: ws(38), height: ws(38), alignItems: 'center', justifyContent: 'center' },
+    headerTitle: { fontSize: wms(16), fontWeight: '700', color: '#fff' },
 
     /* Not found */
-    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-    notFoundText: { fontSize: 15, fontWeight: '700' },
-    notFoundBtn: { backgroundColor: COLORS.primary, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10, marginTop: 4 },
-    notFoundBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: ws(12), padding: ws(24) },
+    notFoundText: { fontSize: wms(15), fontWeight: '700' },
+    notFoundBtn: { backgroundColor: COLORS.primary, borderRadius: ws(10), paddingHorizontal: ws(20), paddingVertical: wvs(10), marginTop: wvs(4) },
+    notFoundBtnText: { color: '#fff', fontWeight: '700', fontSize: wms(13) },
 
     /* Hero */
-    heroCard: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 },
-    heroRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
-    avatar: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.5)' },
-    avatarInitials: { fontSize: 26, fontWeight: '900' },
+    heroCard: { paddingHorizontal: ws(16), paddingTop: wvs(4), paddingBottom: wvs(16) },
+    heroRow: { flexDirection: 'row', alignItems: 'center', gap: ws(14), marginBottom: wvs(14) },
+    avatar: { width: ws(72), height: ws(72), borderRadius: ws(36), alignItems: 'center', justifyContent: 'center', borderWidth: ws(2.5), borderColor: 'rgba(255,255,255,0.5)' },
+    avatarInitials: { fontSize: wms(26), fontWeight: '900' },
     heroInfo: { flex: 1 },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
-    heroName: { fontSize: 18, fontWeight: '800', color: '#fff' },
-    heroService: { fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: '500', marginBottom: 5 },
-    heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    heroMetaText: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
-    availabilityPill: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: ws(6), marginBottom: wvs(3) },
+    heroName: { fontSize: wms(18), fontWeight: '800', color: '#fff' },
+    heroService: { fontSize: wms(13), color: 'rgba(255,255,255,0.85)', fontWeight: '500', marginBottom: wvs(5) },
+    heroMeta: { flexDirection: 'row', alignItems: 'center', gap: ws(5) },
+    heroMetaText: { fontSize: wms(12), color: 'rgba(255,255,255,0.8)' },
+    availabilityPill: { flexDirection: 'row', alignItems: 'center', gap: ws(6), alignSelf: 'flex-start', borderRadius: ws(20), paddingHorizontal: ws(12), paddingVertical: wvs(6) },
     availOn: { backgroundColor: 'rgba(34,197,94,0.2)' },
     availOff: { backgroundColor: 'rgba(148,163,184,0.2)' },
-    availDot: { width: 7, height: 7, borderRadius: 4 },
-    availText: { fontSize: 12, fontWeight: '600', color: '#fff' },
+    availDot: { width: ws(7), height: ws(7), borderRadius: ws(4) },
+    availText: { fontSize: wms(12), fontWeight: '600', color: '#fff' },
 
     /* Stats strip */
-    statsStrip: { flexDirection: 'row', borderBottomWidth: 1, marginBottom: 16 },
-    stat: { flex: 1, alignItems: 'center', paddingVertical: 14 },
-    statBorder: { borderRightWidth: 1 },
-    statValue: { fontSize: 16, fontWeight: '800', marginBottom: 1 },
-    statLabel: { fontSize: 10, fontWeight: '500' },
+    statsStrip: { flexDirection: 'row', borderBottomWidth: ws(1), marginBottom: wvs(16) },
+    stat: { flex: 1, alignItems: 'center', paddingVertical: wvs(14) },
+    statBorder: { borderRightWidth: ws(1) },
+    statValue: { fontSize: wms(16), fontWeight: '800', marginBottom: wvs(1) },
+    statLabel: { fontSize: wms(10), fontWeight: '500' },
 
     /* Generic card */
-    card: { borderRadius: 16, borderWidth: 1, marginHorizontal: 16, marginBottom: 14, padding: 16 },
-    cardTitle: { fontSize: 14, fontWeight: '800', marginBottom: 10 },
-    bioText: { fontSize: 13, lineHeight: 19 },
+    card: { borderRadius: ws(16), borderWidth: ws(1), marginHorizontal: ws(16), marginBottom: wvs(14), padding: ws(16) },
+    cardTitle: { fontSize: wms(14), fontWeight: '800', marginBottom: wvs(10) },
+    bioText: { fontSize: wms(13), lineHeight: wms(19) },
 
     /* Skills */
-    skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    skillChip: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 7 },
-    skillText: { fontSize: 12, fontWeight: '700' },
+    skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: ws(8) },
+    skillChip: { borderRadius: ws(10), borderWidth: ws(1), paddingHorizontal: ws(12), paddingVertical: wvs(7) },
+    skillText: { fontSize: wms(12), fontWeight: '700' },
 
     /* Info rows (pricing) */
-    infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
-    infoLabel: { fontSize: 13, fontWeight: '500' },
-    infoValue: { fontSize: 13, fontWeight: '700' },
-    rowDivider: { height: 1 },
+    infoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: wvs(8) },
+    infoLabel: { fontSize: wms(13), fontWeight: '500' },
+    infoValue: { fontSize: wms(13), fontWeight: '700' },
+    rowDivider: { height: wvs(1) },
 
     /* Certifications */
-    certRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
-    certText: { flex: 1, fontSize: 13, fontWeight: '600' },
+    certRow: { flexDirection: 'row', alignItems: 'center', gap: ws(10), paddingVertical: wvs(10) },
+    certText: { flex: 1, fontSize: wms(13), fontWeight: '600' },
 
     /* Reviews */
-    reviewsHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-    recentRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    recentText: { fontSize: 12, fontWeight: '700' },
-    reviewRow: { paddingVertical: 12 },
-    reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
-    reviewAvatar: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-    reviewInitials: { fontSize: 12, fontWeight: '800' },
-    reviewAuthor: { fontSize: 13, fontWeight: '700', marginBottom: 2 },
-    reviewDate: { fontSize: 11 },
-    reviewComment: { fontSize: 12, lineHeight: 17 },
+    reviewsHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: wvs(10) },
+    recentRow: { flexDirection: 'row', alignItems: 'center', gap: ws(4) },
+    recentText: { fontSize: wms(12), fontWeight: '700' },
+    reviewRow: { paddingVertical: wvs(12) },
+    reviewTop: { flexDirection: 'row', alignItems: 'center', gap: ws(10), marginBottom: wvs(6) },
+    reviewAvatar: { width: ws(34), height: ws(34), borderRadius: ws(17), alignItems: 'center', justifyContent: 'center' },
+    reviewInitials: { fontSize: wms(12), fontWeight: '800' },
+    reviewAuthor: { fontSize: wms(13), fontWeight: '700', marginBottom: wvs(2) },
+    reviewDate: { fontSize: wms(11) },
+    reviewComment: { fontSize: wms(12), lineHeight: wms(17) },
 
     /* Action bar */
-    actionBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 10, borderTopWidth: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28 },
-    messageBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1.5, borderRadius: 12, paddingVertical: 13 },
-    messageBtnText: { fontSize: 14, fontWeight: '700' },
-    bookBtn: { flex: 1.4, alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 13 },
-    bookBtnText: { fontSize: 14, fontWeight: '800', color: '#fff' },
+    actionBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: ws(10), borderTopWidth: ws(1), paddingHorizontal: ws(16), paddingTop: wvs(12), paddingBottom: wvs(28) },
+    messageBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ws(7), borderWidth: ws(1.5), borderRadius: ws(12), paddingVertical: wvs(13) },
+    messageBtnText: { fontSize: wms(14), fontWeight: '700' },
+    bookBtn: { flex: 1.4, alignItems: 'center', justifyContent: 'center', borderRadius: ws(12), paddingVertical: wvs(13) },
+    bookBtnText: { fontSize: wms(14), fontWeight: '800', color: '#fff' },
 });
