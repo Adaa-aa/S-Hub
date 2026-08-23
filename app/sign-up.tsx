@@ -17,7 +17,7 @@ import {
 import { COLORS } from '../constants/theme';
 import { useThemeColors } from '../context/ThemeContext';
 import ScreenContent from '@/components/ScreenContent';
-import { signUpWithPassword, signInWithOAuthProvider } from '@/lib/auth';
+import { signUpWithPassword, signInWithOAuthProvider, routeSignedInUserByRole } from '@/lib/auth';
 import { s, vs, ms } from '@/lib/scaling';
 
 const PRIMARY = COLORS.primary;
@@ -27,9 +27,9 @@ const BG = COLORS.bgGrey;
 
 export default function SignUpScreen() {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'customer' | 'worker'>('customer');
+  const [role, setRole] = useState<'client' | 'worker'>('client');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
@@ -37,10 +37,10 @@ export default function SignUpScreen() {
   const T = useThemeColors();
 
   const handleSignUp = async () => {
-    if (!name || !email || !password) return;
+    if (!name || !identifier || !password) return;
     setError('');
     setLoading(true);
-    const result = await signUpWithPassword({ fullName: name, email, password, role });
+    const result = await signUpWithPassword({ fullName: name, identifier, password, role });
     setLoading(false);
     if (!result.success) {
       setError(result.error ?? 'Something went wrong creating your account.');
@@ -55,14 +55,17 @@ export default function SignUpScreen() {
     setError('');
     setOauthLoading(provider);
     const result = await signInWithOAuthProvider(provider);
-    setOauthLoading(null);
     if (!result.success) {
+      setOauthLoading(null);
       setError(result.error ?? 'Authentication failed.');
       return;
     }
-    // OAuth accounts always land as customers (no role form is shown mid-flow);
-    // they can switch to worker mode afterward via "Start Earning" in profile.
-    router.replace('/home' as any);
+    // Google matches by email, so this can also resolve to an EXISTING
+    // account (including an existing worker) rather than only ever creating
+    // a new client — route by the account's real role instead of assuming
+    // client, or an existing worker landing here would get sent to /home.
+    await routeSignedInUserByRole();
+    setOauthLoading(null);
   };
 
   const handleBack = () => {
@@ -95,7 +98,7 @@ export default function SignUpScreen() {
         <ScreenContent style={styles.container}>
 
           <View style={styles.roleRow}>
-            <TouchableOpacity style={[styles.roleCard, { backgroundColor: T.inputBg, borderColor: T.border }, role === 'customer' && styles.roleCardActive]} onPress={() => setRole('customer')}>
+            <TouchableOpacity style={[styles.roleCard, { backgroundColor: T.inputBg, borderColor: T.border }, role === 'client' && styles.roleCardActive]} onPress={() => setRole('client')}>
               <Text style={styles.roleEmoji}>🔍</Text>
               <Text style={[styles.roleLabel, { color: T.text }]}>Find Workers</Text>
               <Text style={[styles.roleSub, { color: T.subText }]}>I need a service</Text>
@@ -114,7 +117,7 @@ export default function SignUpScreen() {
 
           <View style={styles.inputBox}>
             <Text style={[styles.inputLabel, { color: T.subText }]}>Email or Phone</Text>
-            <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="Enter your Phone Number or Email" placeholderTextColor={T.subText} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+            <TextInput style={[styles.input, { backgroundColor: T.inputBg, borderColor: T.border, color: T.text }]} placeholder="Enter your Phone Number or Email" placeholderTextColor={T.subText} keyboardType="email-address" autoCapitalize="none" value={identifier} onChangeText={setIdentifier} />
           </View>
 
           <View style={styles.inputBox}>
@@ -131,12 +134,12 @@ export default function SignUpScreen() {
 
           <TouchableOpacity
             onPress={handleSignUp}
-            disabled={!name || !email || !password || loading}
+            disabled={!name || !identifier || !password || loading}
             activeOpacity={0.85}
             style={styles.btnWrap}
           >
             <LinearGradient
-              colors={(!name || !email || !password || loading) ? [COLORS.muted, COLORS.muted] : [PRIMARY, COLORS.primaryDark]}
+              colors={(!name || !identifier || !password || loading) ? [COLORS.muted, COLORS.muted] : [PRIMARY, COLORS.primaryDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.btn}

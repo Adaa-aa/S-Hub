@@ -1,7 +1,9 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
+import { getMyProfile } from './api/profiles';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,6 +27,17 @@ export function buildRedirectUrl(path: string): string {
 
 /** OAuth redirect URL — see buildRedirectUrl. */
 export const redirectTo = buildRedirectUrl('auth/callback');
+
+/** True if the given sign-up/sign-in identifier looks like an email address rather than a phone number. */
+export function isEmailIdentifier(identifier: string): boolean {
+  return identifier.includes('@');
+}
+
+/** Normalizes a Ghanaian phone number (however typed) into E.164 format, e.g. "050 000 0000" -> "+233500000000". */
+export function formatGhanaPhone(raw: string): string {
+  const digitsOnly = raw.replace(/\D/g, '').replace(/^0/, '');
+  return digitsOnly.startsWith('233') ? `+${digitsOnly}` : `+233${digitsOnly}`;
+}
 
 /**
  * Sign in with an OAuth provider (Google or Apple).
@@ -90,50 +103,60 @@ export async function signInWithOAuthProvider(
 }
 
 /**
- * Create an account with email + password, tagging the new user's
- * metadata with `full_name` and `role` so the `handle_new_user` DB
- * trigger creates the matching `profiles` row with the right role.
+ * Create an account with an email OR phone number + password, tagging the
+ * new user's metadata with `full_name` and `role` so the `handle_new_user`
+ * DB trigger creates the matching `profiles` row with the right role.
  */
 export async function signUpWithPassword({
   fullName,
-  email,
+  identifier,
   password,
   role,
 }: {
   fullName: string;
-  email: string;
+  identifier: string;
   password: string;
-  role: 'customer' | 'worker';
+  role: 'client' | 'worker';
 }): Promise<{ success: boolean; error?: string }> {
+  const isEmail = isEmailIdentifier(identifier);
   try {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, role },
-      },
-    });
+    const options = { data: { full_name: fullName, role } };
+    const { error } = isEmail
+      ? await supabase.auth.signUp({ email: identifier.trim(), password, options })
+      : await supabase.auth.signUp({ phone: formatGhanaPhone(identifier), password, options });
 
     if (error) {
+      // Phone sign-up requires a configured SMS provider (e.g. Twilio) that
+      // this project doesn't have yet; GoTrue fails before it even gets to
+      // validating input, with an opaque "{}"-style message. Give a message
+      // that actually explains what's wrong instead.
+      if (!isEmail) {
+        return { success: false, error: 'Phone sign-up isn\'t available yet — please use email for now.' };
+      }
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (err: any) {
+    if (!isEmail) {
+      return { success: false, error: 'Phone sign-up isn\'t available yet — please use email for now.' };
+    }
     return { success: false, error: err?.message ?? 'Something went wrong creating your account.' };
   }
 }
 
-/** Sign in with email + password. */
+/** Sign in with an email OR phone number + password. */
 export async function signInWithPassword({
-  email,
+  identifier,
   password,
 }: {
-  email: string;
+  identifier: string;
   password: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = isEmailIdentifier(identifier)
+      ? await supabase.auth.signInWithPassword({ email: identifier.trim(), password })
+      : await supabase.auth.signInWithPassword({ phone: formatGhanaPhone(identifier), password });
 
     if (error) {
       return { success: false, error: error.message };
@@ -142,6 +165,24 @@ export async function signInWithPassword({
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message ?? 'Something went wrong signing in.' };
+  }
+}
+
+/**
+ * Routes a just-authenticated user to the correct home screen for their
+ * *actual* `profiles.role` — never the role toggle shown on the sign-in/
+ * sign-up form, which is only a UI hint and has no bearing on an existing
+ * account's real role. Every sign-in/sign-up entry point (password and
+ * OAuth, on both screens) must call this so an existing worker account can
+ * never land on the client home and vice versa, regardless of which path
+ * or toggle state they came through.
+ */
+export async function routeSignedInUserByRole(): Promise<void> {
+  const profile = await getMyProfile();
+  if (profile.success && profile.data?.role === 'worker') {
+    router.replace('/worker-dashboard' as any);
+  } else {
+    router.replace('/home' as any);
   }
 }
 

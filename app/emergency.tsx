@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import ScreenContent from '@/components/ScreenContent';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -251,15 +252,17 @@ export default function EmergencyScreen() {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.danger} />
 
       {/* ── HEADER ── */}
-      <View style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </TouchableOpacity>
-        <Text style={s.headerTitle}>Emergency Hire</Text>
-        {/* SOS pill */}
-        <TouchableOpacity style={s.sosBtn} onPress={handleSOSAll} activeOpacity={0.85}>
-          <Text style={s.sosBtnText}>SOS</Text>
-        </TouchableOpacity>
+      <View style={s.headerOuter}>
+        <ScreenContent style={s.header}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={22} color="#fff" />
+          </TouchableOpacity>
+          <Text style={s.headerTitle}>Emergency Hire</Text>
+          {/* SOS pill */}
+          <TouchableOpacity style={s.sosBtn} onPress={handleSOSAll} activeOpacity={0.85}>
+            <Text style={s.sosBtnText}>SOS</Text>
+          </TouchableOpacity>
+        </ScreenContent>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -267,19 +270,23 @@ export default function EmergencyScreen() {
 
           {/* ── HERO BANNER (red background) ── */}
           <View style={s.heroBg}>
-            <HeroBanner />
+            <ScreenContent style={{ alignItems: 'center' }}>
+              <HeroBanner />
+            </ScreenContent>
           </View>
 
           {/* ── URGENCY NOTICE ── */}
-          <View style={[s.urgencyBanner, { backgroundColor: COLORS.dangerLight }]}>
-            <Ionicons name="warning" size={16} color={COLORS.danger} />
-            <Text style={s.urgencyText}>
-              Emergency workers charge a premium rate. Standard jobs are available via{' '}
-              <Text style={s.urgencyLink} onPress={() => router.push('/post-a-job' as any)}>Post a Job</Text>.
-            </Text>
+          <View style={[s.urgencyBannerOuter, { backgroundColor: COLORS.dangerLight }]}>
+            <ScreenContent style={s.urgencyBanner}>
+              <Ionicons name="warning" size={16} color={COLORS.danger} />
+              <Text style={s.urgencyText}>
+                Emergency workers charge a premium rate. Standard jobs are available via{' '}
+                <Text style={s.urgencyLink} onPress={() => router.push('/post-a-job' as any)}>Post a Job</Text>.
+              </Text>
+            </ScreenContent>
           </View>
 
-          <View style={s.body}>
+          <ScreenContent style={s.body}>
 
             {/* ── SERVICE SELECTOR ── */}
             <Text style={[s.sectionTitle, { color: T.text }]}>What&apos;s the emergency?</Text>
@@ -375,7 +382,7 @@ export default function EmergencyScreen() {
               <Text style={[s.cancelText, { color: T.subText }]}>Cancel — Go Back</Text>
             </TouchableOpacity>
 
-          </View>
+          </ScreenContent>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -387,11 +394,11 @@ const s = StyleSheet.create({
   safe: { flex: 1 },
 
   /* Header */
+  headerOuter: { alignItems: 'center', backgroundColor: COLORS.danger },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.danger,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
@@ -402,17 +409,16 @@ const s = StyleSheet.create({
   sosBtnText: { fontSize: 13, fontWeight: '800', color: COLORS.danger },
 
   /* Hero */
-  heroBg: { backgroundColor: COLORS.danger, paddingBottom: 4 },
+  heroBg: { backgroundColor: COLORS.danger, paddingBottom: 4, alignItems: 'center' },
 
   /* Urgency banner */
+  urgencyBannerOuter: { alignItems: 'center', borderBottomWidth: 1, borderColor: COLORS.border },
   urgencyBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderColor: COLORS.border,
   },
   urgencyText: { flex: 1, fontSize: 12, color: COLORS.danger, lineHeight: 18, fontWeight: '500' },
   urgencyLink: { fontWeight: '700', textDecorationLine: 'underline' },

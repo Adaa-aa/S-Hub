@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
 
-export type Role = 'customer' | 'worker';
+export type Role = 'client' | 'worker' | 'admin';
 
 export type Profile = {
   id: string;
@@ -57,7 +57,7 @@ export async function becomeWorker(): Promise<{ success: boolean; error?: string
 }
 
 export async function updateProfile(
-  patch: Partial<Pick<Profile, 'full_name' | 'phone' | 'avatar_url'>>
+  patch: Partial<Pick<Profile, 'full_name' | 'phone' | 'avatar_url' | 'email'>>
 ): Promise<{ success: boolean; error?: string }> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) {

@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   StatusBar,
   StyleSheet,
@@ -16,58 +18,52 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { ws, wvs, wms } from '@/lib/scaling';
 import WorkerNav from '@/components/WorkerNav';
 import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
+import { listMyConversations, ConversationView } from '@/lib/api/bookings';
+import { supabase } from '@/lib/supabase';
 
-/* ─── Conversation data (worker-side) ─── */
-interface WorkerConversation {
-  id: string;
-  clientName: string;
-  clientInitials: string;
-  clientColor: string;
-  jobTitle: string;
-  lastMessage: string;
-  lastMessageTime: string;
-  unread: number;
-  online: boolean;
+function initialsOf(name: string): string {
+  return name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
 }
 
-const CONVERSATIONS: WorkerConversation[] = [
-  {
-    id: 'wc1', clientName: 'Akosua Badu', clientInitials: 'AB', clientColor: '#7C3AED',
-    jobTitle: 'Fix leaking bathroom pipe', lastMessage: 'When can you come? The leak is getting worse.',
-    lastMessageTime: '2 min ago', unread: 2, online: true,
-  },
-  {
-    id: 'wc2', clientName: 'Ernest Ofori', clientInitials: 'EO', clientColor: '#1D6FBA',
-    jobTitle: 'Bathroom installation', lastMessage: "I'll bring the materials on Monday morning.",
-    lastMessageTime: '1 hr ago', unread: 0, online: true,
-  },
-  {
-    id: 'wc3', clientName: 'Mabel Asante', clientInitials: 'MA', clientColor: '#D97706',
-    jobTitle: 'Gutter cleaning & repair', lastMessage: 'Thanks for the quick response!',
-    lastMessageTime: 'Yesterday', unread: 1, online: false,
-  },
-  {
-    id: 'wc4', clientName: 'Linda Owusu', clientInitials: 'LO', clientColor: '#DC2626',
-    jobTitle: 'Kitchen sink repair', lastMessage: 'Job completed. Please leave a review 🙏',
-    lastMessageTime: '2 days ago', unread: 0, online: false,
-  },
-  {
-    id: 'wc5', clientName: 'Kojo Antwi', clientInitials: 'KA', clientColor: '#0891B2',
-    jobTitle: 'Water heater installation', lastMessage: 'Can you share a cost estimate first?',
-    lastMessageTime: '3 days ago', unread: 0, online: false,
-  },
-];
+function timeAgo(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr${hrs > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return days === 1 ? 'Yesterday' : `${days} days ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
 export default function WorkerMessagesScreen() {
   const T = useThemeColors();
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [myId, setMyId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationView[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = CONVERSATIONS.filter((c) =>
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        const [auth, result] = await Promise.all([supabase.auth.getUser(), listMyConversations()]);
+        if (cancelled) return;
+        setMyId(auth.data.user?.id ?? null);
+        if (result.success) setConversations(result.data ?? []);
+        setLoading(false);
+      })();
+      return () => { cancelled = true; };
+    }, [])
+  );
+
+  const filtered = conversations.filter((c) =>
     search.trim() === ''
       ? true
-      : c.clientName.toLowerCase().includes(search.toLowerCase()) ||
-        c.jobTitle.toLowerCase().includes(search.toLowerCase())
+      : c.client.full_name.toLowerCase().includes(search.toLowerCase()) ||
+        (c.request_category ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -108,7 +104,11 @@ export default function WorkerMessagesScreen() {
       )}
 
       {/* Conversations */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <View style={styles.empty}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      ) : filtered.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="chatbubbles-outline" size={wms(44)} color={T.subText + '50'} />
           <Text style={[styles.emptyTitle, { color: T.text }]}>No messages yet</Text>
@@ -119,49 +119,49 @@ export default function WorkerMessagesScreen() {
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.booking_id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={[styles.divider, { backgroundColor: T.divider }]} />}
-          renderItem={({ item: convo }) => (
-            <TouchableOpacity
-              style={styles.row}
-              onPress={() => router.push(`/chat?id=${convo.id}` as any)}
-              activeOpacity={0.75}
-            >
-              <View style={styles.avatarWrap}>
-                <View style={[styles.avatar, { backgroundColor: convo.clientColor + '18' }]}>
-                  <Text style={[styles.initials, { color: convo.clientColor }]}>{convo.clientInitials}</Text>
+          renderItem={({ item: convo }) => {
+            const unread = !!convo.last_message && convo.last_message.sender_id !== myId && !convo.last_message.is_read;
+            return (
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => router.push(`/chat?bookingId=${convo.booking_id}` as any)}
+                activeOpacity={0.75}
+              >
+                <View style={styles.avatarWrap}>
+                  <View style={[styles.avatar, { backgroundColor: '#7C3AED18' }]}>
+                    <Text style={[styles.initials, { color: '#7C3AED' }]}>{initialsOf(convo.client.full_name)}</Text>
+                  </View>
                 </View>
-                {convo.online && <View style={[styles.onlineDot, { borderColor: T.bg }]} />}
-              </View>
 
-              <View style={styles.content}>
-                <View style={styles.topRow}>
-                  <Text style={[styles.name, { color: T.text }]} numberOfLines={1}>{convo.clientName}</Text>
-                  <Text style={[styles.time, { color: convo.unread > 0 ? COLORS.primary : T.subText }]}>
-                    {convo.lastMessageTime}
+                <View style={styles.content}>
+                  <View style={styles.topRow}>
+                    <Text style={[styles.name, { color: T.text }]} numberOfLines={1}>{convo.client.full_name}</Text>
+                    {convo.last_message && (
+                      <Text style={[styles.time, { color: unread ? COLORS.primary : T.subText }]}>
+                        {timeAgo(convo.last_message.created_at)}
+                      </Text>
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      styles.lastMsg,
+                      { color: unread ? T.text : T.subText },
+                      unread && { fontWeight: '600' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {convo.last_message?.message_text ?? 'No messages yet'}
                   </Text>
                 </View>
-                <Text
-                  style={[
-                    styles.lastMsg,
-                    { color: convo.unread > 0 ? T.text : T.subText },
-                    convo.unread > 0 && { fontWeight: '600' },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {convo.lastMessage}
-                </Text>
-              </View>
 
-              {convo.unread > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{convo.unread}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
+                {unread && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
       </View>
@@ -211,11 +211,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   initials: { fontSize: wms(14.5), fontWeight: '800' },
-  onlineDot: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: ws(11), height: ws(11), borderRadius: ws(5.5),
-    backgroundColor: '#22C55E', borderWidth: 2,
-  },
 
   /* Content */
   content: { flex: 1 },
@@ -226,12 +221,7 @@ const styles = StyleSheet.create({
   name: { flex: 1, fontSize: wms(14.5), fontWeight: '700' },
   time: { fontSize: wms(11) },
   lastMsg: { fontSize: wms(12.5) },
-  badge: {
-    backgroundColor: COLORS.primary, borderRadius: ws(10),
-    minWidth: ws(20), height: ws(20), alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: ws(5),
-  },
-  badgeText: { fontSize: wms(11), fontWeight: '800', color: '#fff' },
+  unreadDot: { width: ws(9), height: ws(9), borderRadius: ws(4.5), backgroundColor: COLORS.primary },
 
   /* Empty */
   empty: {

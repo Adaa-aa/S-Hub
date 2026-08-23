@@ -106,7 +106,10 @@ export default function ResetPasswordScreen() {
     setLoading(true);
     try {
       const phone = formatPhone(identifier.trim());
-      const { error: verifyError } = await supabase.auth.verifyOtp({ phone, token: otp.trim(), type: 'sms' });
+      // 'recovery' (not 'sms') so the resulting session is recovery-flavored —
+      // this project requires the current password on updateUser() otherwise,
+      // which a forgot-password flow can never satisfy by definition.
+      const { error: verifyError } = await supabase.auth.verifyOtp({ phone, token: otp.trim(), type: 'recovery' as any });
       if (verifyError) throw verifyError;
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;

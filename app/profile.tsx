@@ -1,11 +1,16 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
-import { s } from '@/lib/scaling';
+import ScreenContent from '@/components/ScreenContent';
 import CustomerNav from '@/components/CustomerNav';
+import { getMyProfile, Profile } from '@/lib/api/profiles';
+import { signOut } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   ScrollView,
@@ -18,6 +23,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+function initialsOf(name: string): string {
+  return name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
+}
 
 /* ─── Types ─── */
 type MenuItemProps = {
@@ -87,10 +96,42 @@ function Divider({ color }: { color: string }) {
 /* ─── Main Screen ─── */
 export default function ProfileScreen() {
   const [notifications, setNotifications] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [loading, setLoading] = useState(true);
   const T = useThemeColors();
 
   const iconSize = 20;
   const iconColor = T.icon;
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        const [profileResult, authResult] = await Promise.all([
+          getMyProfile(),
+          supabase.auth.getUser(),
+        ]);
+        if (cancelled) return;
+        if (!profileResult.success) {
+          router.replace('/sign-in' as any);
+          return;
+        }
+        setProfile(profileResult.data ?? null);
+        setEmailVerified(!!authResult.data.user?.email_confirmed_at);
+        setLoading(false);
+      })();
+      return () => { cancelled = true; };
+    }, [])
+  );
+
+  if (loading || !profile) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: T.bg, alignItems: 'center', justifyContent: 'center' }]} edges={['top', 'bottom']}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
@@ -101,13 +142,13 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.scroll}
       >
         {/* Content capped and centered the same way as sign-up.tsx / sign-in.tsx */}
-        <View style={styles.content}>
+        <ScreenContent>
           {/* ── HERO / NAME CARD ── */}
           <View style={[styles.heroCard, { backgroundColor: T.card }]}>
             {/* Avatar */}
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarInitials}>NK</Text>
+                <Text style={styles.avatarInitials}>{initialsOf(profile.full_name)}</Text>
               </View>
               <TouchableOpacity
                 style={styles.cameraBtn}
@@ -120,11 +161,11 @@ export default function ProfileScreen() {
 
             {/* Name + rating */}
             <View style={styles.heroInfo}>
-              <Text style={[styles.heroName, { color: T.text }]}>Nana Kofi Agyei</Text>
+              <Text style={[styles.heroName, { color: T.text }]}>{profile.full_name || 'Add your name'}</Text>
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={15} color={COLORS.accent} />
-                <Text style={[styles.ratingText, { color: T.text }]}> 4.84</Text>
-                <TouchableOpacity onPress={() => Alert.alert('Rating', 'Based on your last 100 jobs.')}>
+                <Text style={[styles.ratingText, { color: T.text }]}> {profile.rating_avg.toFixed(2)}</Text>
+                <TouchableOpacity onPress={() => Alert.alert('Rating', `Based on your last ${profile.rating_count} jobs.`)}>
                   <Ionicons name="information-circle-outline" size={16} color={T.subText} style={{ marginLeft: 4 }} />
                 </TouchableOpacity>
               </View>
@@ -155,7 +196,7 @@ export default function ProfileScreen() {
             <MenuItem cardBg={T.card} textColor={T.text} subColor={COLORS.primary}
               icon={<Ionicons name="person-circle-outline" size={iconSize} color={iconColor} />}
               label="Profile"
-              subtitle="Verify email address"
+              subtitle={emailVerified ? undefined : 'Verify email address'}
               onPress={() => router.push('/profile-edit' as any)}
             />
             <Divider color={T.divider} />
@@ -260,7 +301,12 @@ export default function ProfileScreen() {
               onPress={() =>
                 Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Sign Out', style: 'destructive', onPress: () => router.replace('/sign-in') },
+                  {
+                    text: 'Sign Out', style: 'destructive', onPress: async () => {
+                      await signOut();
+                      router.replace('/sign-in' as any);
+                    },
+                  },
                 ])
               }
             />
@@ -268,7 +314,7 @@ export default function ProfileScreen() {
 
           {/* App version */}
           <Text style={styles.version}>AdwumaGo v1.0.0 · Made in Ghana 🇬🇭</Text>
-        </View>
+        </ScreenContent>
       </ScrollView>
 
       <CustomerNav active="profile" />
@@ -278,8 +324,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingBottom: 100, alignItems: 'center' },
-  content: { width: '100%', maxWidth: s(544) },
+  scroll: { paddingBottom: 100 },
 
   /* Hero */
   heroCard: {

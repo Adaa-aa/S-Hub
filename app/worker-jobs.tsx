@@ -1,42 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ws, wvs, wms } from '@/lib/scaling';
 import WorkerNav from '@/components/WorkerNav';
 import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
+import { listMyBookingsAsWorker, WorkerBookingView } from '@/lib/api/bookings';
+import { subscribeToTable, unsubscribe } from '@/lib/api/realtime';
+import { supabase } from '@/lib/supabase';
 
-/* ─── Types ─── */
-type JobStatus = 'active' | 'completed' | 'cancelled';
 type Filter = 'active' | 'completed' | 'cancelled';
-
-type Job = {
-  id: string;
-  title: string;
-  client: string;
-  clientInitials: string;
-  clientColor: string;
-  status: JobStatus;
-  date: string;
-  amount: number;
-  location: string;
-};
-
-const JOBS: Job[] = [
-  { id: '1', title: 'Fix leaking bathroom pipe', client: 'Akosua Badu', clientInitials: 'AB', clientColor: '#7C3AED', status: 'active', date: 'Today, 2:00 PM', amount: 450, location: 'Adum, Kumasi' },
-  { id: '2', title: 'Gutter cleaning & repair', client: 'Mabel Asante', clientInitials: 'MA', clientColor: '#D97706', status: 'active', date: 'Tomorrow, 9:00 AM', amount: 300, location: 'Asokwa, Kumasi' },
-  { id: '3', title: 'Bathroom installation', client: 'Ernest Ofori', clientInitials: 'EO', clientColor: '#1D6FBA', status: 'completed', date: '28 Jun', amount: 900, location: 'Bantama, Kumasi' },
-  { id: '4', title: 'Kitchen sink repair', client: 'Linda Owusu', clientInitials: 'LO', clientColor: '#DC2626', status: 'completed', date: '25 Jun', amount: 350, location: 'KNUST, Kumasi' },
-  { id: '5', title: 'Water heater installation', client: 'Kojo Antwi', clientInitials: 'KA', clientColor: '#0891B2', status: 'cancelled', date: '22 Jun', amount: 600, location: 'Ahodwo, Kumasi' },
-];
-
-const STATUS_COLOR: Record<JobStatus, string> = {
-  active: COLORS.primary,
-  completed: '#22C55E',
-  cancelled: '#94A3B8',
-};
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'active', label: 'Active' },
@@ -44,13 +20,73 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'cancelled', label: 'Cancelled' },
 ];
 
+const ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
+
+const AVATAR_PALETTE = ['#7C3AED', '#D97706', '#1D6FBA', '#DC2626', '#0891B2', '#2FAE60'];
+function colorForId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+function initialsOf(name: string): string {
+  return name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
+}
+
+function bookingAmount(booking: WorkerBookingView): number | null {
+  if (!booking.bid) return null;
+  return booking.bid.counter_price ?? booking.bid.proposed_price;
+}
+
+function statusColor(status: WorkerBookingView['status']): string {
+  if (status === 'completed') return '#22C55E';
+  if (status === 'cancelled') return '#94A3B8';
+  return COLORS.primary;
+}
+
 export default function WorkerJobsScreen() {
   const T = useThemeColors();
   const [filter, setFilter] = useState<Filter>('active');
+  const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState<WorkerBookingView[]>([]);
+
+  const load = useCallback(async () => {
+    const result = await listMyBookingsAsWorker();
+    if (result.success) setBookings(result.data ?? []);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      let channel: ReturnType<typeof subscribeToTable> | null = null;
+
+      (async () => {
+        setLoading(true);
+        await load();
+        if (cancelled) return;
+        setLoading(false);
+
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user || cancelled) return;
+
+        channel = subscribeToTable('bookings', `worker_id=eq.${auth.user.id}`, () => {
+          load();
+        });
+      })();
+
+      return () => {
+        cancelled = true;
+        if (channel) unsubscribe(channel);
+      };
+    }, [load])
+  );
 
   const filtered = useMemo(
-    () => JOBS.filter((j) => j.status === filter),
-    [filter]
+    () =>
+      bookings.filter((b) =>
+        filter === 'active' ? ACTIVE_STATUSES.includes(b.status) : b.status === filter
+      ),
+    [bookings, filter]
   );
 
   return (
@@ -85,7 +121,11 @@ export default function WorkerJobsScreen() {
       </View>
 
       {/* Jobs List */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <View style={styles.empty}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      ) : filtered.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="briefcase-outline" size={wms(44)} color={T.subText + '50'} />
           <Text style={[styles.emptyTitle, { color: T.text }]}>No {filter} jobs</Text>
@@ -98,30 +138,40 @@ export default function WorkerJobsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
         >
-          {filtered.map((job) => (
-            <View key={job.id} style={[styles.jobCard, { backgroundColor: T.card, borderColor: T.border }]}>
-              <View style={[styles.clientAvatar, { backgroundColor: job.clientColor + '18' }]}>
-                <Text style={[styles.clientInitials, { color: job.clientColor }]}>{job.clientInitials}</Text>
-              </View>
+          {filtered.map((booking) => {
+            const clientName = booking.client?.full_name || 'Client';
+            const color = colorForId(booking.client_id);
+            const amount = bookingAmount(booking);
+            const title = booking.request
+              ? booking.request.category.charAt(0).toUpperCase() + booking.request.category.slice(1)
+              : 'Job';
+            const location = booking.request?.location_string ?? booking.request?.location_region ?? '';
 
-              <View style={styles.jobInfo}>
-                <Text style={[styles.jobTitle, { color: T.text }]} numberOfLines={1}>{job.title}</Text>
-                <Text style={[styles.jobMeta, { color: T.subText }]} numberOfLines={1}>
-                  {job.client} · {job.date}
-                </Text>
-              </View>
+            return (
+              <View key={booking.id} style={[styles.jobCard, { backgroundColor: T.card, borderColor: T.border }]}>
+                <View style={[styles.clientAvatar, { backgroundColor: color + '18' }]}>
+                  <Text style={[styles.clientInitials, { color }]}>{initialsOf(clientName)}</Text>
+                </View>
 
-              <View style={styles.jobRight}>
-                <Text style={styles.jobAmount}>GH₵ {job.amount}</Text>
-                <View style={styles.statusRow}>
-                  <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[job.status] }]} />
-                  <Text style={[styles.statusText, { color: STATUS_COLOR[job.status] }]}>
-                    {job.status[0].toUpperCase() + job.status.slice(1)}
+                <View style={styles.jobInfo}>
+                  <Text style={[styles.jobTitle, { color: T.text }]} numberOfLines={1}>{title}</Text>
+                  <Text style={[styles.jobMeta, { color: T.subText }]} numberOfLines={1}>
+                    {clientName}{location ? ` · ${location}` : ''}
                   </Text>
                 </View>
+
+                <View style={styles.jobRight}>
+                  <Text style={styles.jobAmount}>{amount != null ? `GH₵ ${amount}` : '—'}</Text>
+                  <View style={styles.statusRow}>
+                    <View style={[styles.statusDot, { backgroundColor: statusColor(booking.status) }]} />
+                    <Text style={[styles.statusText, { color: statusColor(booking.status) }]}>
+                      {booking.status.replace('_', ' ')}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       )}
       </View>
@@ -180,5 +230,5 @@ const styles = StyleSheet.create({
   jobAmount: { fontSize: wms(14), fontWeight: '800', color: COLORS.primary },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: ws(4) },
   statusDot: { width: ws(5), height: ws(5), borderRadius: ws(2.5) },
-  statusText: { fontSize: wms(10.5), fontWeight: '700' },
+  statusText: { fontSize: wms(10.5), fontWeight: '700', textTransform: 'capitalize' },
 });

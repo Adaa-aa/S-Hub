@@ -1,12 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
 import { s } from '@/lib/scaling';
 import CustomerNav from '@/components/CustomerNav';
+import AppMap from '@/components/AppMap';
+import { consumePickedLocation, PickedLocation } from '@/lib/locationPickerBridge';
+import { createServiceRequest } from '@/lib/api/serviceRequests';
+import { uploadJobPhoto } from '@/lib/api/storage';
 
 type CategoryKey = 'plumbing' | 'electrical' | 'painting' | 'cleaning';
 type Urgency = 'now' | 'schedule';
@@ -25,6 +30,15 @@ export default function PostAJobScreen() {
   const [description, setDescription] = useState('');
   const [urgency, setUrgency] = useState<Urgency>('now');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [location, setLocation] = useState<PickedLocation | null>(null);
+  const [posting, setPosting] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const picked = consumePickedLocation();
+      if (picked) setLocation(picked);
+    }, [])
+  );
 
   const handleAddPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,9 +56,43 @@ export default function PostAJobScreen() {
     setPhotos((prev) => prev.filter((p) => p !== uri));
   };
 
-  const handlePostJob = () => {
-    // TODO: POST to your job-requests endpoint
-    router.push('/bid-comparison' as any);
+  const handleChangeLocation = () => {
+    const query = location ? `?lat=${location.latitude}&lng=${location.longitude}` : '';
+    router.push(`/location-picker${query}` as any);
+  };
+
+  const handlePostJob = async () => {
+    if (!description.trim()) {
+      Alert.alert('Add a description', 'Let workers know what needs to be done.');
+      return;
+    }
+    if (!location) {
+      Alert.alert('Set a location', 'Choose where this job should happen.');
+      return;
+    }
+
+    setPosting(true);
+    const uploadedPhotos = (
+      await Promise.all(photos.map((uri) => uploadJobPhoto(uri)))
+    ).filter((r): r is { success: true; publicUrl: string } => r.success && !!r.publicUrl).map((r) => r.publicUrl);
+
+    const result = await createServiceRequest({
+      category,
+      description: description.trim(),
+      location_string: location.address,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      location_region: location.region ?? undefined,
+      photos: uploadedPhotos,
+    });
+    setPosting(false);
+
+    if (!result.success) {
+      Alert.alert('Could Not Post Job', result.error ?? 'Something went wrong. Please try again.');
+      return;
+    }
+
+    router.push('/finding-worker' as any);
   };
 
   return (
@@ -142,15 +190,31 @@ export default function PostAJobScreen() {
             <View style={styles.locationRow}>
               <View style={styles.locationLeft}>
                 <Ionicons name="location-outline" size={20} color={COLORS.primary} />
-                <Text style={[styles.locationText, { color: T.text }]}>Cantonments, Accra</Text>
+                <Text style={[styles.locationText, { color: T.text }]} numberOfLines={1}>
+                  {location?.address || 'Set your service location'}
+                </Text>
               </View>
-              <TouchableOpacity>
-                <Text style={styles.changeText}>Change</Text>
+              <TouchableOpacity onPress={handleChangeLocation}>
+                <Text style={styles.changeText}>{location ? 'Change' : 'Set'}</Text>
               </TouchableOpacity>
             </View>
-            <View style={[styles.mapPlaceholder, { backgroundColor: T.inputBg }]}>
-              <Ionicons name="map-outline" size={32} color={T.subText} />
-            </View>
+            {location ? (
+              <View style={styles.mapPreview}>
+                <AppMap
+                  latitude={location.latitude}
+                  longitude={location.longitude}
+                  zoom={0.02}
+                  markers={[{ latitude: location.latitude, longitude: location.longitude, color: COLORS.primary }]}
+                  zoomEnabled={false}
+                  scrollEnabled={false}
+                />
+              </View>
+            ) : (
+              <TouchableOpacity style={[styles.mapPlaceholder, { backgroundColor: T.inputBg }]} onPress={handleChangeLocation} activeOpacity={0.8}>
+                <Ionicons name="map-outline" size={32} color={T.subText} />
+                <Text style={{ color: T.subText, fontSize: 12, marginTop: 6 }}>Tap to choose on map</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={[styles.priceBox, { backgroundColor: COLORS.primaryLight, borderLeftColor: COLORS.primary }]}>
@@ -167,9 +231,15 @@ export default function PostAJobScreen() {
 
       {/* Post button — full-width bar, but the button itself is capped/centered to match content width */}
       <View style={styles.postButtonBar} pointerEvents="box-none">
-        <TouchableOpacity style={styles.postButton} onPress={handlePostJob} activeOpacity={0.85}>
-          <Text style={styles.postButtonText}>Post Job</Text>
-          <Ionicons name="send" size={20} color="#fff" />
+        <TouchableOpacity style={styles.postButton} onPress={handlePostJob} activeOpacity={0.85} disabled={posting}>
+          {posting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Text style={styles.postButtonText}>Post Job</Text>
+              <Ionicons name="send" size={20} color="#fff" />
+            </>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -207,6 +277,7 @@ const styles = StyleSheet.create({
   urgencyText: { fontSize: 15, fontWeight: '700' },
   locationCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   mapPlaceholder: { height: 140, alignItems: 'center', justifyContent: 'center' },
+  mapPreview: { height: 140, overflow: 'hidden' },
   locationRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
   locationLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   locationText: { fontSize: 14, fontWeight: '600' },

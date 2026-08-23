@@ -1,9 +1,23 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import ScreenContent from '@/components/ScreenContent';
+import {
+  listMyNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification,
+  deleteAllReadNotifications,
+  Notification,
+  NotificationType,
+} from '@/lib/api/notifications';
+import { subscribeToMyNotifications, unsubscribe } from '@/lib/api/realtime';
+import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StatusBar,
@@ -14,111 +28,152 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type NotifType = 'job' | 'payment' | 'message' | 'system' | 'promo';
+type FilterCategory = 'all' | 'job' | 'message';
 
-interface Notif {
-  id: number;
-  type: NotifType;
-  title: string;
-  body: string;
-  time: string;
-  read: boolean;
+function categoryOf(type: NotificationType): 'job' | 'message' {
+  return type === 'new_message' ? 'message' : 'job';
 }
 
-const INITIAL_NOTIFS: Notif[] = [
-  { id: 1, type: 'job', title: 'Worker on the way!', body: 'Kofi Mensah has accepted your plumbing job and is heading to your location.', time: '2 min ago', read: false },
-  { id: 2, type: 'message', title: 'New message from Kofi', body: "Hi! I'm about 15 minutes away. Please make sure the main valve is accessible.", time: '5 min ago', read: false },
-  { id: 3, type: 'payment', title: 'Payment confirmed', body: 'GH₵ 450 paid successfully to Kofi Mensah for plumbing service via MTN MoMo.', time: '1 hr ago', read: false },
-  { id: 4, type: 'promo', title: 'You have a promo! 🎉', body: 'Use code WELCOME50 to get GH₵ 50 off your next job. Expires Dec 31, 2025.', time: '3 hrs ago', read: true },
-  { id: 5, type: 'job', title: 'Job completed', body: 'Your carpentry job with Yaw Boateng has been marked complete. How did it go?', time: 'Yesterday', read: true },
-  { id: 6, type: 'system', title: 'Verify your email', body: 'Please verify your email address to unlock all AdwumaGo features. Tap to verify.', time: 'Yesterday', read: true },
-  { id: 7, type: 'message', title: 'Kwame Adjei sent a quote', body: 'I can fix the electrical fault for GH₵ 380. Available from Thursday onwards.', time: '2 days ago', read: true },
-  { id: 8, type: 'payment', title: 'Refund processed', body: 'A refund of GH₵ 200 has been returned to your MoMo wallet. Allow 24–48 hrs.', time: '3 days ago', read: true },
-  { id: 9, type: 'promo', title: 'Weekend special 🔥', body: '20% off all cleaning services this weekend. Limited time — book now!', time: '4 days ago', read: true },
-  { id: 10, type: 'system', title: 'App update available', body: 'AdwumaGo v1.1.0 is available with new features and bug fixes. Update now.', time: '5 days ago', read: true },
-];
+function timeAgo(iso: string): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return days === 1 ? 'Yesterday' : `${days} days ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
-const TYPE_META: Record<NotifType, { icon: string; bg: string; color: string }> = {
-  job: { icon: 'briefcase-outline', bg: COLORS.primary + '18', color: COLORS.primary },
-  payment: { icon: 'card-outline', bg: '#E8F5E9', color: '#2E7D32' },
-  message: { icon: 'chatbubble-ellipses-outline', bg: '#E3F2FD', color: '#1565C0' },
-  system: { icon: 'information-circle-outline', bg: '#FFF8E1', color: '#F57F17' },
-  promo: { icon: 'gift-outline', bg: '#F3E5F5', color: '#7B1FA2' },
+const TYPE_META: Record<NotificationType, { icon: string; bg: string; color: string }> = {
+  bid_accepted: { icon: 'briefcase-outline', bg: COLORS.primary + '18', color: COLORS.primary },
+  bid_declined: { icon: 'briefcase-outline', bg: COLORS.dangerLight, color: COLORS.danger },
+  bid_countered: { icon: 'pricetag-outline', bg: COLORS.primary + '18', color: COLORS.primary },
+  new_message: { icon: 'chatbubble-ellipses-outline', bg: '#E3F2FD', color: '#1565C0' },
 };
 
-const FILTERS: { key: 'all' | NotifType; label: string }[] = [
+const FILTERS: { key: FilterCategory; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'job', label: 'Jobs' },
   { key: 'message', label: 'Messages' },
-  { key: 'payment', label: 'Payments' },
-  { key: 'promo', label: 'Promos' },
 ];
 
 export default function NotificationsScreen() {
-  const [notifs, setNotifs] = useState<Notif[]>(INITIAL_NOTIFS);
-  const [filter, setFilter] = useState<'all' | NotifType>('all');
+  const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [filter, setFilter] = useState<FilterCategory>('all');
+  const [loading, setLoading] = useState(true);
   const T = useThemeColors();
 
-  const unreadCount = notifs.filter(n => !n.read).length;
-  const visible = filter === 'all' ? notifs : notifs.filter(n => n.type === filter);
-  const markRead = (id: number) => setNotifs(ns => ns.map(n => n.id === id ? { ...n, read: true } : n));
-  const dismiss = (id: number) => setNotifs(ns => ns.filter(n => n.id !== id));
-  const markAllRead = () => setNotifs(ns => ns.map(n => ({ ...n, read: true })));
-  const clearAll = () => setNotifs(ns => ns.filter(n => !n.read));
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      let channel: ReturnType<typeof subscribeToMyNotifications> | null = null;
+
+      (async () => {
+        const [auth, result] = await Promise.all([supabase.auth.getUser(), listMyNotifications()]);
+        if (cancelled) return;
+        if (result.success) setNotifs(result.data ?? []);
+        setLoading(false);
+
+        if (auth.data.user) {
+          channel = subscribeToMyNotifications(auth.data.user.id, (row) => {
+            setNotifs((prev) => (prev.some((n) => n.id === row.id) ? prev.map((n) => (n.id === row.id ? row : n)) : [row, ...prev]));
+          });
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+        if (channel) unsubscribe(channel);
+      };
+    }, [])
+  );
+
+  const unreadCount = notifs.filter((n) => !n.is_read).length;
+  const visible = filter === 'all' ? notifs : notifs.filter((n) => categoryOf(n.type) === filter);
+
+  const markRead = (id: string) => {
+    setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    markNotificationRead(id);
+  };
+  const dismiss = (id: string) => {
+    setNotifs((ns) => ns.filter((n) => n.id !== id));
+    deleteNotification(id);
+  };
+  const markAllRead = () => {
+    setNotifs((ns) => ns.map((n) => ({ ...n, is_read: true })));
+    markAllNotificationsRead();
+  };
+  const clearAll = () => {
+    setNotifs((ns) => ns.filter((n) => !n.is_read));
+    deleteAllReadNotifications();
+  };
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
 
       <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color={T.text} />
-        </TouchableOpacity>
-        <View style={s.headerCenter}>
-          <Text style={[s.title, { color: T.text }]}>Notifications</Text>
-          {unreadCount > 0 && (
-            <View style={s.badge}><Text style={s.badgeText}>{unreadCount}</Text></View>
-          )}
-        </View>
-        <TouchableOpacity onPress={markAllRead} activeOpacity={0.7} disabled={unreadCount === 0}>
-          <Text style={[s.markAllText, unreadCount === 0 && { opacity: 0.3 }]}>Mark all read</Text>
-        </TouchableOpacity>
+        <ScreenContent style={s.headerInner}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={22} color={T.text} />
+          </TouchableOpacity>
+          <View style={s.headerCenter}>
+            <Text style={[s.title, { color: T.text }]}>Notifications</Text>
+            {unreadCount > 0 && (
+              <View style={s.badge}><Text style={s.badgeText}>{unreadCount}</Text></View>
+            )}
+          </View>
+          <TouchableOpacity onPress={markAllRead} activeOpacity={0.7} disabled={unreadCount === 0}>
+            <Text style={[s.markAllText, unreadCount === 0 && { opacity: 0.3 }]}>Mark all read</Text>
+          </TouchableOpacity>
+        </ScreenContent>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.filterRow, { backgroundColor: T.header, borderColor: T.border, alignItems: 'center' }]}>
-        {FILTERS.map(f => (
-          <Pressable
-            key={f.key}
-            style={({ pressed }) => [
-              s.filterChip,
-              { backgroundColor: T.card, borderColor: T.border },
-              filter === f.key && s.filterChipActive,
-              pressed && { opacity: 0.75 },
-            ]}
-            onPress={() => setFilter(f.key)}
-          >
-            <Text style={[s.filterText, { color: T.subText }, filter === f.key && s.filterTextActive]}>{f.label}</Text>
-            {f.key !== 'all' && notifs.filter(n => n.type === f.key && !n.read).length > 0 && (
-              <View style={s.chipBadge}>
-                <Text style={s.chipBadgeText}>{notifs.filter(n => n.type === f.key && !n.read).length}</Text>
-              </View>
-            )}
-          </Pressable>
-        ))}
-      </ScrollView>
+      <View style={[s.filterOuter, { backgroundColor: T.header, borderColor: T.border }]}>
+        <ScreenContent>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.filterRow, { alignItems: 'center' }]}>
+            {FILTERS.map(f => (
+              <Pressable
+                key={f.key}
+                style={({ pressed }) => [
+                  s.filterChip,
+                  { backgroundColor: T.card, borderColor: T.border },
+                  filter === f.key && s.filterChipActive,
+                  pressed && { opacity: 0.75 },
+                ]}
+                onPress={() => setFilter(f.key)}
+              >
+                <Text style={[s.filterText, { color: T.subText }, filter === f.key && s.filterTextActive]}>{f.label}</Text>
+                {f.key !== 'all' && notifs.filter(n => categoryOf(n.type) === f.key && !n.is_read).length > 0 && (
+                  <View style={s.chipBadge}>
+                    <Text style={s.chipBadgeText}>{notifs.filter(n => categoryOf(n.type) === f.key && !n.is_read).length}</Text>
+                  </View>
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        </ScreenContent>
+      </View>
 
-      {visible.length === 0 ? (
+      {loading ? (
+        <View style={s.empty}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      ) : visible.length === 0 ? (
         <View style={s.empty}>
           <Ionicons name="notifications-off-outline" size={56} color={COLORS.primary + '50'} />
           <Text style={[s.emptyTitle, { color: T.text }]}>All caught up!</Text>
           <Text style={[s.emptySub, { color: T.subText }]}>No notifications in this category yet.</Text>
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.list}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollOuter}>
+        <ScreenContent style={s.list}>
           {(() => {
-            const unread = visible.filter((n) => !n.read);
-            const read = visible.filter((n) => n.read);
-            const renderNotif = (notif: Notif, bordered: boolean) => {
+            const unread = visible.filter((n) => !n.is_read);
+            const read = visible.filter((n) => n.is_read);
+            const renderNotif = (notif: Notification, bordered: boolean) => {
               const meta = TYPE_META[notif.type];
               return (
                 <TouchableOpacity
@@ -132,14 +187,14 @@ export default function NotificationsScreen() {
                   onPress={() => markRead(notif.id)}
                   activeOpacity={0.78}
                 >
-                  {!notif.read && <View style={s.unreadDot} />}
+                  {!notif.is_read && <View style={s.unreadDot} />}
                   <View style={[s.iconWrap, { backgroundColor: meta.bg }]}>
                     <Ionicons name={meta.icon as any} size={20} color={meta.color} />
                   </View>
                   <View style={s.content}>
                     <Text style={[s.notifTitle, { color: T.text }]} numberOfLines={1}>{notif.title}</Text>
-                    <Text style={[s.notifBody, { color: T.subText }]} numberOfLines={2}>{notif.body}</Text>
-                    <Text style={[s.notifTime, { color: T.subText }]}>{notif.time}</Text>
+                    {!!notif.body && <Text style={[s.notifBody, { color: T.subText }]} numberOfLines={2}>{notif.body}</Text>}
+                    <Text style={[s.notifTime, { color: T.subText }]}>{timeAgo(notif.created_at)}</Text>
                   </View>
                   <TouchableOpacity style={s.dismissBtn} onPress={() => dismiss(notif.id)} hitSlop={{ top: 10, left: 10, right: 10, bottom: 10 }}>
                     <Ionicons name="close-outline" size={18} color={T.subText} />
@@ -164,12 +219,13 @@ export default function NotificationsScreen() {
               </>
             );
           })()}
-          {notifs.filter(n => n.read).length > 0 && (
+          {notifs.filter(n => n.is_read).length > 0 && (
             <TouchableOpacity style={s.clearBtn} onPress={clearAll} activeOpacity={0.7}>
               <Ionicons name="trash-outline" size={15} color={T.subText} />
               <Text style={[s.clearBtnText, { color: T.subText }]}>Clear read notifications</Text>
             </TouchableOpacity>
           )}
+        </ScreenContent>
         </ScrollView>
       )}
     </SafeAreaView>
@@ -178,14 +234,17 @@ export default function NotificationsScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  header: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 17, fontWeight: '700' },
   badge: { backgroundColor: COLORS.danger, borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   badgeText: { fontSize: 11, fontWeight: '800', color: '#fff' },
   markAllText: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
-  filterRow: { paddingHorizontal: 16, paddingVertical: 12, gap: 8, borderBottomWidth: 1 },
+  filterOuter: { borderBottomWidth: 1 },
+  scrollOuter: {},
+  filterRow: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
   filterChip: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, flexShrink: 0, outlineStyle: 'none' } as any,
   filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' },
   filterText: { fontSize: 13, fontWeight: '600', includeFontPadding: false, textAlign: 'center' },

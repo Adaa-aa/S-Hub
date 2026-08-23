@@ -4,8 +4,9 @@ import { ws, wvs, wms } from '@/lib/scaling';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StatusBar,
@@ -16,7 +17,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MY_PROFILE } from './worker-setup';
+import { getMyProfile, updateProfile } from '@/lib/api/profiles';
+import { getMyWorkerProfile, updateWorkerProfile } from '@/lib/api/workerProfiles';
 import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
 
 function Field({ icon, label, value, onChangeText, keyboardType, T }: {
@@ -40,29 +42,59 @@ function Field({ icon, label, value, onChangeText, keyboardType, T }: {
   );
 }
 
-export default function WorkerPersonalInfoScreen() {
+function WorkerPersonalInfoScreen() {
   const T = useThemeColors();
-  const [name, setName] = useState(MY_PROFILE.name);
-  const [phone, setPhone] = useState(MY_PROFILE.phone);
-  const [location, setLocation] = useState(MY_PROFILE.location);
-  const [languages, setLanguages] = useState(MY_PROFILE.languages);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
+  const [languages, setLanguages] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  useEffect(() => {
+    (async () => {
+      const [profileResult, workerResult] = await Promise.all([getMyProfile(), getMyWorkerProfile()]);
+      if (profileResult.success && profileResult.data) {
+        setName(profileResult.data.full_name ?? '');
+        setPhone(profileResult.data.phone ?? '');
+      }
+      if (workerResult.success && workerResult.data) {
+        setLocation(workerResult.data.address ?? '');
+        setLanguages(workerResult.data.languages ?? '');
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const handleSave = async () => {
     if (!name.trim() || !phone.trim() || !location.trim()) {
       Alert.alert('Missing details', 'Name, phone, and location can\'t be empty.');
       return;
     }
-    MY_PROFILE.name = name.trim();
-    MY_PROFILE.phone = phone.trim();
-    MY_PROFILE.location = location.trim();
-    MY_PROFILE.languages = languages.trim();
+    setSaving(true);
+    const [profileResult, workerResult] = await Promise.all([
+      updateProfile({ full_name: name.trim(), phone: phone.trim() }),
+      updateWorkerProfile({ address: location.trim(), languages: languages.trim() }),
+    ]);
+    setSaving(false);
+    if (!profileResult.success || !workerResult.success) {
+      Alert.alert('Could Not Save', profileResult.error ?? workerResult.error ?? 'Something went wrong.');
+      return;
+    }
     Alert.alert('Saved', 'Your personal information has been updated.', [
       { text: 'OK', onPress: () => router.back() },
     ]);
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[s.safe, { backgroundColor: T.bg, alignItems: 'center', justifyContent: 'center' }]} edges={['top', 'bottom']}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <RequireVerifiedWorker>
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
@@ -90,19 +122,26 @@ export default function WorkerPersonalInfoScreen() {
       </ScrollView>
 
       <View style={[s.footer, { backgroundColor: T.card, borderColor: T.border }]}>
-        <TouchableOpacity onPress={handleSave} activeOpacity={0.85}>
+        <TouchableOpacity onPress={handleSave} activeOpacity={0.85} disabled={saving}>
           <LinearGradient
             colors={[COLORS.primary, COLORS.primaryDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={s.saveBtn}
           >
-            <Text style={s.saveBtnText}>Save Changes</Text>
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Save Changes</Text>}
           </LinearGradient>
         </TouchableOpacity>
       </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function GatedWorkerPersonalInfoScreen() {
+  return (
+    <RequireVerifiedWorker>
+      <WorkerPersonalInfoScreen />
     </RequireVerifiedWorker>
   );
 }

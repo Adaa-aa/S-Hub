@@ -34,7 +34,16 @@
       "Bash(node .tmp-test-signup.mjs)",
       "Bash(node .tmp-test-signin.mjs \"phase1-smoketest-1786660792553@example.com\")",
       "Bash(rm -f .tmp-test-signup.mjs .tmp-test-signin.mjs)",
-      "Bash(node .tmp-test-gate.mjs)"
+      "Bash(node .tmp-test-gate.mjs)",
+      "PowerShell(Stop-Process -Id 25108 -Force -Confirm:$false)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8098 -State Listen -ErrorAction SilentlyContinue)",
+      "Bash(node \"C:\\\\Users\\\\MARANA~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-maranatha-Desktop-S-Hub\\\\cffbbea9-d7ff-4af8-a7ca-3d52103e3498\\\\scratchpad\\\\.tmp-test-role-redirect.mjs\")",
+      "Bash(cp \"C:\\\\Users\\\\MARANA~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-maranatha-Desktop-S-Hub\\\\cffbbea9-d7ff-4af8-a7ca-3d52103e3498\\\\scratchpad\\\\.tmp-test-role-redirect.mjs\" \"c:\\\\Users\\\\maranatha\\\\Desktop\\\\S-Hub\\\\.tmp-test-role-redirect.mjs\")",
+      "Bash(node .tmp-test-role-redirect.mjs)",
+      "Bash(disown)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 20 \"http://localhost:8099/sign-in\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8099 -State Listen | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -Confirm:$false })",
+      "Bash(node .tmp-test-profile-update.mjs)"
     ]
   },
   "enabledPlugins": {

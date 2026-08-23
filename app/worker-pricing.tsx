@@ -4,8 +4,9 @@ import { ws, wvs, wms } from '@/lib/scaling';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StatusBar,
@@ -16,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MY_PROFILE } from './worker-setup';
+import { getMyWorkerProfile, updateWorkerProfile } from '@/lib/api/workerProfiles';
 import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
 
 function PriceField({ label, hint, value, onChangeText, T }: {
@@ -41,13 +42,27 @@ function PriceField({ label, hint, value, onChangeText, T }: {
   );
 }
 
-export default function WorkerPricingScreen() {
+function WorkerPricingScreen() {
   const T = useThemeColors();
-  const [price, setPrice] = useState(String(MY_PROFILE.price));
-  const [hourlyRate, setHourlyRate] = useState(String(MY_PROFILE.hourlyRate));
-  const [minJobValue, setMinJobValue] = useState(String(MY_PROFILE.minJobValue));
+  const [price, setPrice] = useState('');
+  const [hourlyRate, setHourlyRate] = useState('');
+  const [minJobValue, setMinJobValue] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  useEffect(() => {
+    (async () => {
+      const result = await getMyWorkerProfile();
+      if (result.success && result.data) {
+        setPrice(result.data.per_job_rate != null ? String(result.data.per_job_rate) : '');
+        setHourlyRate(result.data.hourly_rate != null ? String(result.data.hourly_rate) : '');
+        setMinJobValue(result.data.min_job_value != null ? String(result.data.min_job_value) : '');
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const handleSave = async () => {
     const p = parseInt(price, 10);
     const h = parseInt(hourlyRate, 10);
     const m = parseInt(minJobValue, 10);
@@ -57,16 +72,27 @@ export default function WorkerPricingScreen() {
       return;
     }
 
-    MY_PROFILE.price = p;
-    MY_PROFILE.hourlyRate = h;
-    MY_PROFILE.minJobValue = m;
+    setSaving(true);
+    const result = await updateWorkerProfile({ per_job_rate: p, hourly_rate: h, min_job_value: m });
+    setSaving(false);
+    if (!result.success) {
+      Alert.alert('Could Not Save', result.error ?? 'Something went wrong.');
+      return;
+    }
     Alert.alert('Saved', 'Your pricing has been updated.', [
       { text: 'OK', onPress: () => router.back() },
     ]);
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[s.safe, { backgroundColor: T.bg, alignItems: 'center', justifyContent: 'center' }]} edges={['top', 'bottom']}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <RequireVerifiedWorker>
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
@@ -110,19 +136,26 @@ export default function WorkerPricingScreen() {
       </ScrollView>
 
       <View style={[s.footer, { backgroundColor: T.card, borderColor: T.border }]}>
-        <TouchableOpacity onPress={handleSave} activeOpacity={0.85}>
+        <TouchableOpacity onPress={handleSave} activeOpacity={0.85} disabled={saving}>
           <LinearGradient
             colors={[COLORS.primary, COLORS.primaryDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={s.saveBtn}
           >
-            <Text style={s.saveBtnText}>Save Changes</Text>
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Save Changes</Text>}
           </LinearGradient>
         </TouchableOpacity>
       </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function GatedWorkerPricingScreen() {
+  return (
+    <RequireVerifiedWorker>
+      <WorkerPricingScreen />
     </RequireVerifiedWorker>
   );
 }

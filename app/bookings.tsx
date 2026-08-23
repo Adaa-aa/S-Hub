@@ -1,54 +1,78 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
 import { s } from '@/lib/scaling';
 import CustomerNav from '@/components/CustomerNav';
+import { listMyServiceRequests, ServiceRequest } from '@/lib/api/serviceRequests';
+import { listMyBookingsAsClient, ClientBookingView, BookingStatus } from '@/lib/api/bookings';
 
-type Status = 'ongoing' | 'upcoming' | 'completed' | 'cancelled';
 type Filter = 'all' | 'upcoming' | 'completed';
 
-type Booking = {
-  id: string;
-  service: string;
-  worker: string;
-  icon: string;
-  status: Status;
-  date: string;
-  price: string;
+type Entry =
+  | { kind: 'request'; id: string; createdAt: string; request: ServiceRequest }
+  | { kind: 'booking'; id: string; createdAt: string; booking: ClientBookingView };
+
+const ACTIVE_BOOKING_STATUSES: BookingStatus[] = ['accepted', 'en_route', 'arrived', 'in_progress'];
+
+const CATEGORY_ICON: Record<string, string> = {
+  plumbing: 'water-outline',
+  electrical: 'flash-outline',
+  painting: 'color-palette-outline',
+  cleaning: 'sparkles-outline',
+  carpentry: 'hammer-outline',
 };
 
-const BOOKINGS: Booking[] = [
-  { id: '1', service: 'Electrical Repair', worker: 'Kwame Appiah', icon: 'flash-outline', status: 'ongoing', date: 'Oct 24, 2023', price: 'GH₵ 250' },
-  { id: '2', service: 'Pipe Leakage', worker: 'Abena Mensah', icon: 'water-outline', status: 'upcoming', date: 'Oct 26, 2023', price: 'GH₵ 180' },
-  { id: '3', service: 'House Cleaning', worker: 'Kojo Boateng', icon: 'sparkles-outline', status: 'completed', date: 'Oct 20, 2023', price: 'GH₵ 400' },
-  { id: '4', service: 'Wall Painting', worker: 'Efua Asare', icon: 'color-palette-outline', status: 'cancelled', date: 'Oct 18, 2023', price: 'GH₵ 1,200' },
-];
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function bookingStatusLabel(status: BookingStatus): string {
+  return status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function BookingsScreen() {
   const T = useThemeColors();
   const [filter, setFilter] = useState<Filter>('all');
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [clientBookings, setClientBookings] = useState<ClientBookingView[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredBookings = useMemo(() => {
-    if (filter === 'all') return BOOKINGS;
-    if (filter === 'upcoming') return BOOKINGS.filter((b) => b.status === 'upcoming' || b.status === 'ongoing');
-    return BOOKINGS.filter((b) => b.status === 'completed');
-  }, [filter]);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        setLoading(true);
+        const [reqResult, bookingResult] = await Promise.all([listMyServiceRequests(), listMyBookingsAsClient()]);
+        if (cancelled) return;
+        if (reqResult.success) setRequests(reqResult.data ?? []);
+        if (bookingResult.success) setClientBookings(bookingResult.data ?? []);
+        setLoading(false);
+      })();
+      return () => { cancelled = true; };
+    }, [])
+  );
 
-  const statusStyle = (status: Status) => {
-    switch (status) {
-      case 'ongoing':
-        return { bg: COLORS.accentLight, fg: COLORS.accentDark, label: 'Ongoing' };
-      case 'upcoming':
-        return { bg: COLORS.primaryLight, fg: COLORS.primary, label: 'Upcoming' };
-      case 'completed':
-        return { bg: COLORS.primaryLight, fg: COLORS.primary, label: 'Completed' };
-      default:
-        return { bg: T.inputBg, fg: T.subText, label: 'Cancelled' };
+  const entries: Entry[] = useMemo(() => {
+    const requestEntries: Entry[] = requests
+      .filter((r) => r.status === 'seeking_bids' || r.status === 'cancelled')
+      .map((r) => ({ kind: 'request', id: r.id, createdAt: r.created_at, request: r }));
+    const bookingEntries: Entry[] = clientBookings.map((b) => ({ kind: 'booking', id: b.id, createdAt: b.created_at, booking: b }));
+    return [...requestEntries, ...bookingEntries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [requests, clientBookings]);
+
+  const filteredEntries = useMemo(() => {
+    if (filter === 'all') return entries;
+    if (filter === 'upcoming') {
+      return entries.filter((e) =>
+        e.kind === 'request' ? e.request.status === 'seeking_bids' : ACTIVE_BOOKING_STATUSES.includes(e.booking.status)
+      );
     }
-  };
+    return entries.filter((e) => e.kind === 'booking' && e.booking.status === 'completed');
+  }, [entries, filter]);
 
   return (
     <View style={[styles.container, { backgroundColor: T.bg }]}>
@@ -83,58 +107,124 @@ export default function BookingsScreen() {
             ))}
           </ScrollView>
 
-          <View style={{ gap: 12 }}>
-            {filteredBookings.map((booking) => {
-              const statusInfo = statusStyle(booking.status);
-              return (
-                <TouchableOpacity
-                  key={booking.id}
-                  style={[styles.card, { backgroundColor: T.card, borderColor: T.border }, booking.status === 'cancelled' && { opacity: 0.7 }]}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.cardTopRow}>
-                    <View style={styles.cardLeft}>
-                      <View style={[styles.iconWrap, { backgroundColor: T.inputBg }]}>
-                        <Ionicons name={booking.icon as any} size={22} color={COLORS.primary} />
-                      </View>
-                      <View>
-                        <Text style={[styles.serviceName, { color: T.text }]}>{booking.service}</Text>
-                        <Text style={[styles.workerName, { color: T.subText }]}>{booking.worker}</Text>
-                      </View>
-                    </View>
-                    <View style={[styles.statusPill, { backgroundColor: statusInfo.bg }]}>
-                      <Text style={[styles.statusPillText, { color: statusInfo.fg }]}>{statusInfo.label}</Text>
-                    </View>
-                  </View>
-                  <View style={[styles.cardBottomRow, { borderTopColor: T.border }]}>
-                    <View>
-                      <Text style={[styles.metaLabel, { color: T.subText }]}>Date</Text>
-                      <Text style={[styles.metaValue, { color: T.text }]}>{booking.date}</Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={[styles.metaLabel, { color: T.subText }]}>Price</Text>
-                      <Text
-                        style={[
-                          styles.metaValuePrice,
-                          booking.status === 'cancelled' && { textDecorationLine: 'line-through', color: T.subText },
-                        ]}
-                      >
-                        {booking.price}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-
-            <View style={styles.promoCard}>
-              <Text style={styles.promoTitle}>Need more help?</Text>
-              <Text style={styles.promoBody}>Book a trusted professional for your next home project in minutes.</Text>
-              <TouchableOpacity style={styles.promoButton} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
-                <Text style={styles.promoButtonText}>Post a Job</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.promoCard}>
+            <Text style={styles.promoTitle}>Need more help?</Text>
+            <Text style={styles.promoBody}>Book a trusted professional for your next home project in minutes.</Text>
+            <TouchableOpacity style={styles.promoButton} onPress={() => router.push('/post-a-job' as any)} activeOpacity={0.85}>
+              <Text style={styles.promoButtonText}>Post a Job</Text>
+            </TouchableOpacity>
           </View>
+
+          {loading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator color={COLORS.primary} />
+            </View>
+          ) : filteredEntries.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="briefcase-outline" size={36} color={T.subText} />
+              <Text style={[styles.emptyText, { color: T.subText }]}>No {filter === 'all' ? '' : filter} jobs yet.</Text>
+            </View>
+          ) : (
+            <View style={{ gap: 12 }}>
+              {filteredEntries.map((entry) => {
+                if (entry.kind === 'request') {
+                  const req = entry.request;
+                  const icon = CATEGORY_ICON[req.category] ?? 'briefcase-outline';
+                  const cancelled = req.status === 'cancelled';
+                  return (
+                    <TouchableOpacity
+                      key={entry.id}
+                      style={[styles.card, { backgroundColor: T.card, borderColor: T.border }, cancelled && { opacity: 0.7 }]}
+                      activeOpacity={0.85}
+                      onPress={() => !cancelled && router.push(`/bid-comparison?requestId=${req.id}` as any)}
+                    >
+                      <View style={styles.cardTopRow}>
+                        <View style={styles.cardLeft}>
+                          <View style={[styles.iconWrap, { backgroundColor: T.inputBg }]}>
+                            <Ionicons name={icon as any} size={22} color={COLORS.primary} />
+                          </View>
+                          <View>
+                            <Text style={[styles.serviceName, { color: T.text }]}>
+                              {req.category.charAt(0).toUpperCase() + req.category.slice(1)}
+                            </Text>
+                            <Text style={[styles.workerName, { color: T.subText }]}>
+                              {cancelled ? 'Cancelled' : 'Awaiting bids'}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={[styles.statusPill, { backgroundColor: cancelled ? T.inputBg : COLORS.primaryLight }]}>
+                          <Text style={[styles.statusPillText, { color: cancelled ? T.subText : COLORS.primary }]}>
+                            {cancelled ? 'Cancelled' : 'Seeking Bids'}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[styles.cardBottomRow, { borderTopColor: T.border }]}>
+                        <View>
+                          <Text style={[styles.metaLabel, { color: T.subText }]}>Posted</Text>
+                          <Text style={[styles.metaValue, { color: T.text }]}>{formatDate(req.created_at)}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={[styles.metaLabel, { color: T.subText }]}>Budget</Text>
+                          <Text style={styles.metaValuePrice}>
+                            {req.initial_offer_price != null ? `GH₵ ${req.initial_offer_price}` : 'Open'}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }
+
+                const booking = entry.booking;
+                const icon = CATEGORY_ICON[booking.request?.category ?? ''] ?? 'briefcase-outline';
+                const cancelled = booking.status === 'cancelled';
+                const price = booking.bid?.counter_price ?? booking.bid?.proposed_price;
+                return (
+                  <TouchableOpacity
+                    key={entry.id}
+                    style={[styles.card, { backgroundColor: T.card, borderColor: T.border }, cancelled && { opacity: 0.7 }]}
+                    activeOpacity={0.85}
+                    onPress={() => router.push(`/chat?bookingId=${booking.id}` as any)}
+                  >
+                    <View style={styles.cardTopRow}>
+                      <View style={styles.cardLeft}>
+                        <View style={[styles.iconWrap, { backgroundColor: T.inputBg }]}>
+                          <Ionicons name={icon as any} size={22} color={COLORS.primary} />
+                        </View>
+                        <View>
+                          <Text style={[styles.serviceName, { color: T.text }]}>
+                            {(booking.request?.category ?? 'Service').replace(/^\w/, (c) => c.toUpperCase())}
+                          </Text>
+                          <Text style={[styles.workerName, { color: T.subText }]}>{booking.worker?.full_name ?? 'Worker'}</Text>
+                        </View>
+                      </View>
+                      <View style={[styles.statusPill, { backgroundColor: booking.status === 'completed' ? COLORS.primaryLight : cancelled ? T.inputBg : COLORS.accentLight }]}>
+                        <Text style={[styles.statusPillText, { color: booking.status === 'completed' || !cancelled ? (booking.status === 'completed' ? COLORS.primary : COLORS.accentDark) : T.subText }]}>
+                          {bookingStatusLabel(booking.status)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[styles.cardBottomRow, { borderTopColor: T.border }]}>
+                      <View>
+                        <Text style={[styles.metaLabel, { color: T.subText }]}>Date</Text>
+                        <Text style={[styles.metaValue, { color: T.text }]}>{formatDate(booking.created_at)}</Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={[styles.metaLabel, { color: T.subText }]}>Price</Text>
+                        <Text
+                          style={[
+                            styles.metaValuePrice,
+                            cancelled && { textDecorationLine: 'line-through', color: T.subText },
+                          ]}
+                        >
+                          {price != null ? `GH₵ ${price}` : '—'}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -157,6 +247,8 @@ const styles = StyleSheet.create({
   chipRow: { marginBottom: 20 },
   chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, marginRight: 8 },
   chipText: { fontSize: 13, fontWeight: '600' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 40 },
+  emptyText: { fontSize: 13, textAlign: 'center' },
   card: { borderWidth: 1, borderRadius: 20, padding: 16, gap: 12 },
   cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardLeft: { flexDirection: 'row', gap: 12, flex: 1 },
@@ -164,12 +256,12 @@ const styles = StyleSheet.create({
   serviceName: { fontSize: 16, fontWeight: '700' },
   workerName: { fontSize: 14 },
   statusPill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
-  statusPillText: { fontSize: 11, fontWeight: '700' },
+  statusPillText: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
   cardBottomRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, paddingTop: 12 },
   metaLabel: { fontSize: 11, textTransform: 'uppercase', fontWeight: '700' },
   metaValue: { fontSize: 14, fontWeight: '600' },
   metaValuePrice: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
-  promoCard: { backgroundColor: COLORS.primary, borderRadius: 20, padding: 20, gap: 6, minHeight: 180, justifyContent: 'center' },
+  promoCard: { backgroundColor: COLORS.primary, borderRadius: 20, padding: 20, gap: 6, minHeight: 180, justifyContent: 'center', marginBottom: 20 },
   promoTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
   promoBody: { fontSize: 14, color: '#fff', maxWidth: '80%' },
   promoButton: { backgroundColor: '#fff', alignSelf: 'flex-start', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 999, marginTop: 12 },

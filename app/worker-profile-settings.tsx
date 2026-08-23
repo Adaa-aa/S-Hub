@@ -195,7 +195,7 @@ export default function WorkerProfileSettingsScreen() {
           <MenuItem
             T={T}
             icon={<MaterialCommunityIcons name="swap-horizontal" size={wms(17)} color={COLORS.primary} />}
-            label="Switch to Customer Mode"
+            label="Switch to Client Mode"
             subtitle="Post jobs and hire workers instead"
             onPress={() => router.replace('/home' as any)}
           />

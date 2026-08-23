@@ -17,12 +17,11 @@ import {
 import { COLORS } from '../constants/theme';
 import { useThemeColors } from '../context/ThemeContext';
 import ScreenContent from '@/components/ScreenContent';
-import { signInWithPassword, signInWithOAuthProvider } from '@/lib/auth';
-import { getMyProfile } from '@/lib/api/profiles';
+import { signInWithPassword, signInWithOAuthProvider, routeSignedInUserByRole } from '@/lib/auth';
 import { s, vs, ms } from '@/lib/scaling';
 
 export default function LoginScreen() {
-  const [role, setRole] = useState<'customer' | 'worker'>('customer');
+  const [role, setRole] = useState<'client' | 'worker'>('client');
   const [credential, setCredential] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -31,20 +30,11 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const T = useThemeColors();
 
-  const routeByRole = async () => {
-    const profile = await getMyProfile();
-    if (profile.success && profile.data?.role === 'worker') {
-      router.replace('/worker-dashboard' as any);
-    } else {
-      router.replace('/home' as any);
-    }
-  };
-
   const handleLogin = async () => {
     if (!credential || !password) return;
     setError('');
     setLoading(true);
-    const result = await signInWithPassword({ email: credential, password });
+    const result = await signInWithPassword({ identifier: credential, password });
     if (!result.success) {
       setLoading(false);
       setError(result.error ?? 'Something went wrong signing in.');
@@ -52,7 +42,7 @@ export default function LoginScreen() {
     }
     // Route by the account's real role, not the toggle above — the toggle is
     // just a hint for which fields to show, the account's role is fixed at signup.
-    await routeByRole();
+    await routeSignedInUserByRole();
     setLoading(false);
   };
 
@@ -65,7 +55,7 @@ export default function LoginScreen() {
       setError(result.error ?? 'Authentication failed.');
       return;
     }
-    await routeByRole();
+    await routeSignedInUserByRole();
     setOauthLoading(null);
   };
 
@@ -99,8 +89,8 @@ export default function LoginScreen() {
         <ScreenContent style={styles.container}>
 
           <View style={[styles.toggleWrap, { backgroundColor: T.inputBg }]}>
-            <TouchableOpacity style={[styles.toggleBtn, role === 'customer' && styles.toggleBtnActive]} onPress={() => setRole('customer')} activeOpacity={0.8}>
-              <Text style={[styles.toggleText, { color: T.subText }, role === 'customer' && styles.toggleTextActive]}>Customer</Text>
+            <TouchableOpacity style={[styles.toggleBtn, role === 'client' && styles.toggleBtnActive]} onPress={() => setRole('client')} activeOpacity={0.8}>
+              <Text style={[styles.toggleText, { color: T.subText }, role === 'client' && styles.toggleTextActive]}>Client</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.toggleBtn, role === 'worker' && styles.toggleBtnActive]} onPress={() => setRole('worker')} activeOpacity={0.8}>
               <Text style={[styles.toggleText, { color: T.subText }, role === 'worker' && styles.toggleTextActive]}>Worker</Text>
@@ -110,7 +100,7 @@ export default function LoginScreen() {
           <View style={styles.inputWrap}>
             <View style={[styles.inputRow, { backgroundColor: T.inputBg }]}>
               <FontAwesome5 name="envelope" size={15} color={T.subText} style={styles.inputIcon} />
-              <TextInput style={[styles.input, { color: T.text }]} placeholder="Email" placeholderTextColor={T.subText} value={credential} onChangeText={setCredential} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+              <TextInput style={[styles.input, { color: T.text }]} placeholder="Email or Phone Number" placeholderTextColor={T.subText} value={credential} onChangeText={setCredential} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
             </View>
           </View>
 

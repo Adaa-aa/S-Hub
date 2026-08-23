@@ -4,8 +4,9 @@ import { ws, wvs, wms } from '@/lib/scaling';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StatusBar,
@@ -16,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MY_PROFILE } from './worker-setup';
+import { getMyWorkerProfile, updateWorkerProfile } from '@/lib/api/workerProfiles';
 import RequireVerifiedWorker from '@/components/RequireVerifiedWorker';
 
 const SUGGESTED = [
@@ -24,10 +25,22 @@ const SUGGESTED = [
   'Gutter Repair', 'Kitchen Plumbing', 'Pump Installation', 'Emergency Repairs', 'Pipe Fitting',
 ];
 
-export default function WorkerSkillsScreen() {
+function WorkerSkillsScreen() {
   const T = useThemeColors();
-  const [skills, setSkills] = useState<string[]>([...MY_PROFILE.skills]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const result = await getMyWorkerProfile();
+      if (result.success && result.data) {
+        setSkills(result.data.skills ?? []);
+      }
+      setLoading(false);
+    })();
+  }, []);
 
   const addSkill = (skill: string) => {
     const trimmed = skill.trim();
@@ -41,12 +54,18 @@ export default function WorkerSkillsScreen() {
     setSkills(skills.filter(s => s !== skill));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (skills.length === 0) {
       Alert.alert('Add at least one skill', 'Clients search by skill, so you need at least one listed.');
       return;
     }
-    MY_PROFILE.skills = skills;
+    setSaving(true);
+    const result = await updateWorkerProfile({ skills });
+    setSaving(false);
+    if (!result.success) {
+      Alert.alert('Could Not Save', result.error ?? 'Something went wrong.');
+      return;
+    }
     Alert.alert('Saved', 'Your skills have been updated.', [
       { text: 'OK', onPress: () => router.back() },
     ]);
@@ -54,8 +73,15 @@ export default function WorkerSkillsScreen() {
 
   const suggestionsToShow = SUGGESTED.filter(sk => !skills.includes(sk));
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[s.safe, { backgroundColor: T.bg, alignItems: 'center', justifyContent: 'center' }]} edges={['top', 'bottom']}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <RequireVerifiedWorker>
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
@@ -131,19 +157,26 @@ export default function WorkerSkillsScreen() {
       </ScrollView>
 
       <View style={[s.footer, { backgroundColor: T.card, borderColor: T.border }]}>
-        <TouchableOpacity onPress={handleSave} activeOpacity={0.85}>
+        <TouchableOpacity onPress={handleSave} activeOpacity={0.85} disabled={saving}>
           <LinearGradient
             colors={[COLORS.primary, COLORS.primaryDark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={s.saveBtn}
           >
-            <Text style={s.saveBtnText}>Save Changes</Text>
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Save Changes</Text>}
           </LinearGradient>
         </TouchableOpacity>
       </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function GatedWorkerSkillsScreen() {
+  return (
+    <RequireVerifiedWorker>
+      <WorkerSkillsScreen />
     </RequireVerifiedWorker>
   );
 }

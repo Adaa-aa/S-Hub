@@ -2,7 +2,7 @@ import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ws, wvs, wms } from '@/lib/scaling';
 import { becomeWorker } from '@/lib/api/profiles';
-import { createWorkerProfile } from '@/lib/api/workerProfiles';
+import { createWorkerProfile, PREFERRED_TIME_OPTIONS, PreferredTime } from '@/lib/api/workerProfiles';
 import { submitVerification } from '@/lib/api/verification';
 import { uploadIdDocument, uploadSelfie } from '@/lib/api/storage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -44,7 +44,6 @@ const SKILL_CATEGORIES = [
 
 const EXPERIENCE_OPTIONS = ['Less than 1 year', '1–2 years', '3–5 years', '6–10 years', '10+ years'];
 const AVAILABILITY_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const AVAILABILITY_TIMES = ['Morning (6am–12pm)', 'Afternoon (12pm–6pm)', 'Evening (6pm–10pm)'];
 const ID_TYPES = ['Ghana Card', 'Voter ID', 'Passport', "Driver's Licence"];
 const ID_TYPE_DB_VALUES: Record<string, 'ghana_card' | 'voter_id' | 'passport' | 'drivers_licence'> = {
   'Ghana Card': 'ghana_card',
@@ -122,7 +121,7 @@ export default function WorkerSetupScreen() {
 
   /* Step 3 – Availability & Rate */
   const [days, setDays] = useState<string[]>([]);
-  const [times, setTimes] = useState<string[]>([]);
+  const [times, setTimes] = useState<PreferredTime[]>([]);
   const [ratePerHour, setRate] = useState('');
   const [ratePerJob, setRateJ] = useState('');
 
@@ -139,7 +138,7 @@ export default function WorkerSetupScreen() {
     setSkills(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
   const toggleDay = (d: string) => setDays(a => a.includes(d) ? a.filter(x => x !== d) : [...a, d]);
-  const toggleTime = (t: string) => setTimes(a => a.includes(t) ? a.filter(x => x !== t) : [...a, t]);
+  const toggleTime = (t: PreferredTime) => setTimes(a => a.includes(t) ? a.filter(x => x !== t) : [...a, t]);
 
   const pickImage = async (onPicked: (uri: string) => void) => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -189,7 +188,10 @@ export default function WorkerSetupScreen() {
       years_experience: experience ? EXPERIENCE_OPTIONS.indexOf(experience) : undefined,
       hourly_rate: ratePerHour ? Number(ratePerHour) : undefined,
       per_job_rate: ratePerJob ? Number(ratePerJob) : undefined,
-      availability: { days, times },
+      // Matches the AvailabilityDay[] shape worker-availability.tsx reads/writes
+      // for this same jsonb column.
+      availability: AVAILABILITY_DAYS.map((day) => ({ day, on: days.includes(day) })),
+      preferred_times: times,
       address: location || undefined,
     });
     if (!profileResult.success) {
@@ -437,28 +439,28 @@ export default function WorkerSetupScreen() {
 
               <FieldLabel label="Preferred Working Hours" color={T.text} />
               <View style={s.timeOptions}>
-                {AVAILABILITY_TIMES.map(t => {
-                  const on = times.includes(t);
+                {PREFERRED_TIME_OPTIONS.map(opt => {
+                  const on = times.includes(opt.value);
                   return (
                     <TouchableOpacity
-                      key={t}
+                      key={opt.value}
                       style={[
                         s.timeRow,
                         { backgroundColor: T.card, borderColor: on ? COLORS.primary : T.border },
                         on && { backgroundColor: COLORS.primary + '08' },
                       ]}
-                      onPress={() => toggleTime(t)}
+                      onPress={() => toggleTime(opt.value)}
                       activeOpacity={0.8}
                     >
                       <View style={[s.timeRadio, { borderColor: COLORS.primary }]}>
                         {on && <View style={s.timeRadioDot} />}
                       </View>
                       <Ionicons
-                        name={t.startsWith('Morning') ? 'sunny-outline' : t.startsWith('Afternoon') ? 'partly-sunny-outline' : 'moon-outline'}
+                        name={opt.icon as any}
                         size={wms(16)}
                         color={on ? COLORS.primary : T.subText}
                       />
-                      <Text style={[s.timeText, { color: on ? COLORS.primary : T.text }]}>{t}</Text>
+                      <Text style={[s.timeText, { color: on ? COLORS.primary : T.text }]}>{opt.label}</Text>
                     </TouchableOpacity>
                   );
                 })}

@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/theme';
 import { useThemeColors } from '@/context/ThemeContext';
+import ScreenContent from '@/components/ScreenContent';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -165,7 +166,7 @@ function WorkerCard({ worker, service, T }: { worker: typeof WORKERS[0]; service
         <TouchableOpacity
           style={wc.hireBtn}
           activeOpacity={0.85}
-          onPress={() => router.push(`/chat?id=c1` as any)}
+          onPress={() => router.push('/messages' as any)}
         >
           <Text style={wc.hireBtnText}>Hire</Text>
         </TouchableOpacity>
@@ -226,31 +227,36 @@ export default function FindingWorkerScreen() {
     <SafeAreaView style={[s.safe, { backgroundColor: T.bg }]} edges={['top', 'bottom']}>
       <StatusBar barStyle={T.statusBar} backgroundColor={T.header} />
 
-      <View style={[s.header, { backgroundColor: T.header, borderColor: T.border }]}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={22} color={T.text} />
-        </TouchableOpacity>
-        <View style={s.headerInfo}>
-          <Text style={[s.headerTitle, { color: T.text }]}>Finding Workers</Text>
-          <Text style={[s.headerSub, { color: T.subText }]} numberOfLines={1}>{service} · {jobTitle}</Text>
-        </View>
-        <TouchableOpacity
-          style={s.myJobsBtn}
-          onPress={() => router.push('/bookings' as any)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="briefcase-outline" size={16} color={COLORS.primary} />
-          <Text style={s.myJobsBtnText}>My Jobs</Text>
-        </TouchableOpacity>
+      <View style={[s.headerOuter, { backgroundColor: T.header, borderColor: T.border }]}>
+        <ScreenContent style={s.header}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={22} color={T.text} />
+          </TouchableOpacity>
+          <View style={s.headerInfo}>
+            <Text style={[s.headerTitle, { color: T.text }]}>Finding Workers</Text>
+            <Text style={[s.headerSub, { color: T.subText }]} numberOfLines={1}>{service} · {jobTitle}</Text>
+          </View>
+          <TouchableOpacity
+            style={s.myJobsBtn}
+            onPress={() => router.push('/bookings' as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="briefcase-outline" size={16} color={COLORS.primary} />
+            <Text style={s.myJobsBtnText}>My Jobs</Text>
+          </TouchableOpacity>
+        </ScreenContent>
       </View>
 
       {/* ── JOB POSTED BANNER ── */}
-      <View style={s.postedBanner}>
-        <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
-        <Text style={s.postedBannerText}>Job posted! Workers are being notified near you.</Text>
+      <View style={s.postedBannerOuter}>
+        <ScreenContent style={s.postedBanner}>
+          <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
+          <Text style={s.postedBannerText}>Job posted! Workers are being notified near you.</Text>
+        </ScreenContent>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollOuter}>
+        <ScreenContent style={s.scroll}>
 
         {/* ── SEARCHING ANIMATION ── */}
         <SearchingView service={service} />
@@ -292,6 +298,7 @@ export default function FindingWorkerScreen() {
             </View>
           </Animated.View>
         )}
+        </ScreenContent>
       </ScrollView>
     </SafeAreaView>
   );
@@ -300,7 +307,8 @@ export default function FindingWorkerScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1 },
 
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1 },
+  headerOuter: { alignItems: 'center', borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12 },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerInfo: { flex: 1 },
   headerTitle: { fontSize: 16, fontWeight: '700' },
@@ -308,10 +316,12 @@ const s = StyleSheet.create({
   myJobsBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.primary },
   myJobsBtnText: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
 
-  postedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primaryLight, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderColor: COLORS.border },
+  postedBannerOuter: { alignItems: 'center', backgroundColor: COLORS.primaryLight, borderBottomWidth: 1, borderColor: COLORS.border },
+  postedBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10 },
   postedBannerText: { fontSize: 12, color: COLORS.primary, fontWeight: '600', flex: 1 },
 
-  scroll: { paddingBottom: 40 },
+  scrollOuter: { alignItems: 'center' },
+  scroll: { width: '100%', paddingBottom: 40 },
 
   foundRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
   foundText: { fontSize: 15, fontWeight: '700' },
